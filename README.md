@@ -1,36 +1,349 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# steveackley.org
 
-## Getting Started
+A modern, mobile-first personal website and blog for Steve Ackley — built with Next.js 15, Tailwind CSS, and PostgreSQL.
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker)](https://www.docker.com/)
+
+---
+
+## ✨ Features
+
+- **Bento-box dashboard** — Visually engaging CSS Grid home page that showcases skills, projects, and contact links
+- **Dark & Light mode** — Automatically respects system `prefers-color-scheme`, WCAG AA compliant in both themes
+- **Blog** — Full-featured blog backed by PostgreSQL with rich-text editing (Tiptap)
+- **Admin panel** — Secure, single-user CMS at `/admin` for creating, editing, and publishing posts
+- **Image uploads** — Admin can upload images directly into blog posts; stored in a Docker volume
+- **Resume download** — Direct PDF download from the home CTA
+- **Fully Dockerized** — Multi-stage build, docker-compose for local development and production
+
+---
+
+## 🖥️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4 |
+| Database | PostgreSQL 16 |
+| ORM | Prisma 6 |
+| Auth | NextAuth.js v5 (Auth.js) |
+| Rich Text | Tiptap 2 |
+| Containerization | Docker + Docker Compose |
+
+---
+
+## 📋 Prerequisites
+
+- **Node.js** 20.x LTS
+- **npm** 10.x
+- **Docker** 24.x+
+- **Docker Compose** v2.x
+
+---
+
+## 🚀 Quick Start (Local Development)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/steveackleyorg.git
+cd steveackleyorg
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` — see [Environment Variables](#-environment-variables) for details.
+
+### 4. Start PostgreSQL with Docker
+
+```bash
+docker compose -f docker-compose.dev.yml up -d db
+```
+
+### 5. Run database migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 6. Create the admin user
+
+```bash
+npm run setup:admin
+```
+
+You'll be prompted for your email and password. The bcrypt hash will be saved to `.env.local`.
+
+### 7. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.  
+Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🐳 Docker (Full Stack)
 
-## Learn More
+### Start everything with Docker Compose
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Copy and configure environment
+cp .env.example .env
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Edit .env with your values, then:
+docker compose up --build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+### Stop and clean up
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+docker compose down
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Stop and remove volumes (⚠️ destroys all data)
+
+```bash
+docker compose down -v
+```
+
+### Rebuild after code changes
+
+```bash
+docker compose up --build
+```
+
+### View logs
+
+```bash
+docker compose logs -f web   # Application logs
+docker compose logs -f db    # Database logs
+```
+
+---
+
+## 🔑 Environment Variables
+
+Copy `.env.example` to `.env.local` (development) or `.env` (Docker production).
+
+| Variable | Required | Description | Example |
+|---|---|---|---|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/steveackley` |
+| `NEXTAUTH_SECRET` | ✅ | JWT signing secret (min 32 chars) | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | ✅ | Application base URL | `http://localhost:3000` |
+| `ADMIN_EMAIL` | ✅ | Admin login email | `steve@steveackley.org` |
+| `ADMIN_PASSWORD_HASH` | ✅ | bcrypt hash of admin password | Generated by `npm run setup:admin` |
+| `NEXT_PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL | `https://linkedin.com/in/steveackley` |
+| `NEXT_PUBLIC_EMAIL` | ✅ | Contact email | `steve@steveackley.org` |
+| `NEXT_PUBLIC_P1_OPS_HUB_URL` | ✅ | P1 Ops Hub project URL | `https://p1opshub.example.com` |
+| `UPLOAD_DIR` | ✅ | Image upload path | `/app/uploads` |
+| `MAX_UPLOAD_SIZE_MB` | ✅ | Max upload size | `5` |
+
+> **Security Note:** Never commit `.env` or `.env.local` files. See [SECURITY.md](./docs/SECURITY.md).
+
+### Generating NEXTAUTH_SECRET
+
+```bash
+openssl rand -base64 32
+```
+
+### Generating ADMIN_PASSWORD_HASH
+
+```bash
+npm run setup:admin
+# or manually:
+node -e "const b=require('bcryptjs');b.hash('yourpassword',12).then(console.log)"
+```
+
+---
+
+## 🗄️ Database
+
+### Prisma commands
+
+```bash
+# Create and apply a new migration
+npx prisma migrate dev --name my-change
+
+# Apply pending migrations (production)
+npx prisma migrate deploy
+
+# Open Prisma Studio (database GUI)
+npx prisma studio
+
+# Regenerate Prisma client after schema changes
+npx prisma generate
+
+# Reset database (⚠️ development only — deletes all data)
+npx prisma migrate reset
+```
+
+### Schema overview
+
+```
+User    — Admin user account (single user, credentials auth)
+Post    — Blog posts with title, slug, content (HTML), cover image, published flag
+```
+
+See `prisma/schema.prisma` for the full schema and `docs/SDD.md` for detailed design.
+
+---
+
+## 📝 Blog Admin Usage
+
+1. Navigate to `/admin/login`
+2. Log in with your configured admin credentials
+3. **Dashboard** — View all posts (drafts + published), with edit/delete/publish actions
+4. **New Post** (`/admin/posts/new`)
+   - Write with the Tiptap rich-text editor
+   - Use the toolbar: headings, bold, italic, lists, code blocks, links
+   - Upload images via the image toolbar button (max 5MB, JPEG/PNG/WebP/GIF)
+   - Set a cover image, title, and optional excerpt
+   - Save as **Draft** or publish immediately
+5. **Edit Post** — Click any post in the dashboard to edit
+
+---
+
+## 📁 Project Structure
+
+```
+steveackleyorg/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (public)/           # Public pages
+│   │   ├── admin/              # Protected admin pages
+│   │   └── api/                # API routes
+│   ├── components/
+│   │   ├── bento/              # Home dashboard cards
+│   │   ├── blog/               # Blog components
+│   │   ├── admin/              # Admin components
+│   │   └── ui/                 # Shared UI primitives
+│   ├── lib/                    # Server-side utilities
+│   └── types/                  # TypeScript types
+├── prisma/
+│   ├── schema.prisma           # Database schema
+│   └── migrations/             # Migration history
+├── public/
+│   └── resume.pdf              # Resume (place your PDF here)
+├── docs/                       # Project documentation
+│   ├── PRD.md                  # Product Requirements
+│   ├── SDD.md                  # Software Design
+│   ├── DATA_FLOW.md            # Data flow diagrams
+│   └── SECURITY.md             # Security guidelines
+├── Dockerfile                  # Multi-stage production build
+├── docker-compose.yml          # Production orchestration
+├── docker-compose.dev.yml      # Development orchestration
+├── .env.example                # Environment variable template
+└── README.md                   # This file
+```
+
+---
+
+## 🎨 Design System
+
+The site features a dual-theme design that automatically switches based on the user's OS setting:
+
+| Element | Light Mode | Dark Mode |
+|---|---|---|
+| Background | `#fafafa` | `#0a0a0a` |
+| Card Surface | `#ffffff` | `#141414` |
+| Text Primary | `#171717` | `#ededed` |
+| Text Secondary | `#525252` | `#a3a3a3` |
+| Accent | `#2563eb` (blue) | `#60a5fa` (blue) |
+| Border | `#e5e5e5` | `#2a2a2a` |
+
+Typography: Inter (via `next/font` — zero CLS)  
+Both themes meet WCAG AA contrast requirements (≥ 4.5:1 body text).
+
+---
+
+## 🚢 Production Deployment (AWS)
+
+### Option 1: EC2 with Docker Compose
+
+```bash
+# On your EC2 instance:
+git clone https://github.com/yourusername/steveackleyorg.git
+cd steveackleyorg
+cp .env.example .env
+# Edit .env with production values
+docker compose up -d --build
+```
+
+Configure nginx as a reverse proxy to port 3000, with Certbot for SSL.
+
+### Option 2: ECS + RDS
+
+1. Push Docker image to ECR:
+   ```bash
+   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.us-east-1.amazonaws.com
+   docker build -t steveackleyorg .
+   docker tag steveackleyorg:latest <account>.dkr.ecr.us-east-1.amazonaws.com/steveackleyorg:latest
+   docker push <account>.dkr.ecr.us-east-1.amazonaws.com/steveackleyorg:latest
+   ```
+2. Create an ECS service with the image
+3. Use AWS RDS PostgreSQL instead of the containerized DB
+4. Mount EFS for the uploads volume
+5. Use AWS Secrets Manager for environment variables
+
+### Adding Your Resume
+
+Place your resume PDF at `public/resume.pdf`. It will be served at `/resume.pdf` and linked from the CTA card's "Download Resume" button.
+
+---
+
+## 🔒 Security
+
+See [docs/SECURITY.md](./docs/SECURITY.md) for the full security documentation, including:
+
+- Authentication implementation (NextAuth.js + bcrypt)
+- SQL injection prevention (Prisma ORM)
+- File upload security (MIME validation, filename sanitization)
+- XSS prevention (DOMPurify sanitization)
+- Security headers configuration
+- Environment variable security
+
+---
+
+## 📖 Documentation
+
+| Document | Description |
+|---|---|
+| [docs/PRD.md](./docs/PRD.md) | Product Requirements Document |
+| [docs/SDD.md](./docs/SDD.md) | Software Design Document |
+| [docs/DATA_FLOW.md](./docs/DATA_FLOW.md) | Data Flow Document |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Security Guidelines |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution Guidelines |
+
+---
+
+## 📜 License
+
+This is a personal project. All rights reserved by Steve Ackley.
+
+---
+
+## 📬 Contact
+
+- **Website:** [steveackley.org](https://steveackley.org)
+- **LinkedIn:** See the site CTA
+- **Email:** See the site CTA

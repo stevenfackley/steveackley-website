@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local env
+.env.local
+.env
+
+# Uploads (volume-managed in Docker)
+uploads/
+
+# Prisma generated
+node_modules/.prisma/
