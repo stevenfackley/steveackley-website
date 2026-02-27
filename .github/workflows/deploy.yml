@@ -80,3 +80,12 @@ jobs:
             docker image prune -f
 
             echo "==> Deploy complete ✓"
+
+      - name: Purge Cloudflare Cache
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' \
+            --fail-with-body
+          echo "✓ Cloudflare cache purged"
