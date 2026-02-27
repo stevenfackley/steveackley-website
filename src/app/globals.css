@@ -10,35 +10,45 @@
    Base Theme — Light Mode (default)
    ============================================================ */
 :root {
-  --background: #fafafa;
+  --background: #f8f9fc;
   --surface: #ffffff;
-  --surface-hover: #f5f5f5;
-  --border: #e5e5e5;
-  --border-hover: #d4d4d4;
-  --text-primary: #171717;
-  --text-secondary: #525252;
-  --text-muted: #737373;
+  --surface-hover: #f1f3f9;
+  --border: #e2e6f0;
+  --border-hover: #c7cee0;
+  --text-primary: #0f1117;
+  --text-secondary: #4a5270;
+  --text-muted: #7b849e;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-text: #ffffff;
+  --accent-glow: rgba(37, 99, 235, 0.18);
+  --gradient-start: #2563eb;
+  --gradient-end: #7c3aed;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(37,99,235,0.10);
 }
 
 /* ============================================================
-   Dark Mode — respects prefers-color-scheme automatically
+   Dark Mode
    ============================================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --surface: #141414;
-    --surface-hover: #1e1e1e;
-    --border: #2a2a2a;
-    --border-hover: #3a3a3a;
-    --text-primary: #ededed;
-    --text-secondary: #a3a3a3;
-    --text-muted: #737373;
+    --background: #07080f;
+    --surface: #0f1117;
+    --surface-hover: #181c28;
+    --border: #1e2235;
+    --border-hover: #2d3352;
+    --text-primary: #f0f2ff;
+    --text-secondary: #8b91b0;
+    --text-muted: #555c7a;
     --accent: #60a5fa;
     --accent-hover: #93c5fd;
-    --accent-text: #0a0a0a;
+    --accent-text: #07080f;
+    --accent-glow: rgba(96, 165, 250, 0.20);
+    --gradient-start: #60a5fa;
+    --gradient-end: #a78bfa;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+    --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(96,165,250,0.12);
   }
 }
 
@@ -51,6 +61,95 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Background mesh pattern
+   ============================================================ */
+.bg-mesh {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -5%, var(--accent-glow), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(124,58,237,0.08), transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-mesh {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -5%, rgba(96,165,250,0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(167,139,250,0.08), transparent);
+  }
+}
+
+/* ============================================================
+   Gradient text utility
+   ============================================================ */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   Glow card
+   ============================================================ */
+.card-glow {
+  transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--card-shadow);
+}
+.card-glow:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+}
+
+/* ============================================================
+   Glass card (frosted effect)
+   ============================================================ */
+.glass-card {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    background: rgba(15,17,23,0.7);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+}
+
+/* ============================================================
+   Gradient border
+   ============================================================ */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Accent bar (decorative line above headings)
+   ============================================================ */
+.accent-bar::before {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 32px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  margin-bottom: 0.75rem;
 }
 
 /* ============================================================
@@ -68,7 +167,7 @@ body {
 }
 
 /* ============================================================
-   Focus Visible (accessible keyboard navigation)
+   Focus Visible
    ============================================================ */
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -82,6 +181,118 @@ body {
 ::selection {
   background-color: var(--accent);
   color: var(--accent-text);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.avatar-ring {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.4); }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Fade up (for resume sections) */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s ease both;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+
+/* Skill bar fill animation */
+@keyframes skill-fill {
+  from { width: 0%; opacity: 0.4; }
+  to   { opacity: 1; }
+}
+.skill-bar-fill {
+  animation: skill-fill 1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+
+/* Slide in from left */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease both;
+}
+
+/* Scale in */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scale-in {
+  animation: scale-in 0.4s ease both;
+}
+
+/* Glow pulse for accent elements */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50%       { box-shadow: 0 0 0 8px transparent; }
+}
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Timeline dot draw */
+@keyframes timeline-dot {
+  from { transform: scale(0) rotate(-45deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
 }
 
 /* ============================================================
@@ -106,7 +317,7 @@ body {
 }
 
 /* ============================================================
-   Prose (Blog Content) Overrides for both themes
+   Prose (Blog Content) Overrides
    ============================================================ */
 .prose pre {
   background-color: var(--surface);
@@ -125,4 +336,25 @@ body {
   color: inherit;
   background: none;
   padding: 0;
+}
+
+/* ============================================================
+   Resume page print styles
+   ============================================================ */
+@media print {
+  nav, .no-print {
+    display: none !important;
+  }
+  .print-break {
+    page-break-before: always;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .resume-hero {
+    background: linear-gradient(135deg, #1e40af, #5b21b6) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
