@@ -11,9 +11,7 @@
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/stevenfackley/steveackley-web:latest
     container_name: steveackley-web     # Caddy routes to this name
     ports:
       - "127.0.0.1:3000:3000"                           # Internal only — Caddy proxies, not the host

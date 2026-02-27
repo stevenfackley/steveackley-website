@@ -1,4 +1,4 @@
-name: CI / Deploy to EC2
+name: CI / Deploy to GHCR & EC2
 
 on:
   push:
@@ -6,52 +6,39 @@ on:
       - main
 
 jobs:
-  # ─────────────────────────────────────────────────────────────
-  # Job 1: Lint & Build
-  # ─────────────────────────────────────────────────────────────
-  ci:
-    name: Lint & Build
+  build-and-push:
+    name: Build & Push to GHCR
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: 20
-          cache: 'npm'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/stevenfackley/steveackley-web:latest
+          build-args: |
+            DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        env:
-          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
-          AUTH_SECRET: "placeholder-secret-for-build-only"
-          AUTH_URL: "https://aws.steveackley.org"
-          NEXT_TELEMETRY_DISABLED: "1"
-        run: npm run build
-
-  # ─────────────────────────────────────────────────────────────
-  # Job 2: Deploy to EC2
-  # ─────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to EC2
-    needs: ci
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      # Base64-encode the .env so it can be safely passed as a single-line
-      # environment variable over SSH (avoids SCP connectivity issues and
-      # YAML multi-line interpolation problems).
       - name: Encode .env for SSH transport
         env:
           DOTENV: ${{ secrets.EC2_DOTENV }}
@@ -68,25 +55,24 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          command_timeout: 20m
           envs: DOTENV_B64
           script: |
             set -e
-
             cd ${{ secrets.EC2_APP_DIR }}
 
-            echo "==> Pulling latest code"
+            echo "==> Log in to GHCR"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "==> Pulling latest config"
             git pull origin main
 
             echo "==> Writing .env"
             printf '%s' "$DOTENV_B64" | base64 -d > .env
             chmod 600 .env
 
-            echo "==> Rebuilding and restarting containers"
-            docker compose up -d --build --remove-orphans
-
-            echo "==> Running DB migrations"
-            docker compose exec -T web npx prisma migrate deploy
+            echo "==> Pulling latest image and restarting"
+            docker compose pull
+            docker compose up -d --remove-orphans
 
             echo "==> Pruning old images"
             docker image prune -f
