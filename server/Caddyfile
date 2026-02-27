@@ -1,0 +1,31 @@
+# =============================================================================
+# Caddyfile — EC2 Reverse Proxy
+# Place this on the EC2 instance at: ~/server/Caddyfile
+# Run with: cd ~/server && docker compose up -d
+#
+# Caddy automatically obtains and renews TLS certs via Let's Encrypt.
+# For self-signed / local-only certs (e.g. EC2 raw hostname), use:
+#   tls internal
+# =============================================================================
+
+# ── Personal site ─────────────────────────────────────────────────────────────
+aws.steveackley.org {
+    reverse_proxy steveackley-web:3000
+}
+
+# Once you point steveackley.org DNS to this EC2 IP, uncomment:
+# steveackley.org, www.steveackley.org {
+#     reverse_proxy steveackley-web:3000
+# }
+
+# ── P1 Ops Hub — Test ─────────────────────────────────────────────────────────
+# Uncomment and set the correct domain when ready:
+# p1ops-test.example.com {
+#     reverse_proxy p1ops-test-web:3000
+# }
+
+# ── P1 Ops Hub — Production ───────────────────────────────────────────────────
+# Uncomment and set the correct domain when ready:
+# p1opshub.com, www.p1opshub.com {
+#     reverse_proxy p1ops-prod-web:3000
+# }

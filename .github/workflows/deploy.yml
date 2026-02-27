@@ -7,7 +7,7 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # Job 1: Lint & Build (CI checks)
+  # Job 1: Lint & Build
   # ─────────────────────────────────────────────────────────────
   ci:
     name: Lint & Build
@@ -29,13 +29,11 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Run lint
+      - name: Lint
         run: npm run lint
 
       - name: Build
         env:
-          # Dummy values so Next.js can compile without a real DB at build time.
-          # Real values live in .env on the EC2 host.
           DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
           AUTH_SECRET: "placeholder-secret-for-build-only"
           AUTH_URL: "https://aws.steveackley.org"
@@ -43,7 +41,10 @@ jobs:
         run: npm run build
 
   # ─────────────────────────────────────────────────────────────
-  # Job 2: Deploy to EC2 (only when CI passes)
+  # Job 2: Deploy to EC2
+  # Assumes the EC2 server is already set up (git, docker, Caddy,
+  # the "web" network, and the repo cloned at EC2_APP_DIR).
+  # Run server/setup.sh once on a fresh EC2 instance.
   # ─────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to EC2
@@ -51,14 +52,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Write the .env contents from the secret to a temp file on the runner.
-      # Using an env var here avoids inline YAML interpolation of multi-line secrets.
+      # Create .env on the runner from the secret.
+      # Using an env var (not inline ${{ }}) avoids YAML multi-line interpolation issues.
       - name: Create .env from secret
         env:
           DOTENV_CONTENT: ${{ secrets.EC2_DOTENV }}
         run: printf '%s' "$DOTENV_CONTENT" > deploy.env
 
-      # SCP the .env file to the EC2 home dir; the SSH step will move it into place.
+      # SCP the .env to the EC2 home directory.
+      # The SSH step below moves it into the app directory.
       - name: Upload .env to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -79,38 +81,22 @@ jobs:
           script: |
             set -e
 
-            echo "==> Ensuring required tools are installed"
-            if ! command -v git &>/dev/null; then
-              sudo yum install -y git
-            fi
-            if ! command -v docker &>/dev/null; then
-              sudo amazon-linux-extras install docker -y 2>/dev/null || sudo yum install -y docker
-              sudo systemctl enable --now docker
-            fi
-
-            echo "==> Checking project directory"
-            if [ ! -d "${{ secrets.EC2_APP_DIR }}" ]; then
-              echo "==> First deploy: cloning repository"
-              git clone https://github.com/stevenfackley/steveackley-website.git ${{ secrets.EC2_APP_DIR }}
-            fi
-
             cd ${{ secrets.EC2_APP_DIR }}
 
-            echo "==> Pulling latest code from main"
+            echo "==> Pulling latest code"
             git pull origin main
 
-            echo "==> Moving .env into place"
+            echo "==> Updating .env"
             mv ~/deploy.env .env
             chmod 600 .env
 
-            echo "==> Bringing up services with Docker Compose"
-            sudo docker compose pull --quiet || true
-            sudo docker compose up -d --build --remove-orphans
+            echo "==> Rebuilding and restarting containers"
+            docker compose up -d --build --remove-orphans
 
             echo "==> Running DB migrations"
-            sudo docker compose exec -T web npx prisma migrate deploy
+            docker compose exec -T web npx prisma migrate deploy
 
-            echo "==> Pruning unused Docker images"
-            sudo docker image prune -f
+            echo "==> Pruning old images"
+            docker image prune -f
 
             echo "==> Deploy complete ✓"

@@ -1,0 +1,32 @@
+# =============================================================================
+# Server-level Docker Compose — Caddy reverse proxy
+# Run once on the EC2 instance: cd ~/server && docker compose up -d
+#
+# This creates the shared "web" network that all app containers join.
+# Caddy routes incoming traffic to the correct app by hostname.
+# =============================================================================
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"     # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - web
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  web:
+    name: web
+    driver: bridge
