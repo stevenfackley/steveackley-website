@@ -32,6 +32,8 @@ jobs:
           tags: ghcr.io/stevenfackley/steveackley-web:latest
           build-args: |
             DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+            AUTH_SECRET="placeholder-for-build-only"
+            AUTH_URL="https://aws.steveackley.org"
 
   deploy:
     name: Deploy to EC2
@@ -63,7 +65,7 @@ jobs:
             echo "==> Log in to GHCR"
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            echo "==> Pulling latest config"
+            # We pull the config too, just in case docker-compose.yml changed
             git pull origin main
 
             echo "==> Writing .env"
