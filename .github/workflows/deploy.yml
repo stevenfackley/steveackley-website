@@ -81,6 +81,12 @@ jobs:
             echo "==> Pulling latest code from main"
             git pull origin main
 
+            echo "==> Writing .env from GitHub secret"
+            cat > .env << 'ENVEOF'
+${{ secrets.EC2_DOTENV }}
+ENVEOF
+            chmod 600 .env
+
             echo "==> Bringing up services with Docker Compose"
             sudo docker compose pull --quiet || true
             sudo docker compose up -d --build --remove-orphans
