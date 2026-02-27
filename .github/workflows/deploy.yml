@@ -51,6 +51,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Write the .env contents from the secret to a temp file on the runner.
+      # Using an env var here avoids inline YAML interpolation of multi-line secrets.
+      - name: Create .env from secret
+        env:
+          DOTENV_CONTENT: ${{ secrets.EC2_DOTENV }}
+        run: printf '%s' "$DOTENV_CONTENT" > deploy.env
+
+      # SCP the .env file to the EC2 home dir; the SSH step will move it into place.
+      - name: Upload .env to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: "deploy.env"
+          target: "/home/ec2-user/"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -81,10 +98,8 @@ jobs:
             echo "==> Pulling latest code from main"
             git pull origin main
 
-            echo "==> Writing .env from GitHub secret"
-            cat > .env << 'ENVEOF'
-${{ secrets.EC2_DOTENV }}
-ENVEOF
+            echo "==> Moving .env into place"
+            mv ~/deploy.env .env
             chmod 600 .env
 
             echo "==> Bringing up services with Docker Compose"
