@@ -1,0 +1,80 @@
+name: CI / Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Job 1: Lint & Build (CI checks)
+  # ─────────────────────────────────────────────────────────────
+  ci:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build
+        env:
+          # Dummy values so Next.js can compile without a real DB at build time.
+          # Real values live in .env on the EC2 host.
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          AUTH_SECRET: "placeholder-secret-for-build-only"
+          AUTH_URL: "https://aws.steveackley.org"
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 2: Deploy to EC2 (only when CI passes)
+  # ─────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to EC2
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            echo "==> Navigating to project directory"
+            cd ${{ secrets.EC2_APP_DIR }}
+
+            echo "==> Pulling latest code from main"
+            git pull origin main
+
+            echo "==> Bringing up services with Docker Compose"
+            docker compose pull --quiet || true
+            docker compose up -d --build --remove-orphans
+
+            echo "==> Running DB migrations"
+            docker compose exec -T web npx prisma migrate deploy
+
+            echo "==> Pruning unused Docker images"
+            docker image prune -f
+
+            echo "==> Deploy complete ✓"
