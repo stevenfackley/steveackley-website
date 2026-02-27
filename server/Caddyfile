@@ -1,33 +1,47 @@
 # =============================================================================
 # Caddyfile — EC2 Reverse Proxy (inside Docker, managed by server/docker-compose.yml)
 #
-# IMPORTANT: The `http://` scheme prefix is REQUIRED here.
-# Without it, Caddy automatically redirects HTTP → HTTPS (308) on port 80.
-# Since Cloudflare (Flexible SSL) connects to origin on port 80, that redirect
-# creates an infinite loop: Cloudflare → origin 308 → Cloudflare → origin 308 …
+# TLS SETUP — Cloudflare Strict SSL mode
+# ---------------------------------------
+# Cloudflare (Strict SSL) connects to origin on port 443 and requires a
+# certificate it trusts. We use a Cloudflare Origin Certificate, which is
+# free, issued by Cloudflare's own CA, and trusted only by Cloudflare's edge.
 #
-# Cloudflare terminates TLS for the visitor. Caddy only needs to speak HTTP
-# to the Cloudflare edge — `http://` prevents Caddy's auto-HTTPS behavior.
+# Steps to generate (one-time, 15-year validity):
+#   1. Cloudflare Dashboard → your domain → SSL/TLS → Origin Server
+#   2. Click "Create Certificate"
+#   3. Select hostnames: aws.steveackley.org (add *.steveackley.org if needed)
+#   4. Choose "15 years" validity → Create
+#   5. Copy "Origin Certificate" → save as ~/server/certs/origin.crt on EC2
+#   6. Copy "Private Key" → save as ~/server/certs/origin.key on EC2
+#   7. chmod 600 ~/server/certs/origin.key
+#
+# The `certs/` directory is mounted into the container via docker-compose.yml.
+# DO NOT commit origin.key or origin.crt to git.
 # =============================================================================
 
 # ── Personal site ─────────────────────────────────────────────────────────────
-http://aws.steveackley.org {
+aws.steveackley.org {
+    tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
     reverse_proxy steveackley-web:3000
 }
 
 # Once you point steveackley.org DNS to this EC2 IP, uncomment:
-# http://steveackley.org, http://www.steveackley.org {
+# steveackley.org, www.steveackley.org {
+#     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 #     reverse_proxy steveackley-web:3000
 # }
 
 # ── P1 Ops Hub — Test ─────────────────────────────────────────────────────────
 # Uncomment and set the correct domain when ready:
-# http://p1ops-test.example.com {
+# p1ops-test.example.com {
+#     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 #     reverse_proxy p1ops-test-web:3000
 # }
 
 # ── P1 Ops Hub — Production ───────────────────────────────────────────────────
 # Uncomment and set the correct domain when ready:
-# http://p1opshub.com, http://www.p1opshub.com {
+# p1opshub.com, www.p1opshub.com {
+#     tls /etc/caddy/certs/origin.crt /etc/caddy/certs/origin.key
 #     reverse_proxy p1ops-prod-web:3000
 # }

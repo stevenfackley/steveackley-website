@@ -49,3 +49,6 @@ uploads/
 
 # Prisma generated
 node_modules/.prisma/
+
+# Cloudflare Origin Certificate (placed on server only, never committed)
+server/certs/

@@ -16,6 +16,7 @@ services:
       - "443:443/udp"     # HTTP/3
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro   # Cloudflare Origin Certificate (origin.crt + origin.key)
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
