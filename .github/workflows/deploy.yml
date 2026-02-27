@@ -61,7 +61,12 @@ jobs:
           script: |
             set -e
 
-            echo "==> Navigating to project directory"
+            echo "==> Checking project directory"
+            if [ ! -d "${{ secrets.EC2_APP_DIR }}" ]; then
+              echo "==> First deploy: cloning repository"
+              git clone https://github.com/stevenfackley/steveackley-website.git ${{ secrets.EC2_APP_DIR }}
+            fi
+
             cd ${{ secrets.EC2_APP_DIR }}
 
             echo "==> Pulling latest code from main"
