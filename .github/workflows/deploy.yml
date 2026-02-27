@@ -42,9 +42,6 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────
   # Job 2: Deploy to EC2
-  # Assumes the EC2 server is already set up (git, docker, Caddy,
-  # the "web" network, and the repo cloned at EC2_APP_DIR).
-  # Run server/setup.sh once on a fresh EC2 instance.
   # ─────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to EC2
@@ -52,32 +49,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Create .env on the runner from the secret.
-      # Using an env var (not inline ${{ }}) avoids YAML multi-line interpolation issues.
-      - name: Create .env from secret
+      # Base64-encode the .env so it can be safely passed as a single-line
+      # environment variable over SSH (avoids SCP connectivity issues and
+      # YAML multi-line interpolation problems).
+      - name: Encode .env for SSH transport
         env:
-          DOTENV_CONTENT: ${{ secrets.EC2_DOTENV }}
-        run: printf '%s' "$DOTENV_CONTENT" > deploy.env
-
-      # SCP the .env to the EC2 home directory.
-      # The SSH step below moves it into the app directory.
-      - name: Upload .env to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          source: "deploy.env"
-          target: "/home/ec2-user/"
+          DOTENV: ${{ secrets.EC2_DOTENV }}
+        run: |
+          printf '%s' "$DOTENV" | base64 -w 0 > /tmp/dotenv.b64
+          echo "DOTENV_B64=$(cat /tmp/dotenv.b64)" >> "$GITHUB_ENV"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOTENV_B64: ${{ env.DOTENV_B64 }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
           command_timeout: 20m
+          envs: DOTENV_B64
           script: |
             set -e
 
@@ -86,8 +78,8 @@ jobs:
             echo "==> Pulling latest code"
             git pull origin main
 
-            echo "==> Updating .env"
-            mv ~/deploy.env .env
+            echo "==> Writing .env"
+            printf '%s' "$DOTENV_B64" | base64 -d > .env
             chmod 600 .env
 
             echo "==> Rebuilding and restarting containers"
