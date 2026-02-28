@@ -10,9 +10,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY prisma ./prisma/
-RUN npm ci --include=dev
+RUN npm install --no-audit --no-fund
 # Dummy DATABASE_URL is only used at build time for `prisma generate` schema validation.
 # The real DATABASE_URL is injected at runtime via web.env (never baked into the image).
 ARG DATABASE_URL="postgresql://build:build@localhost:5432/builddb"
