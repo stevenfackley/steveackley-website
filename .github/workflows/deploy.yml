@@ -5,9 +5,168 @@ on:
     branches:
       - main
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PIPELINE OVERVIEW
+#
+#  unit-tests ──┐
+#               ├──► e2e-tests ──► build-and-push ──► deploy
+#  integration- ┘
+#  tests
+#
+# Production is never touched unless ALL three test gates pass.
+# ─────────────────────────────────────────────────────────────────────────────
+
 jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # GATE 1 — Unit Tests
+  # Pure functions, no external dependencies, fast feedback.
+  # ───────────────────────────────────────────────────────────────────────────
+  unit-tests:
+    name: "🧪 Unit Tests"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client (for TypeScript types)
+        run: npx prisma generate
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # GATE 2 — Integration Tests
+  # Route handlers and lib modules tested with mocked external dependencies.
+  # ───────────────────────────────────────────────────────────────────────────
+  integration-tests:
+    name: "🔗 Integration Tests"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # GATE 3 — E2E Tests
+  # Full browser tests against a running Next.js instance backed by a real
+  # (ephemeral) PostgreSQL database.  Only runs after Gates 1 & 2 pass.
+  # ───────────────────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: "🌐 E2E Tests"
+    needs: [unit-tests, integration-tests]
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: e2etest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
+      # AUTH_SECRET must be ≥32 chars — this value is safe for ephemeral CI only
+      AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
+      # bcrypt hash of the string "ci-test-password" — safe for CI only
+      ADMIN_PASSWORD_HASH: "$2a$12$ci.placeholder.hash.not.real.xxxxxxxxxxxxxxx"
+      NODE_ENV: "test"
+      CI: "true"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Start Next.js production server
+        # Run in the background; we'll wait for it before launching tests
+        run: npm run start &
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for Next.js to accept connections on port 3000..."
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -qE "^(200|301|302|307|308)$"; then
+              echo "Server is up ✓"
+              exit 0
+            fi
+            echo "  attempt $i/30 — not ready yet, sleeping 2s..."
+            sleep 2
+          done
+          echo "Server did not start in time ✗"
+          exit 1
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: "http://localhost:3000"
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # BUILD — Docker image, only after ALL test gates pass
+  # ───────────────────────────────────────────────────────────────────────────
   build-and-push:
-    name: Build & Push to GHCR
+    name: "🐳 Build & Push to GHCR"
+    needs: [unit-tests, integration-tests, e2e-tests]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,13 +198,12 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-          # Dummy DATABASE_URL for build-time Prisma generate — never used in production.
-          # Real DATABASE_URL is injected at container runtime via web.env.
-          build-args: |
-            DATABASE_URL=postgresql://build:build@localhost:5432/builddb
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # DEPLOY — EC2, only after successful Docker build
+  # ───────────────────────────────────────────────────────────────────────────
   deploy:
-    name: Deploy to EC2
+    name: "🚀 Deploy to EC2"
     needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
@@ -60,7 +218,6 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          # Pass secrets as env vars into the SSH session
           envs: DATABASE_URL,AUTH_SECRET,ADMIN_PASSWORD_HASH,POSTGRES_PASSWORD,GHCR_TOKEN,GHCR_USER,IMAGE_REF
           script: |
             set -e
@@ -83,7 +240,6 @@ jobs:
             rm -f .env
 
             echo "==> Writing web.env file for web container"
-            # Escape $ as $$ in bcrypt hash so Docker Compose doesn't interpolate
             ESCAPED_HASH=$(printf '%s' "$ADMIN_PASSWORD_HASH" | sed 's/\$/\$\$/g')
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nADMIN_PASSWORD_HASH=%s\n' \
               "$DATABASE_URL" "$AUTH_SECRET" "$ESCAPED_HASH" > web.env
@@ -91,12 +247,11 @@ jobs:
 
             echo "==> Writing postgres secret file"
             mkdir -p secrets
-            printf '%s' "$POSTGRES_PASSWORD"      > secrets/postgres_password.txt
+            printf '%s' "$POSTGRES_PASSWORD" > secrets/postgres_password.txt
             chmod 600 secrets/postgres_password.txt
 
             echo "==> Verifying web.env file"
             echo "  web.env: $(wc -l < web.env) lines, $(wc -c < web.env) bytes"
-            # Show keys only (not values)
             awk -F= '{print "  ✓ " $1}' web.env
             echo "  secrets/postgres_password.txt: $(wc -c < secrets/postgres_password.txt) bytes"
 

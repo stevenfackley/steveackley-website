@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /home/steve/projects/steveackleyorg/src/app/\\\\\\(public\\\\\\)/resume/page.tsx)",
+      "Bash(ls .env* docker-compose*)",
+      "Bash(docker ps --format \"table {{.Names}}\\\\t{{.Status}}\\\\t{{.Ports}}\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(n,v.get\\(''IPAddress'',''''\\)\\) for n,v in d.items\\(\\)]\")",
+      "Bash(nc -zv 172.19.0.2 5432)",
+      "Bash(docker exec:*)",
+      "Bash(docker compose build web)",
+      "Bash(docker compose build --no-cache web)",
+      "Bash(docker compose up -d --force-recreate web)"
+    ]
+  }
+}
