@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getPublicRepos, enrichRepos } from "@/lib/github";
 import { getSiteSettings, SETTING_KEYS } from "@/lib/settings";
 
-export const dynamic = "force-dynamic";
+// ISR: revalidate every hour (GitHub data), post actions call revalidatePath("/") on publish
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const [blogPosts, rawRepos, settings] = await Promise.all([

@@ -28,6 +28,7 @@ export async function createPost(formData: FormData): Promise<ActionResult> {
     console.error("[createPost]", err);
     return { success: false, error: "Failed to create post" };
   }
+  revalidatePath("/");           // ISR: invalidate home page blog feed
   revalidatePath("/blog");
   revalidatePath("/admin/dashboard");
   redirect("/admin/dashboard");

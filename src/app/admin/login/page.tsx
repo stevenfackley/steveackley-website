@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import type { Metadata } from "next";
 
 export default function AdminLoginPage() {
   const router = useRouter();

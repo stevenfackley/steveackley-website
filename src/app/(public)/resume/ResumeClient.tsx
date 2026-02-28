@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from "react";
+import { useIntersectionVisible } from "@/hooks/useIntersectionVisible";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -179,19 +180,7 @@ function FadeSection({
   className?: string;
   delay?: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const [ref, visible] = useIntersectionVisible();
 
   return (
     <div
@@ -213,19 +202,7 @@ function FadeSection({
 // ---------------------------------------------------------------------------
 
 function SkillsSection() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const [ref, visible] = useIntersectionVisible();
 
   const microsoft = coreSkills.filter((s) => s.category === "Microsoft");
   const frontend  = coreSkills.filter((s) => s.category === "Frontend");

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { markMessageRead, markAllRead, deleteMessage, sendMessageToClient } from "./actions";
+import { formatDateTime } from "@/lib/utils";
 
 interface ReceivedMessage {
   id: string;
@@ -33,16 +34,6 @@ interface Props {
   initialReceived: ReceivedMessage[];
   initialSent: SentMessage[];
   clients: Client[];
-}
-
-function formatDate(d: Date) {
-  return new Date(d).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 export function AdminMessagesClient({ initialReceived, initialSent, clients }: Props) {
@@ -248,7 +239,7 @@ export function AdminMessagesClient({ initialReceived, initialSent, clients }: P
                       </p>
                     </div>
                     <p className="text-[10px] text-[var(--text-muted)] shrink-0 mt-1">
-                      {formatDate(msg.createdAt)}
+                      {formatDateTime(msg.createdAt)}
                     </p>
                   </div>
                 </button>
@@ -271,7 +262,7 @@ export function AdminMessagesClient({ initialReceived, initialSent, clients }: P
                       </div>
                       <p className="text-xs text-[var(--text-muted)] mt-1">
                         From: <span className="font-medium">{selected.fromUser.name ?? selected.fromUser.email}</span>
-                        {" · "}{formatDate(selected.createdAt)}
+                        {" · "}{formatDateTime(selected.createdAt)}
                       </p>
                     </div>
                     <Button
@@ -343,7 +334,7 @@ export function AdminMessagesClient({ initialReceived, initialSent, clients }: P
                       </p>
                     </div>
                     <p className="text-[10px] text-[var(--text-muted)] shrink-0 mt-1">
-                      {formatDate(msg.createdAt)}
+                      {formatDateTime(msg.createdAt)}
                     </p>
                   </div>
                 </button>
@@ -365,7 +356,7 @@ export function AdminMessagesClient({ initialReceived, initialSent, clients }: P
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-1">
                       To: <span className="font-medium">{selectedSent.toUser.name ?? selectedSent.toUser.email}</span>
-                      {" · "}{formatDate(selectedSent.createdAt)}
+                      {" · "}{formatDateTime(selectedSent.createdAt)}
                     </p>
                   </div>
                   <div className="border-t border-[var(--border)] pt-4">

@@ -33,6 +33,7 @@ export async function updatePost(id: string, formData: FormData): Promise<Action
     console.error("[updatePost]", err);
     return { success: false, error: "Failed to update post" };
   }
+  revalidatePath("/");           // ISR: invalidate home page blog feed
   revalidatePath("/blog");
   revalidatePath(`/blog/${slug}`);
   revalidatePath("/admin/dashboard");

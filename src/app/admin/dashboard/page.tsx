@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminPostTable } from "@/components/admin/AdminPostTable";
 import { Button } from "@/components/ui/Button";
+import type { PostSummary } from "@/types";
 export const metadata: Metadata = { title: "Dashboard" };
 export default async function AdminDashboardPage() {
   const posts = await prisma.post.findMany({
@@ -18,7 +19,7 @@ export default async function AdminDashboardPage() {
         </div>
         <Link href="/admin/posts/new"><Button variant="primary" size="md">+ New Post</Button></Link>
       </div>
-      <AdminPostTable posts={posts as never} />
+      <AdminPostTable posts={posts as PostSummary[]} />
     </div>
   );
 }

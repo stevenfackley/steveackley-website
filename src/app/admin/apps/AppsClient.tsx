@@ -217,7 +217,7 @@ export function AppsClient({ initialApps, users }: Props) {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Environment</label>
-              <select value={environment} onChange={(e) => setEnvironment(e.target.value as any)} className={inputCls}>
+              <select value={environment} onChange={(e) => setEnvironment(e.target.value as "PRODUCTION" | "TEST" | "DEVELOPMENT")} className={inputCls}>
                 <option value="PRODUCTION">Production</option>
                 <option value="TEST">Test</option>
                 <option value="DEVELOPMENT">Development</option>

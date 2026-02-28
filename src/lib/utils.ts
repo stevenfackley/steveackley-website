@@ -73,6 +73,20 @@ export function formatDateShort(date: Date | string): string {
 }
 
 /**
+ * Format a date with time for display in message lists.
+ * e.g. "Feb 26, 2026, 3:45 PM"
+ */
+export function formatDateTime(date: Date | string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(date));
+}
+
+/**
  * Ensure a slug is unique by appending a numeric suffix.
  * Pass the existing slugs set to check against.
  */

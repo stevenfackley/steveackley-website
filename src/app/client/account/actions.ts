@@ -42,7 +42,8 @@ export async function updateClientLogo(logoUrl: string): Promise<ActionResult> {
   try {
     const userId = await requireAuth();
     await prisma.user.update({ where: { id: userId }, data: { logo: logoUrl || null } });
-    revalidatePath("/client");
+    revalidatePath("/client/dashboard");
+    revalidatePath("/client/account");
     return { success: true };
   } catch (err) {
     console.error("[updateClientLogo]", err);
@@ -67,7 +68,8 @@ export async function updateClientProfile(data: {
         contactLastName: data.contactLastName.trim() || null,
       },
     });
-    revalidatePath("/client");
+    revalidatePath("/client/dashboard");
+    revalidatePath("/client/account");
     return { success: true };
   } catch (err) {
     console.error("[updateClientProfile]", err);

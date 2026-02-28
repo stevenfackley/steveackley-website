@@ -15,6 +15,7 @@ export async function deletePost(postId: string): Promise<ActionResult> {
     if (!post) return { success: false, error: "Post not found" };
     if (post.coverImage) await deleteUploadedFile(post.coverImage);
     await prisma.post.delete({ where: { id: postId } });
+    revalidatePath("/");           // ISR: invalidate home page blog feed
     revalidatePath("/blog");
     revalidatePath("/admin/dashboard");
     return { success: true };
@@ -27,6 +28,7 @@ export async function togglePublished(postId: string, published: boolean): Promi
   try {
     await requireAuth();
     await prisma.post.update({ where: { id: postId }, data: { published } });
+    revalidatePath("/");           // ISR: invalidate home page blog feed
     revalidatePath("/blog");
     revalidatePath("/admin/dashboard");
     return { success: true };

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { markMessageRead, sendMessage } from "@/app/admin/messages/actions";
+import { formatDateTime } from "@/lib/utils";
 
 interface ReceivedMessage {
   id: string;
@@ -27,16 +28,6 @@ interface Props {
   adminId: string | null;
   initialReceived: ReceivedMessage[];
   initialSent: SentMessage[];
-}
-
-function formatDate(d: Date) {
-  return new Date(d).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 export function ClientMessagesClient({ adminId, initialReceived, initialSent }: Props) {
@@ -178,7 +169,7 @@ export function ClientMessagesClient({ adminId, initialReceived, initialSent }: 
                       </p>
                     </div>
                     <p className="text-[10px] text-[var(--text-muted)] shrink-0 mt-1">
-                      {formatDate(msg.createdAt)}
+                      {formatDateTime(msg.createdAt)}
                     </p>
                   </div>
                 </button>
@@ -191,7 +182,7 @@ export function ClientMessagesClient({ adminId, initialReceived, initialSent }: 
                     <h2 className="text-base font-semibold text-[var(--text-primary)]">{selected.subject}</h2>
                     <p className="text-xs text-[var(--text-muted)] mt-1">
                       From: <span className="font-medium">{selected.fromUser.name ?? selected.fromUser.email}</span>
-                      {" · "}{formatDate(selected.createdAt)}
+                      {" · "}{formatDateTime(selected.createdAt)}
                     </p>
                   </div>
                   <div className="border-t border-[var(--border)] pt-4">
@@ -231,7 +222,7 @@ export function ClientMessagesClient({ adminId, initialReceived, initialSent }: 
                       )}
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                      To: {msg.toUser.name ?? msg.toUser.email} · {formatDate(msg.createdAt)}
+                      To: {msg.toUser.name ?? msg.toUser.email} · {formatDateTime(msg.createdAt)}
                     </p>
                     <p className="text-sm text-[var(--text-secondary)] mt-2 line-clamp-2">{msg.body}</p>
                   </div>
