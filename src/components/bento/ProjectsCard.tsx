@@ -49,17 +49,10 @@ function TechBadges({ badges }: { badges: TechBadge[] }) {
   if (!badges.length) return null;
   return (
     <div className="flex flex-wrap gap-1 mt-2 ml-10">
-      {badges.map((b) =>
-        b.href ? (
-          <a key={b.imageUrl} href={b.href} target="_blank" rel="noopener noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.imageUrl} alt={b.label} className="h-5" />
-          </a>
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
-        )
-      )}
+      {badges.map((b) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
+      ))}
     </div>
   );
 }
