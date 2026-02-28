@@ -88,9 +88,9 @@ Standard setup with:
 1. **Push to `main` branch** → triggers workflow
 2. **Build Docker image** → push to GitHub Container Registry
 3. **Deploy to EC2:**
-   - Pull latest image
-   - Update `.env` file
-   - Restart containers with `docker compose up -d`
+   - Pull latest image from GHCR
+   - Write `web.env` (app secrets with bcrypt `$` escaping) and `secrets/postgres_password.txt`
+   - Restart containers with `docker compose up -d --remove-orphans`
 4. **Purge Cloudflare cache** → users see latest version immediately
 
 ### Manual Deployment (if needed)
@@ -216,9 +216,12 @@ For automated deployment and cache clearing:
 | `EC2_USER` | SSH username | `ec2-user` |
 | `EC2_SSH_PRIVATE_KEY` | SSH key | Contents of `aws-web-server1.pem` |
 | `EC2_APP_DIR` | Project path | `/home/ec2-user/steveackleyorg` |
-| `EC2_DOTENV` | Environment vars | Contents of `.env` file |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://steveackley:<pw>@db:5432/steveackleydb` |
+| `AUTH_SECRET` | JWT signing secret | `openssl rand -base64 32` |
+| `ADMIN_PASSWORD_HASH` | bcrypt hash of admin password | `npm run setup:admin` |
+| `POSTGRES_PASSWORD` | Database password | Strong random password |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare zone | Dashboard → steveackley.org → Zone ID |
-| `CLOUDFLARE_API_TOKEN` | API token | Dashboard → Profile → API Tokens |
+| `CLOUDFLARE_API_TOKEN` | API token with Cache Purge permission | Dashboard → Profile → API Tokens |
 
 ---
 
@@ -243,15 +246,19 @@ sudo systemctl restart cloudflared
 
 ### Rotate Secrets
 
+The simplest approach is to update the GitHub Actions secret and push to `main` — the CI/CD script rewrites `web.env` and `secrets/postgres_password.txt` on every deploy.
+
+For an immediate rotation without a code push:
+
 ```bash
-# Update EC2 .env file
 ssh -i ~/.ssh/aws-web-server1.pem ec2-user@3.230.237.0
 cd ~/steveackleyorg
-nano .env
 
-# Restart containers
-docker compose down
-docker compose up -d
+# Edit web.env directly (DATABASE_URL, AUTH_SECRET, ADMIN_PASSWORD_HASH)
+nano web.env
+
+# Restart web container to pick up new values
+docker compose up -d web
 ```
 
 ---

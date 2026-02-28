@@ -1,4 +1,8 @@
-# 🚇 Cloudflare Tunnel Migration Guide
+# Cloudflare Tunnel Migration Guide
+
+> **ARCHIVED — migration is complete.**
+> The production deployment now uses Cloudflare Tunnel with `cloudflared` running as a systemd service on EC2. Caddy has been removed. This document is kept for historical reference.
+> See [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md) for the current configuration and [DEPLOYMENT_GUIDE.md](../../DEPLOYMENT_GUIDE.md) for the full deployment architecture.
 
 ## 📊 Architecture Comparison
 

@@ -1,4 +1,9 @@
-# 🔐 Cloudflare Origin Certificate - Detailed Instructions
+# Cloudflare Origin Certificate - Detailed Instructions
+
+> **ARCHIVED — no longer applicable to the current setup.**
+> The production deployment now uses a Cloudflare Tunnel (systemd service) which handles TLS automatically — no origin certificates or reverse proxy are needed.
+> This document is kept for historical reference only.
+> See [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) and [docs/deployment/CLOUDFLARE_TUNNEL_SETUP.md](docs/deployment/CLOUDFLARE_TUNNEL_SETUP.md) for the current architecture.
 
 ## What is a Cloudflare Origin Certificate?
 

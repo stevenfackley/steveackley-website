@@ -146,12 +146,12 @@ See `docs/SDD.md` for the complete project structure.
 | `npm run build` | Build for production |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
-| `npm run type-check` | Run TypeScript type checking |
 | `npm run setup:admin` | Interactive admin user setup |
-| `npx prisma studio` | Open Prisma database GUI |
-| `npx prisma migrate dev` | Create and apply new migration |
-| `npx prisma migrate deploy` | Apply pending migrations (production) |
-| `npx prisma generate` | Regenerate Prisma client after schema changes |
+| `npm run db:generate` | Regenerate Prisma client after schema changes |
+| `npm run db:push` | Push schema changes to DB without a migration file |
+| `npm run db:migrate` | Apply pending migrations (production) |
+| `npm run db:studio` | Open Prisma database GUI |
+| `npx prisma migrate dev` | Create and apply a new migration (development) |
 
 ---
 
@@ -314,8 +314,8 @@ Copy `.env.example` to `.env.local` for local development. **Never commit `.env.
 | Variable | Required | Description |
 |---|---|---|
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `NEXTAUTH_SECRET` | ✅ | JWT signing secret (min 32 chars) |
-| `NEXTAUTH_URL` | ✅ | App base URL |
+| `AUTH_SECRET` | ✅ | JWT signing secret (min 32 chars) |
+| `AUTH_URL` | ✅ | App base URL |
 | `ADMIN_EMAIL` | ✅ | Admin login email |
 | `ADMIN_PASSWORD_HASH` | ✅ | bcrypt hash of admin password |
 | `NEXT_PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL |
