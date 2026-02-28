@@ -56,6 +56,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--background)] text-[var(--text-primary)] min-h-screen`}
       >
+        <noscript>
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            backgroundColor: "#1e293b",
+            color: "#f8fafc",
+            padding: "10px 16px",
+            textAlign: "center",
+            fontSize: "14px",
+            borderBottom: "1px solid #334155",
+          }}>
+            This site is best viewed with JavaScript enabled. Some features, including login, are unavailable without it.
+          </div>
+        </noscript>
         {children}
       </body>
     </html>

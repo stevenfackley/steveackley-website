@@ -7,10 +7,6 @@ import type { PostSummary } from "@/types";
 import Link from "next/link";
 import { PRIVATE_PROJECTS, type EnrichedRepo } from "@/lib/github";
 
-const GITHUB_AVATAR = "https://avatars.githubusercontent.com/u/2008105?v=4";
-// Set BROOKE_PHOTO to a real path once you add the photo, e.g. "/photos/steve-and-brooke.jpg"
-const BROOKE_PHOTO = null as string | null;
-
 const TABS = [
   { id: "overview",  label: "Overview"  },
   { id: "about",     label: "About"     },
@@ -26,9 +22,11 @@ interface TabsDashboardProps {
   overview: React.ReactNode;
   blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
   githubRepos: EnrichedRepo[];
+  avatarUrl: string;
+  couplePhotoUrl: string;
 }
 
-export function TabsDashboard({ overview, blogPosts, githubRepos }: TabsDashboardProps) {
+export function TabsDashboard({ overview, blogPosts, githubRepos, avatarUrl, couplePhotoUrl }: TabsDashboardProps) {
   const [active, setActive] = useState<TabId>("overview");
 
   return (
@@ -55,7 +53,7 @@ export function TabsDashboard({ overview, blogPosts, githubRepos }: TabsDashboar
 
       {/* Tab panels */}
       {active === "overview"  && overview}
-      {active === "about"     && <AboutPanel />}
+      {active === "about"     && <AboutPanel avatarUrl={avatarUrl} couplePhotoUrl={couplePhotoUrl} />}
       {active === "skills"    && <SkillsPanel />}
       {active === "projects"  && <ProjectsPanel repos={githubRepos} />}
       {active === "blog"      && <BlogPanel posts={blogPosts} />}
@@ -142,7 +140,7 @@ const timeline = [
   },
 ];
 
-function AboutPanel() {
+function AboutPanel({ avatarUrl, couplePhotoUrl }: { avatarUrl: string; couplePhotoUrl: string }) {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       {/* Bio */}
@@ -158,7 +156,7 @@ function AboutPanel() {
                 aria-hidden
               />
               <Image
-                src={GITHUB_AVATAR}
+                src={avatarUrl}
                 alt="Steve Ackley"
                 width={96}
                 height={96}
@@ -168,10 +166,10 @@ function AboutPanel() {
 
             {/* Steve and Brooke photo */}
             <div className="relative shrink-0">
-              {BROOKE_PHOTO ? (
+              {couplePhotoUrl ? (
                 <Image
-                  src={BROOKE_PHOTO}
-                  alt="Steve and Brooke"
+                  src={couplePhotoUrl}
+                  alt="About photo"
                   width={160}
                   height={96}
                   className="rounded-2xl ring-2 ring-[var(--border)] object-cover"

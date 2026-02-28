@@ -35,6 +35,18 @@ export default async function AdminLayout({
                   New Post
                 </Link>
                 <Link
+                  href="/admin/apps"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  Apps
+                </Link>
+                <Link
+                  href="/admin/settings"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  Settings
+                </Link>
+                <Link
                   href="/"
                   className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   target="_blank"

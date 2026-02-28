@@ -35,10 +35,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const u = user as typeof user & { role?: "ADMIN" | "CLIENT" };
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? undefined,
+          id: u.id,
+          email: u.email,
+          name: u.name ?? undefined,
+          role: u.role ?? "CLIENT",
         };
       },
     }),
@@ -57,12 +59,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as { role?: "ADMIN" | "CLIENT" }).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token.id && session.user) {
         session.user.id = token.id as string;
+        session.user.role = (token.role as "ADMIN" | "CLIENT") ?? "CLIENT";
       }
       return session;
     },

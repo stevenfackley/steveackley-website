@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import { getSiteSetting, SETTING_KEYS } from "@/lib/settings";
 
-const GITHUB_AVATAR = "https://avatars.githubusercontent.com/u/2008105?v=4";
+export async function HeroCard({ className }: { className?: string }) {
+  const avatarUrl = await getSiteSetting(SETTING_KEYS.AVATAR_URL);
 
-export function HeroCard({ className }: { className?: string }) {
   return (
     <Card
       className={cn(
@@ -42,7 +43,7 @@ export function HeroCard({ className }: { className?: string }) {
               aria-hidden
             />
             <Image
-              src={GITHUB_AVATAR}
+              src={avatarUrl}
               alt="Steve Ackley"
               width={72}
               height={72}

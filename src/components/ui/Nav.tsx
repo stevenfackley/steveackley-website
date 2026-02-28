@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-
-const GITHUB_AVATAR = "https://avatars.githubusercontent.com/u/2008105?v=4";
+import { getSiteSetting, SETTING_KEYS } from "@/lib/settings";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -10,7 +9,9 @@ const navLinks = [
   { href: "/blog", label: "Blog" },
 ];
 
-export function Nav() {
+export async function Nav() {
+  const avatarUrl = await getSiteSetting(SETTING_KEYS.AVATAR_URL);
+
   return (
     <nav className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -22,7 +23,7 @@ export function Nav() {
             className="flex items-center gap-2.5 group"
           >
             <Image
-              src={GITHUB_AVATAR}
+              src={avatarUrl}
               alt="Steve Ackley"
               width={28}
               height={28}

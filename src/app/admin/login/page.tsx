@@ -112,6 +112,14 @@ export default function AdminLoginPage() {
         <p className="mt-4 text-center text-xs text-[var(--text-muted)]">
           This area is for site administrators only.
         </p>
+
+        <noscript>
+          <div className="mt-4 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-center dark:border-yellow-800 dark:bg-yellow-950">
+            <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+              Login requires JavaScript. Please enable it in your browser settings.
+            </p>
+          </div>
+        </noscript>
       </div>
     </div>
   );

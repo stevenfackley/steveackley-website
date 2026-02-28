@@ -2,29 +2,53 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 /**
- * Auth middleware: protects all /admin/* routes.
+ * Auth middleware: protects /admin/* and /client/* routes.
  *
- * - Unauthenticated requests to /admin/* (except /admin/login) → redirect to /admin/login
- * - Authenticated requests to /admin/login → redirect to /admin/dashboard
+ * - /admin/* (non-login): requires ADMIN role; clients are sent to /client/dashboard
+ * - /admin/login: redirects already-authenticated users based on their role
+ * - /client/*: requires any authenticated user
  */
 export default auth((req) => {
-  const isLoggedIn = !!req.auth;
+  const session = req.auth;
+  const isLoggedIn = !!session;
+  const role = (session?.user as { role?: string } | undefined)?.role;
   const pathname = req.nextUrl.pathname;
-  const isAdminLogin = pathname === "/admin/login";
 
-  // Redirect authenticated admin away from login page
-  if (isLoggedIn && isAdminLogin) {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+  const isAdminLogin = pathname === "/admin/login";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isClientRoute = pathname.startsWith("/client");
+
+  // /admin/login
+  if (isAdminLogin) {
+    if (!isLoggedIn) return; // allow
+    const dest = role === "ADMIN" ? "/admin/dashboard" : "/client/dashboard";
+    return NextResponse.redirect(new URL(dest, req.url));
   }
 
-  // Redirect unauthenticated users to login
-  if (!isLoggedIn && !isAdminLogin) {
-    const loginUrl = new URL("/admin/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  // /admin/* (protected)
+  if (isAdminRoute) {
+    if (!isLoggedIn) {
+      const loginUrl = new URL("/admin/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/client/dashboard", req.url));
+    }
+    return;
+  }
+
+  // /client/* (any authenticated user)
+  if (isClientRoute) {
+    if (!isLoggedIn) {
+      const loginUrl = new URL("/admin/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return;
   }
 });
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/client/:path*"],
 };
