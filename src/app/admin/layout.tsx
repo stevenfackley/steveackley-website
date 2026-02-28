@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { Nav } from "@/components/ui/Nav";
+import { AdminAccountMenu } from "@/components/admin/AdminAccountMenu";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -63,18 +64,10 @@ export default async function AdminLayout({
                     </span>
                   )}
                 </Link>
-                <Link
-                  href="/admin/account"
-                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
-                >
-                  Account
-                </Link>
-                <Link
-                  href="/admin/settings"
-                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
-                >
-                  Settings
-                </Link>
+
+                {/* Account + Settings dropdown */}
+                <AdminAccountMenu />
+
                 <Link
                   href="/"
                   className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shrink-0"
