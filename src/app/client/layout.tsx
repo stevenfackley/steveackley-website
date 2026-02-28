@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -18,6 +19,7 @@ export default async function ClientLayout({ children }: { children: React.React
     select: {
       name: true,
       email: true,
+      logo: true,
       apps: {
         select: {
           app: { select: { id: true, name: true, url: true, icon: true } },
@@ -27,6 +29,15 @@ export default async function ClientLayout({ children }: { children: React.React
   });
 
   const apps = userWithApps?.apps.map((ua) => ua.app) ?? [];
+
+  let unreadCount = 0;
+  try {
+    unreadCount = await prisma.message.count({
+      where: { toUserId: session.user.id, read: false },
+    });
+  } catch {
+    // ignore
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -55,11 +66,46 @@ export default async function ClientLayout({ children }: { children: React.React
               ))}
             </div>
 
-            {/* User + sign out */}
+            {/* Right side: logo, messages, account, sign out */}
             <div className="flex items-center gap-4 shrink-0">
+              {/* Client logo */}
+              {userWithApps?.logo && (
+                <Image
+                  src={userWithApps.logo}
+                  alt="Company logo"
+                  width={28}
+                  height={28}
+                  className="rounded object-contain"
+                />
+              )}
+
+              {/* User name (hidden on small screens) */}
               <span className="text-xs text-[var(--text-muted)] hidden sm:block">
                 {userWithApps?.name ?? userWithApps?.email}
               </span>
+
+              {/* Messages link with badge */}
+              <Link
+                href="/client/messages"
+                className="relative inline-flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                Messages
+                {unreadCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-[1rem] rounded-full bg-[var(--accent)] text-white text-[10px] font-bold px-1">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Account link */}
+              <Link
+                href="/client/account"
+                className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                Account
+              </Link>
+
+              {/* Sign out */}
               <form
                 action={async () => {
                   "use server";

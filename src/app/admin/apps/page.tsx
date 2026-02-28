@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { AppsClient } from "./AppsClient";
 
-export const metadata: Metadata = { title: "Client Apps" };
+export const metadata: Metadata = { title: "Live Projects" };
 
 export default async function AdminAppsPage() {
   const [apps, users] = await Promise.all([
@@ -26,6 +26,8 @@ export default async function AdminAppsPage() {
         url: a.url,
         description: a.description,
         icon: a.icon,
+        favicon: a.favicon,
+        ogImage: a.ogImage,
         userIds: a.users.map((u) => u.userId),
       }))}
       users={users as { id: string; email: string; name: string | null; role: "ADMIN" | "CLIENT" }[]}

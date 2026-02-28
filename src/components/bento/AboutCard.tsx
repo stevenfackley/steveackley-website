@@ -1,5 +1,6 @@
 import { Card, CardHeader } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
+import { getSiteSetting, SETTING_KEYS } from "@/lib/settings";
 
 function MasonIcon({ className }: { className?: string }) {
   return (
@@ -30,15 +31,14 @@ const interests = [
   { icon: "🌿",  label: "Fragrances" },
 ];
 
-export function AboutCard({ className }: { className?: string }) {
+export async function AboutCard({ className }: { className?: string }) {
+  const bioText = await getSiteSetting(SETTING_KEYS.BIO_TEXT);
+
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader label="About" />
       <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-        Staff Software Engineer at{" "}
-        <span className="text-[var(--text-primary)] font-medium">Lockheed Martin</span>{" "}
-        with <span className="text-[var(--text-primary)] font-medium">12+ years</span> in the
-        Microsoft ecosystem. C#, .NET, Azure, Angular, and SQL Server.
+        {bioText}
       </p>
       <div className="grid grid-cols-2 gap-1.5">
         {interests.map((interest) => (

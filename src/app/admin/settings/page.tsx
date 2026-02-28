@@ -11,7 +11,12 @@ export default async function AdminSettingsPage() {
       orderBy: { createdAt: "asc" },
       select: { id: true, email: true, name: true, role: true, createdAt: true },
     }),
-    getSiteSettings([SETTING_KEYS.AVATAR_URL, SETTING_KEYS.COUPLE_PHOTO_URL]),
+    getSiteSettings([
+      SETTING_KEYS.AVATAR_URL,
+      SETTING_KEYS.COUPLE_PHOTO_URL,
+      SETTING_KEYS.BIO_TEXT,
+      SETTING_KEYS.HERO_TAGLINE,
+    ]),
   ]);
 
   return (
@@ -19,6 +24,8 @@ export default async function AdminSettingsPage() {
       users={users as { id: string; email: string; name: string | null; role: "ADMIN" | "CLIENT"; createdAt: Date }[]}
       avatarUrl={settings[SETTING_KEYS.AVATAR_URL]}
       couplePhotoUrl={settings[SETTING_KEYS.COUPLE_PHOTO_URL]}
+      bioText={settings[SETTING_KEYS.BIO_TEXT]}
+      heroTagline={settings[SETTING_KEYS.HERO_TAGLINE]}
     />
   );
 }

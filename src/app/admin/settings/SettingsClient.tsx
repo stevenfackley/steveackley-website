@@ -9,7 +9,6 @@ import {
   updateSiteSetting,
   createUser,
   deleteUser,
-  updateUserRole,
 } from "./actions";
 import { SETTING_KEYS } from "@/lib/settings";
 
@@ -25,6 +24,8 @@ interface Props {
   users: User[];
   avatarUrl: string;
   couplePhotoUrl: string;
+  bioText: string;
+  heroTagline: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +177,69 @@ function ImageSetting({
 }
 
 // ---------------------------------------------------------------------------
+// Text Setting (bio / tagline)
+// ---------------------------------------------------------------------------
+function TextSetting({
+  label,
+  description,
+  settingKey,
+  initialValue,
+  multiline = false,
+}: {
+  label: string;
+  description: string;
+  settingKey: string;
+  initialValue: string;
+  multiline?: boolean;
+}) {
+  const [value, setValue] = useState(initialValue);
+  const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const inputCls =
+    "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors";
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setResult(null);
+    startTransition(async () => {
+      const r = await updateSiteSetting(settingKey, value);
+      setResult(r);
+    });
+  }
+
+  return (
+    <div className="py-3 border-b border-[var(--border)] last:border-0 space-y-2">
+      <div>
+        <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-0.5">{description}</p>
+      </div>
+      <form onSubmit={handleSave} className="space-y-2">
+        {multiline ? (
+          <textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            rows={3}
+            className={inputCls + " resize-y"}
+          />
+        ) : (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className={inputCls}
+          />
+        )}
+        <StatusMsg result={result} />
+        <Button type="submit" variant="secondary" size="sm" isLoading={isPending}>
+          Save
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // User Management Section
 // ---------------------------------------------------------------------------
 function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
@@ -184,31 +248,27 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"ADMIN" | "CLIENT">("CLIENT");
   const [addResult, setAddResult] = useState<{ success: boolean; error?: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const inputCls =
     "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors";
-  const selectCls =
-    "rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors";
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAddResult(null);
     startTransition(async () => {
-      const r = await createUser(email, password, name, role);
+      const r = await createUser(email, password, name);
       setAddResult(r);
       if (r.success) {
         setUsers((prev) => [
           ...prev,
-          { id: (r.data as { id: string }).id, email, name: name || null, role, createdAt: new Date() },
+          { id: (r.data as { id: string }).id, email, name: name || null, role: "CLIENT" as const, createdAt: new Date() },
         ]);
         setEmail("");
         setName("");
         setPassword("");
-        setRole("CLIENT");
         setShowAdd(false);
       }
     });
@@ -223,17 +283,11 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
     });
   }
 
-  function handleRoleChange(userId: string, newRole: "ADMIN" | "CLIENT") {
-    startTransition(async () => {
-      const r = await updateUserRole(userId, newRole);
-      if (r.success) {
-        setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-      }
-    });
-  }
-
   return (
-    <Section title="User Management">
+    <Section title="Client Accounts">
+      <p className="text-xs text-[var(--text-muted)] -mt-2">
+        Create and manage client accounts. All new accounts are created as clients.
+      </p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -251,26 +305,26 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
                   <p className="text-xs text-[var(--text-muted)]">{u.email}</p>
                 </td>
                 <td className="py-2.5 pr-4">
-                  <select
-                    value={u.role}
-                    onChange={(e) => handleRoleChange(u.id, e.target.value as "ADMIN" | "CLIENT")}
-                    className={selectCls}
-                    disabled={isPending}
-                  >
-                    <option value="ADMIN">Admin</option>
-                    <option value="CLIENT">Client</option>
-                  </select>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    u.role === "ADMIN"
+                      ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                      : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  }`}>
+                    {u.role === "ADMIN" ? "Admin" : "Client"}
+                  </span>
                 </td>
                 <td className="py-2.5">
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    isLoading={deletingId === u.id}
-                    onClick={() => handleDelete(u.id)}
-                  >
-                    Delete
-                  </Button>
+                  {u.role !== "ADMIN" && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      isLoading={deletingId === u.id}
+                      onClick={() => handleDelete(u.id)}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -280,7 +334,7 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
 
       {showAdd ? (
         <form onSubmit={handleAdd} className="border border-[var(--border)] rounded-xl p-4 space-y-3 mt-2">
-          <p className="text-sm font-medium text-[var(--text-primary)]">Add new user</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">Add new client</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Display name</label>
@@ -294,23 +348,16 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Password *</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" className={inputCls} />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Role *</label>
-              <select value={role} onChange={(e) => setRole(e.target.value as "ADMIN" | "CLIENT")} className={selectCls}>
-                <option value="CLIENT">Client</option>
-                <option value="ADMIN">Admin</option>
-              </select>
-            </div>
           </div>
           <StatusMsg result={addResult} />
           <div className="flex gap-2">
-            <Button type="submit" variant="primary" size="sm" isLoading={isPending}>Add User</Button>
+            <Button type="submit" variant="primary" size="sm" isLoading={isPending}>Add Client</Button>
             <Button type="button" variant="ghost" size="sm" onClick={() => { setShowAdd(false); setAddResult(null); }}>Cancel</Button>
           </div>
         </form>
       ) : (
         <Button type="button" variant="secondary" size="sm" onClick={() => setShowAdd(true)}>
-          + Add User
+          + Add Client
         </Button>
       )}
     </Section>
@@ -320,12 +367,12 @@ function UserManagementSection({ initialUsers }: { initialUsers: User[] }) {
 // ---------------------------------------------------------------------------
 // Root Client Component
 // ---------------------------------------------------------------------------
-export function SettingsClient({ users, avatarUrl, couplePhotoUrl }: Props) {
+export function SettingsClient({ users, avatarUrl, couplePhotoUrl, bioText, heroTagline }: Props) {
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">Settings</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Manage your account, site images, and users.</p>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Manage your account, site content, images, and client users.</p>
       </div>
 
       <PasswordSection />
@@ -348,6 +395,28 @@ export function SettingsClient({ users, avatarUrl, couplePhotoUrl }: Props) {
             settingKey={SETTING_KEYS.COUPLE_PHOTO_URL}
             initialUrl={couplePhotoUrl}
             fallbackIcon="📸"
+          />
+        </div>
+      </Section>
+
+      <Section title="Bio & Content">
+        <p className="text-xs text-[var(--text-muted)] -mt-2">
+          Edit the text shown on your public profile. Changes are reflected immediately.
+        </p>
+        <div>
+          <TextSetting
+            label="Hero tagline"
+            description="The bio paragraph shown in the hero card on the home page."
+            settingKey={SETTING_KEYS.HERO_TAGLINE}
+            initialValue={heroTagline}
+            multiline
+          />
+          <TextSetting
+            label="About card bio"
+            description="The short bio shown in the About card on the home page."
+            settingKey={SETTING_KEYS.BIO_TEXT}
+            initialValue={bioText}
+            multiline
           />
         </div>
       </Section>

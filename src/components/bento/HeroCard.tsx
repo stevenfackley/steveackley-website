@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
-import { getSiteSetting, SETTING_KEYS } from "@/lib/settings";
+import { getSiteSettings, SETTING_KEYS } from "@/lib/settings";
 
 export async function HeroCard({ className }: { className?: string }) {
-  const avatarUrl = await getSiteSetting(SETTING_KEYS.AVATAR_URL);
+  const settings = await getSiteSettings([SETTING_KEYS.AVATAR_URL, SETTING_KEYS.HERO_TAGLINE]);
+  const avatarUrl = settings[SETTING_KEYS.AVATAR_URL];
+  const heroTagline = settings[SETTING_KEYS.HERO_TAGLINE];
 
   return (
     <Card
@@ -67,10 +69,7 @@ export async function HeroCard({ className }: { className?: string }) {
 
         {/* Bio summary */}
         <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
-          12+ years designing and shipping enterprise-grade software. Core stack is{" "}
-          <span className="text-[var(--text-primary)] font-medium">C# / .NET</span> on{" "}
-          <span className="text-[var(--text-primary)] font-medium">Azure</span>, with deep experience across
-          full-stack, cloud architecture, and technical leadership.
+          {heroTagline}
         </p>
 
         {/* Status row */}

@@ -24,11 +24,11 @@ async function main() {
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (existing) {
-    // Only update if the hash actually changed
-    if (existing.passwordHash !== passwordHash) {
+    // Only update if the hash actually changed or role needs fixing
+    if (existing.passwordHash !== passwordHash || existing.role !== "ADMIN") {
       await prisma.user.update({
         where: { email },
-        data: { passwordHash, name: "Steve Ackley" },
+        data: { passwordHash, name: "Steve Ackley", role: "ADMIN" },
       });
       console.log(`  ✓ Updated admin user: ${email}`);
     } else {
@@ -36,7 +36,7 @@ async function main() {
     }
   } else {
     await prisma.user.create({
-      data: { email, passwordHash, name: "Steve Ackley" },
+      data: { email, passwordHash, name: "Steve Ackley", role: "ADMIN" },
     });
     console.log(`  ✓ Created admin user: ${email}`);
   }

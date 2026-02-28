@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { compare, hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/types";
+import { isDefaultAdminEmail } from "@/lib/admin";
 
 async function requireAdmin() {
   const session = await auth();
@@ -71,8 +72,7 @@ export async function updateSiteSetting(key: string, value: string): Promise<Act
 export async function createUser(
   email: string,
   password: string,
-  name: string,
-  role: "ADMIN" | "CLIENT"
+  name: string
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
@@ -86,7 +86,7 @@ export async function createUser(
 
     const passwordHash = await hash(password, 12);
     const user = await prisma.user.create({
-      data: { email, passwordHash, name: name || null, role },
+      data: { email, passwordHash, name: name || null, role: "CLIENT" },
     });
 
     revalidatePath("/admin/settings");
@@ -113,13 +113,22 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
 
 export async function updateUserRole(
   userId: string,
-  role: "ADMIN" | "CLIENT"
+  newRole: "ADMIN" | "CLIENT"
 ): Promise<ActionResult> {
   try {
     const callerId = await requireAdmin();
     if (userId === callerId) return { success: false, error: "You cannot change your own role" };
 
-    await prisma.user.update({ where: { id: userId }, data: { role } });
+    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!targetUser) return { success: false, error: "User not found" };
+    if (newRole === "ADMIN") {
+      return { success: false, error: "Only default admin may have ADMIN role" };
+    }
+    if (newRole === "CLIENT" && isDefaultAdminEmail(targetUser.email)) {
+      return { success: false, error: "Cannot change role of default admin" };
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { role: newRole } });
     revalidatePath("/admin/settings");
     return { success: true };
   } catch (err) {
