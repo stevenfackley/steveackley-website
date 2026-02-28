@@ -45,8 +45,8 @@ next-env.d.ts
 .env.local
 .env
 
-# Uploads (volume-managed in Docker)
-uploads/
+# Uploads (volume-managed in Docker) — anchored to root so src/app/api/uploads/ is NOT ignored
+/uploads/
 
 # Prisma generated
 node_modules/.prisma/
