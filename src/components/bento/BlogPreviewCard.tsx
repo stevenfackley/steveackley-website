@@ -15,7 +15,7 @@ export async function BlogPreviewCard({ className }: { className?: string }) {
         <div className="space-y-3 mt-1">
           {posts.map((post) => (
             <div key={post.id}>
-              <Link href={`/blog/${post.slug}`} onClick={(e) => e.stopPropagation()} className="block group">
+              <Link href={`/blog/${post.slug}`} className="block group">
                 <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-1">{post.title}</p>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">{formatDateShort(post.createdAt)}</p>
               </Link>
