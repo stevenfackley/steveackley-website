@@ -1,0 +1,34 @@
+import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { AppsClient } from "./AppsClient";
+
+export const metadata: Metadata = { title: "Client Apps" };
+
+export default async function AdminAppsPage() {
+  const [apps, users] = await Promise.all([
+    prisma.clientApp.findMany({
+      orderBy: { createdAt: "asc" },
+      include: {
+        users: { select: { userId: true } },
+      },
+    }),
+    prisma.user.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, email: true, name: true, role: true },
+    }),
+  ]);
+
+  return (
+    <AppsClient
+      initialApps={apps.map((a) => ({
+        id: a.id,
+        name: a.name,
+        url: a.url,
+        description: a.description,
+        icon: a.icon,
+        userIds: a.users.map((u) => u.userId),
+      }))}
+      users={users as { id: string; email: string; name: string | null; role: "ADMIN" | "CLIENT" }[]}
+    />
+  );
+}
