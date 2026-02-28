@@ -5,9 +5,9 @@ import Link from "next/link";
 export async function BlogPreviewCard({ className }: { className?: string }) {
   const posts = await prisma.post.findMany({ where: { published: true }, orderBy: { createdAt: "desc" }, take: 3, select: { id: true, title: true, slug: true, createdAt: true } });
   return (
-    <Card href="/blog" className={cn("p-6", className)}>
+    <Card className={cn("p-6", className)}>
       <CardHeader label="Latest Posts">
-        <span className="text-xs text-[var(--accent)]">View all →</span>
+        <Link href="/blog" className="text-xs text-[var(--accent)] hover:underline">View all →</Link>
       </CardHeader>
       {posts.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)] mt-2">No posts yet. Check back soon!</p>
