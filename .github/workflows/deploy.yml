@@ -39,6 +39,10 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+          # Dummy DATABASE_URL for build-time Prisma generate — never used in production.
+          # Real DATABASE_URL is injected at container runtime via web.env.
+          build-args: |
+            DATABASE_URL=postgresql://build:build@localhost:5432/builddb
 
   deploy:
     name: Deploy to EC2

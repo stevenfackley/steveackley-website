@@ -13,6 +13,10 @@ RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 RUN npm ci --include=dev
+# Dummy DATABASE_URL is only used at build time for `prisma generate` schema validation.
+# The real DATABASE_URL is injected at runtime via web.env (never baked into the image).
+ARG DATABASE_URL="postgresql://build:build@localhost:5432/builddb"
+ENV DATABASE_URL=$DATABASE_URL
 RUN npx prisma generate
 
 # Stage 2: Builder
@@ -23,6 +27,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+# Dummy DATABASE_URL needed in case Next.js build touches Prisma client validation.
+# Real DATABASE_URL is injected at runtime — this value is never used in production.
+ARG DATABASE_URL="postgresql://build:build@localhost:5432/builddb"
+ENV DATABASE_URL=$DATABASE_URL
 RUN npm run build
 
 # Stage 3: Runner
