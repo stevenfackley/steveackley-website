@@ -2,20 +2,22 @@
 set -e
 
 # =============================================================================
-# Docker Entrypoint — reads Docker secrets into env vars, seeds admin, starts app
+# Docker Entrypoint — pushes DB schema, seeds admin, starts app
+#
+# Secrets (DATABASE_URL, AUTH_SECRET, ADMIN_PASSWORD_HASH) are injected as
+# environment variables by docker-compose via env_file (.env).
 # =============================================================================
 
-# Load Docker secrets into environment variables
-# Secret files at /run/secrets/<name> → env var NAME (uppercased)
-if [ -d /run/secrets ]; then
-  for secret_file in /run/secrets/*; do
-    if [ -f "$secret_file" ]; then
-      secret_name=$(basename "$secret_file" | tr '[:lower:]' '[:upper:]')
-      export "$secret_name"="$(cat "$secret_file")"
-      echo "  ✓ Loaded secret: $secret_name"
-    fi
-  done
-fi
+echo "==> Entrypoint starting..."
+
+# Debug: show which env vars are set (values hidden)
+for var in DATABASE_URL AUTH_SECRET ADMIN_PASSWORD_HASH ADMIN_EMAIL NODE_ENV AUTH_URL; do
+  if [ -n "$(eval echo \$$var)" ]; then
+    echo "  ✓ $var is set"
+  else
+    echo "  ✗ $var is NOT set"
+  fi
+done
 
 # Push database schema (creates tables if they don't exist)
 if [ -n "$DATABASE_URL" ]; then

@@ -56,21 +56,21 @@ jobs:
             echo "==> Pull latest code (compose file, configs)"
             git pull origin main
 
-            echo "==> Writing Docker secret files"
+            echo "==> Writing .env file for web container"
+            printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nADMIN_PASSWORD_HASH=%s\n' \
+              "$DATABASE_URL" "$AUTH_SECRET" "$ADMIN_PASSWORD_HASH" > .env
+            chmod 600 .env
+
+            echo "==> Writing postgres secret file"
             mkdir -p secrets
-            printf '%s' "$DATABASE_URL"          > secrets/database_url.txt
-            printf '%s' "$AUTH_SECRET"            > secrets/auth_secret.txt
-            printf '%s' "$ADMIN_PASSWORD_HASH"    > secrets/admin_password_hash.txt
             printf '%s' "$POSTGRES_PASSWORD"      > secrets/postgres_password.txt
-            chmod 600 secrets/*.txt
+            chmod 600 secrets/postgres_password.txt
 
-            echo "==> Removing old .env file (secrets are now in files)"
-            rm -f .env
-
-            echo "==> Verifying secret files"
-            for f in secrets/*.txt; do
-              echo "  $f: $(wc -c < "$f") bytes"
-            done
+            echo "==> Verifying .env file"
+            echo "  .env: $(wc -l < .env) lines, $(wc -c < .env) bytes"
+            # Show keys only (not values)
+            awk -F= '{print "  ✓ " $1}' .env
+            echo "  secrets/postgres_password.txt: $(wc -c < secrets/postgres_password.txt) bytes"
 
             echo "==> Ensuring web network exists"
             docker network create web 2>/dev/null || true
