@@ -64,12 +64,29 @@ jobs:
             printf '%s' "$POSTGRES_PASSWORD"      > secrets/postgres_password.txt
             chmod 600 secrets/*.txt
 
+            echo "==> Removing old .env file (secrets are now in files)"
+            rm -f .env
+
+            echo "==> Verifying secret files"
+            for f in secrets/*.txt; do
+              echo "  $f: $(wc -c < "$f") bytes"
+            done
+
             echo "==> Ensuring web network exists"
             docker network create web 2>/dev/null || true
 
             echo "==> Pulling latest image and restarting"
             docker compose pull web
             docker compose up -d --remove-orphans
+
+            echo "==> Waiting for container to start..."
+            sleep 5
+
+            echo "==> Container logs:"
+            docker logs steveackley-web --tail 20 2>&1 || true
+
+            echo "==> Container status:"
+            docker ps --filter name=steveackley-web --format "{{.Status}}" || true
 
             echo "==> Pruning old images"
             docker image prune -f
