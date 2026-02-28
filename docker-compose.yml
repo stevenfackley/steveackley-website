@@ -14,7 +14,7 @@ services:
     build: .                              # Allows local builds with `docker compose build`
     container_name: steveackley-web
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     secrets:
       - database_url
       - auth_secret
