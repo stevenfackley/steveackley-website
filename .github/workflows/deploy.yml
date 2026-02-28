@@ -60,8 +60,10 @@ jobs:
             rm -f .env
 
             echo "==> Writing web.env file for web container"
+            # Escape $ as $$ in bcrypt hash so Docker Compose doesn't interpolate
+            ESCAPED_HASH=$(printf '%s' "$ADMIN_PASSWORD_HASH" | sed 's/\$/\$\$/g')
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nADMIN_PASSWORD_HASH=%s\n' \
-              "$DATABASE_URL" "$AUTH_SECRET" "$ADMIN_PASSWORD_HASH" > web.env
+              "$DATABASE_URL" "$AUTH_SECRET" "$ESCAPED_HASH" > web.env
             chmod 600 web.env
 
             echo "==> Writing postgres secret file"
