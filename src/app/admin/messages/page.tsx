@@ -10,12 +10,19 @@ export default async function AdminMessagesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/admin/login");
 
-  const [messages, clients] = await Promise.all([
+  const [received, sent, clients] = await Promise.all([
     prisma.message.findMany({
       where: { toUserId: session.user.id },
       orderBy: { createdAt: "desc" },
       include: {
         fromUser: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    prisma.message.findMany({
+      where: { fromUserId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        toUser: { select: { id: true, name: true, email: true } },
       },
     }),
     prisma.user.findMany({
@@ -27,7 +34,7 @@ export default async function AdminMessagesPage() {
 
   return (
     <AdminMessagesClient
-      initialMessages={messages.map((m) => ({
+      initialReceived={received.map((m) => ({
         id: m.id,
         subject: m.subject,
         body: m.body,
@@ -35,6 +42,14 @@ export default async function AdminMessagesPage() {
         read: m.read,
         createdAt: m.createdAt,
         fromUser: m.fromUser,
+      }))}
+      initialSent={sent.map((m) => ({
+        id: m.id,
+        subject: m.subject,
+        body: m.body,
+        type: m.type as "GENERAL" | "PROJECT_REQUEST",
+        createdAt: m.createdAt,
+        toUser: m.toUser,
       }))}
       clients={clients}
     />
