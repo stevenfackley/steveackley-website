@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../prisma/generated/client.js";
+import { PrismaPpg } from "@prisma/adapter-ppg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -7,6 +8,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    adapter: new PrismaPpg({ connectionString: process.env.DATABASE_URL! }),
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]

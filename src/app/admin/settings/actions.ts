@@ -171,6 +171,41 @@ export async function createClientApp(
   }
 }
 
+export async function updateClientApp(
+  appId: string,
+  data: {
+    name: string;
+    url: string;
+    description: string;
+    icon: string;
+    productName: string;
+    companyName: string;
+    environment: "PRODUCTION" | "TEST" | "DEVELOPMENT";
+  }
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.clientApp.update({
+      where: { id: appId },
+      data: {
+        name: data.name,
+        url: data.url,
+        description: data.description || null,
+        icon: data.icon || null,
+        productName: data.productName || null,
+        companyName: data.companyName || null,
+        environment: data.environment,
+      },
+    });
+    revalidatePath("/admin/apps");
+    revalidatePath("/client/dashboard");
+    return { success: true };
+  } catch (err) {
+    console.error("[updateClientApp]", err);
+    return { success: false, error: "Failed to update app" };
+  }
+}
+
 export async function deleteClientApp(appId: string): Promise<ActionResult> {
   try {
     await requireAdmin();
