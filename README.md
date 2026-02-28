@@ -353,7 +353,9 @@ See [docs/SECURITY.md](./docs/SECURITY.md) for the full security documentation, 
 
 ## 📜 License
 
-This is a personal project. All rights reserved by Steve Ackley.
+Copyright (c) 2025 Steve Ackley. See [LICENSE](./LICENSE) for full terms.
+
+In short: you may fork and use the code as a reference for your own project, but you may not copy it verbatim, and you may not use photographs or likenesses of Steve Ackley or his family under any circumstances.
 
 ---
 
