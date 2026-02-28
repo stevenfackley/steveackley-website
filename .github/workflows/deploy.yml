@@ -30,10 +30,6 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/stevenfackley/steveackley-web:latest
-          build-args: |
-            DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
-            AUTH_SECRET="placeholder-for-build-only"
-            AUTH_URL="https://aws.steveackley.org"
 
   deploy:
     name: Deploy to EC2
@@ -41,45 +37,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Encode .env for SSH transport
-        env:
-          DOTENV: ${{ secrets.EC2_DOTENV }}
-        run: |
-          printf '%s' "$DOTENV" | base64 -w 0 > /tmp/dotenv.b64
-          echo "DOTENV_B64=$(cat /tmp/dotenv.b64)" >> "$GITHUB_ENV"
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          DOTENV_B64: ${{ env.DOTENV_B64 }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
-          envs: DOTENV_B64
+          # Pass secrets as env vars into the SSH session
+          envs: DATABASE_URL,AUTH_SECRET,ADMIN_PASSWORD_HASH,POSTGRES_PASSWORD,GHCR_TOKEN
           script: |
             set -e
             cd ${{ secrets.EC2_APP_DIR }}
 
             echo "==> Log in to GHCR"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u stevenfackley --password-stdin
 
-            # We pull the config too, just in case docker-compose.yml changed
+            echo "==> Pull latest code (compose file, configs)"
             git pull origin main
 
-            echo "==> Writing .env"
-            printf '%s' "$DOTENV_B64" | base64 -d > .env
-            chmod 600 .env
+            echo "==> Writing Docker secret files"
+            mkdir -p secrets
+            printf '%s' "$DATABASE_URL"          > secrets/database_url.txt
+            printf '%s' "$AUTH_SECRET"            > secrets/auth_secret.txt
+            printf '%s' "$ADMIN_PASSWORD_HASH"    > secrets/admin_password_hash.txt
+            printf '%s' "$POSTGRES_PASSWORD"      > secrets/postgres_password.txt
+            chmod 600 secrets/*.txt
+
+            echo "==> Ensuring web network exists"
+            docker network create web 2>/dev/null || true
 
             echo "==> Pulling latest image and restarting"
-            docker compose pull
+            docker compose pull web
             docker compose up -d --remove-orphans
 
             echo "==> Pruning old images"
             docker image prune -f
 
             echo "==> Deploy complete ✓"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          ADMIN_PASSWORD_HASH: ${{ secrets.ADMIN_PASSWORD_HASH }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Purge Cloudflare Cache
         run: |

@@ -1,6 +1,9 @@
 # =============================================================================
 # steveackley.org — Production Dockerfile
 # Multi-stage build for Next.js standalone output
+#
+# Secrets are mounted via Docker Compose secrets (not baked into the image).
+# The entrypoint reads /run/secrets/* → env vars at runtime.
 # =============================================================================
 
 # Stage 1: Dependencies
@@ -41,6 +44,11 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy entrypoint and seed scripts
+COPY --chown=nextjs:nodejs docker/entrypoint.sh /app/docker/entrypoint.sh
+COPY --chown=nextjs:nodejs docker/seed-admin.js /app/docker/seed-admin.js
+RUN chmod +x /app/docker/entrypoint.sh
+
 # Create uploads directory (will be volume-mounted in production)
 RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
 
@@ -50,4 +58,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
 CMD ["node", "server.js"]
