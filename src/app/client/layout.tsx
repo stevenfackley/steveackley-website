@@ -105,6 +105,15 @@ export default async function ClientLayout({ children }: { children: React.React
                 Account
               </Link>
 
+              {/* Back to main site */}
+              <Link
+                href="/"
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                title="Go back to the main website"
+              >
+                ← Main Site
+              </Link>
+
               {/* Sign out */}
               <form
                 action={async () => {
