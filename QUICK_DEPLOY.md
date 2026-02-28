@@ -41,8 +41,12 @@ cd ~/steveackleyorg && docker compose up -d
 # Stop all containers
 cd ~/steveackleyorg && docker compose down
 
-# Pull latest image and restart (manual deploy)
-cd ~/steveackleyorg && git pull origin main && docker compose pull web && docker compose up -d --remove-orphans
+# Deploy a pinned image (manual deploy)
+cd ~/steveackleyorg && git pull origin main
+export IMAGE_REF=ghcr.io/stevenfackley/steveackley-web:sha-<commit-sha>
+# Optional: use digest form for strongest immutability
+# export IMAGE_REF=ghcr.io/stevenfackley/steveackley-web@sha256:<digest>
+IMAGE_REF="$IMAGE_REF" docker compose pull web && IMAGE_REF="$IMAGE_REF" docker compose up -d --remove-orphans
 ```
 
 ---

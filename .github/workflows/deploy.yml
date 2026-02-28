@@ -12,6 +12,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_ref: ghcr.io/stevenfackley/steveackley-web@${{ steps.build.outputs.digest }}
 
     steps:
       - name: Checkout code
@@ -25,16 +28,25 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/stevenfackley/steveackley-web:latest
+          tags: |
+            ghcr.io/stevenfackley/steveackley-web:latest
+            ghcr.io/stevenfackley/steveackley-web:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
 
   deploy:
     name: Deploy to EC2
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Deploy via SSH
@@ -45,13 +57,20 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           port: 22
           # Pass secrets as env vars into the SSH session
-          envs: DATABASE_URL,AUTH_SECRET,ADMIN_PASSWORD_HASH,POSTGRES_PASSWORD,GHCR_TOKEN
+          envs: DATABASE_URL,AUTH_SECRET,ADMIN_PASSWORD_HASH,POSTGRES_PASSWORD,GHCR_TOKEN,GHCR_USER,IMAGE_REF
           script: |
             set -e
             cd ${{ secrets.EC2_APP_DIR }}
 
+            if [ -z "$IMAGE_REF" ]; then
+              echo "ERROR: IMAGE_REF is empty"
+              exit 1
+            fi
+
+            echo "==> Deploying image ref: $IMAGE_REF"
+
             echo "==> Log in to GHCR"
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u stevenfackley --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             echo "==> Pull latest code (compose file, configs)"
             git pull origin main
@@ -80,9 +99,9 @@ jobs:
             echo "==> Ensuring web network exists"
             docker network create web 2>/dev/null || true
 
-            echo "==> Pulling latest image and restarting"
-            docker compose pull web
-            docker compose up -d --remove-orphans
+            echo "==> Pulling image and restarting"
+            IMAGE_REF="$IMAGE_REF" docker compose pull web
+            IMAGE_REF="$IMAGE_REF" docker compose up -d --remove-orphans
 
             echo "==> Waiting for container to start..."
             sleep 15
@@ -118,6 +137,8 @@ jobs:
           ADMIN_PASSWORD_HASH: ${{ secrets.ADMIN_PASSWORD_HASH }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          IMAGE_REF: ${{ needs.build-and-push.outputs.image_ref }}
 
       - name: Purge Cloudflare Cache
         run: |

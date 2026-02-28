@@ -8,7 +8,7 @@
 
 services:
   web:
-    image: ghcr.io/stevenfackley/steveackley-web:latest
+    image: ${IMAGE_REF:-ghcr.io/stevenfackley/steveackley-web:latest}
     build: .                              # Allows local builds with `docker compose build`
     container_name: steveackley-web
     ports:

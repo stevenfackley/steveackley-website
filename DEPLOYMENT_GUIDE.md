@@ -49,7 +49,8 @@ Runs on: `ubuntu-latest`
 |------|--------|
 | Checkout code | `actions/checkout@v4` |
 | Log in to GHCR | `docker/login-action@v3` using `GITHUB_TOKEN` |
-| Build & push image | `docker/build-push-action@v5` → `ghcr.io/stevenfackley/steveackley-web:latest` |
+| Build & push image | `docker/build-push-action@v5` → `ghcr.io/stevenfackley/steveackley-web:latest` and `:sha-<commit>` |
+| Capture immutable image digest | Exposes `image_ref=ghcr.io/stevenfackley/steveackley-web@sha256:...` for deploy job |
 
 ### Job 2: Deploy to EC2
 
@@ -67,8 +68,8 @@ Uses `appleboy/ssh-action@v1.0.3` to SSH into the EC2 instance and execute:
 6.  Set file permissions 600 on both secret files
 7.  Verify file contents (keys only, values hidden)
 8.  Create Docker network 'web' if missing
-9.  docker compose pull web
-10. docker compose up -d --remove-orphans
+9.  IMAGE_REF=<ghcr image@sha256 digest> docker compose pull web
+10. IMAGE_REF=<ghcr image@sha256 digest> docker compose up -d --remove-orphans
 11. sleep 15 (wait for startup)
 12. Print full container logs
 13. curl health check — http://localhost:3000/
@@ -119,7 +120,7 @@ Set in: **GitHub repo → Settings → Secrets and variables → Actions**
 Two services: `web` and `db`, two volumes, two networks.
 
 **web container:**
-- Image: `ghcr.io/stevenfackley/steveackley-web:latest`
+- Image: `${IMAGE_REF:-ghcr.io/stevenfackley/steveackley-web:latest}`
 - Port: `3000:3000`
 - Env file: `web.env` (secrets injected by CI/CD)
 - Non-secret env vars baked directly into the compose file (safe to commit)
@@ -246,11 +247,16 @@ cd ~/steveackleyorg
 # Pull latest compose files / configs
 git pull origin main
 
-# Pull latest image from GHCR
-docker compose pull web
+# Deploy a pinned image tag (recommended)
+export IMAGE_REF=ghcr.io/stevenfackley/steveackley-web:sha-<commit-sha>
+# or use digest form for strongest immutability:
+# export IMAGE_REF=ghcr.io/stevenfackley/steveackley-web@sha256:<digest>
+
+# Pull selected image from GHCR
+IMAGE_REF="$IMAGE_REF" docker compose pull web
 
 # Restart containers
-docker compose up -d --remove-orphans
+IMAGE_REF="$IMAGE_REF" docker compose up -d --remove-orphans
 
 # Watch logs
 docker logs steveackley-web -f
