@@ -56,20 +56,23 @@ jobs:
             echo "==> Pull latest code (compose file, configs)"
             git pull origin main
 
-            echo "==> Writing .env file for web container"
+            echo "==> Removing old .env (prevents Docker Compose $ interpolation)"
+            rm -f .env
+
+            echo "==> Writing web.env file for web container"
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nADMIN_PASSWORD_HASH=%s\n' \
-              "$DATABASE_URL" "$AUTH_SECRET" "$ADMIN_PASSWORD_HASH" > .env
-            chmod 600 .env
+              "$DATABASE_URL" "$AUTH_SECRET" "$ADMIN_PASSWORD_HASH" > web.env
+            chmod 600 web.env
 
             echo "==> Writing postgres secret file"
             mkdir -p secrets
             printf '%s' "$POSTGRES_PASSWORD"      > secrets/postgres_password.txt
             chmod 600 secrets/postgres_password.txt
 
-            echo "==> Verifying .env file"
-            echo "  .env: $(wc -l < .env) lines, $(wc -c < .env) bytes"
+            echo "==> Verifying web.env file"
+            echo "  web.env: $(wc -l < web.env) lines, $(wc -c < web.env) bytes"
             # Show keys only (not values)
-            awk -F= '{print "  ✓ " $1}' .env
+            awk -F= '{print "  ✓ " $1}' web.env
             echo "  secrets/postgres_password.txt: $(wc -c < secrets/postgres_password.txt) bytes"
 
             echo "==> Ensuring web network exists"
