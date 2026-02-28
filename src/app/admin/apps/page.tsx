@@ -23,6 +23,9 @@ export default async function AdminAppsPage() {
       initialApps={apps.map((a) => ({
         id: a.id,
         name: a.name,
+        productName: a.productName,
+        companyName: a.companyName,
+        environment: a.environment,
         url: a.url,
         description: a.description,
         icon: a.icon,

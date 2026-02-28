@@ -145,12 +145,23 @@ export async function createClientApp(
   name: string,
   url: string,
   description: string,
-  icon: string
+  icon: string,
+  productName?: string,
+  companyName?: string,
+  environment?: "PRODUCTION" | "TEST" | "DEVELOPMENT"
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
     const app = await prisma.clientApp.create({
-      data: { name, url, description: description || null, icon: icon || null },
+      data: {
+        name,
+        url,
+        description: description || null,
+        icon: icon || null,
+        productName: productName || null,
+        companyName: companyName || null,
+        environment: environment || "PRODUCTION",
+      },
     });
     revalidatePath("/admin/apps");
     return { success: true, data: { id: app.id } };

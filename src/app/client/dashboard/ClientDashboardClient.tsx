@@ -7,6 +7,9 @@ import { sendProjectRequest } from "@/app/admin/messages/actions";
 interface App {
   id: string;
   name: string;
+  productName: string | null;
+  companyName: string | null;
+  environment: "PRODUCTION" | "TEST" | "DEVELOPMENT";
   url: string;
   icon: string | null;
   description: string | null;
@@ -131,10 +134,26 @@ export function ClientDashboardClient({ firstName, apps, adminId }: Props) {
                     {app.name[0]}
                   </div>
                 )}
-                <div>
-                  <p className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                    {app.name}
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                      {app.name}
+                    </p>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold uppercase ${
+                      app.environment === "PRODUCTION" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                      app.environment === "TEST" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    }`}>
+                      {app.environment === "PRODUCTION" ? "Prod" : app.environment === "TEST" ? "Test" : "Dev"}
+                    </span>
+                  </div>
+                  {(app.productName || app.companyName) && (
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5 truncate">
+                      {app.productName && <span className="font-medium">{app.productName}</span>}
+                      {app.productName && app.companyName && <span> • </span>}
+                      {app.companyName && <span>{app.companyName}</span>}
+                    </p>
+                  )}
                   <p className="text-xs text-[var(--text-muted)] truncate max-w-[180px]">{app.url}</p>
                 </div>
               </div>

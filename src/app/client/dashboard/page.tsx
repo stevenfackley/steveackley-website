@@ -23,7 +23,16 @@ export default async function ClientDashboardPage() {
       apps: {
         select: {
           app: {
-            select: { id: true, name: true, url: true, icon: true, description: true },
+            select: {
+              id: true,
+              name: true,
+              productName: true,
+              companyName: true,
+              environment: true,
+              url: true,
+              icon: true,
+              description: true,
+            },
           },
         },
       },

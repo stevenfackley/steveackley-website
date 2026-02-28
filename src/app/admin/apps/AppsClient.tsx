@@ -7,6 +7,9 @@ import { createClientApp, deleteClientApp, assignAppToUser, removeAppFromUser } 
 interface App {
   id: string;
   name: string;
+  productName: string | null;
+  companyName: string | null;
+  environment: "PRODUCTION" | "TEST" | "DEVELOPMENT";
   url: string;
   description: string | null;
   icon: string | null;
@@ -47,6 +50,9 @@ export function AppsClient({ initialApps, users }: Props) {
   const [apps, setApps] = useState(initialApps);
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState("");
+  const [productName, setProductName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [environment, setEnvironment] = useState<"PRODUCTION" | "TEST" | "DEVELOPMENT">("PRODUCTION");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("");
@@ -87,14 +93,29 @@ export function AppsClient({ initialApps, users }: Props) {
     e.preventDefault();
     setAddResult(null);
     startTransition(async () => {
-      const r = await createClientApp(name, url, description, icon);
+      const r = await createClientApp(name, url, description, icon, productName, companyName, environment);
       setAddResult(r);
       if (r.success) {
         setApps((prev) => [
           ...prev,
-          { id: (r.data as { id: string }).id, name, url, description: description || null, icon: icon || null, favicon: null, ogImage: null, userIds: [] },
+          {
+            id: (r.data as { id: string }).id,
+            name,
+            productName: productName || null,
+            companyName: companyName || null,
+            environment,
+            url,
+            description: description || null,
+            icon: icon || null,
+            favicon: null,
+            ogImage: null,
+            userIds: []
+          },
         ]);
         setName("");
+        setProductName("");
+        setCompanyName("");
+        setEnvironment("PRODUCTION");
         setUrl("");
         setDescription("");
         setIcon("");
@@ -187,12 +208,28 @@ export function AppsClient({ initialApps, users }: Props) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project name *</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputCls} placeholder="My Client Portal" />
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Product Name</label>
+              <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} className={inputCls} placeholder="P1 Ops Hub" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Company Name</label>
+              <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputCls} placeholder="Perimeter One Solutions" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Environment</label>
+              <select value={environment} onChange={(e) => setEnvironment(e.target.value as any)} className={inputCls}>
+                <option value="PRODUCTION">Production</option>
+                <option value="TEST">Test</option>
+                <option value="DEVELOPMENT">Development</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Icon (emoji)</label>
               <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} className={inputCls} placeholder="🚀" maxLength={4} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Project name *</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputCls} placeholder="My Client Portal" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description</label>
@@ -219,7 +256,23 @@ export function AppsClient({ initialApps, users }: Props) {
                 <div className="flex items-center gap-3">
                   {app.icon && <span className="text-2xl">{app.icon}</span>}
                   <div>
-                    <p className="font-semibold text-[var(--text-primary)]">{app.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-[var(--text-primary)]">{app.name}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        app.environment === "PRODUCTION" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                        app.environment === "TEST" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                      }`}>
+                        {app.environment === "PRODUCTION" ? "PROD" : app.environment === "TEST" ? "TEST" : "DEV"}
+                      </span>
+                    </div>
+                    {(app.productName || app.companyName) && (
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        {app.productName && <span className="font-medium">{app.productName}</span>}
+                        {app.productName && app.companyName && <span> • </span>}
+                        {app.companyName && <span>{app.companyName}</span>}
+                      </p>
+                    )}
                     <a
                       href={app.url}
                       target="_blank"

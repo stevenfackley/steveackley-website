@@ -17,11 +17,20 @@ enum MessageType {
   PROJECT_REQUEST
 }
 
+enum Environment {
+  PRODUCTION
+  TEST
+  DEVELOPMENT
+}
+
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
   passwordHash     String
   name             String?
+  companyName      String?
+  contactFirstName String?
+  contactLastName  String?
   role             Role      @default(CLIENT)
   logo             String?
   apps             UserApp[]
@@ -32,18 +41,21 @@ model User {
 }
 
 model ClientApp {
-  id               String    @id @default(cuid())
+  id               String       @id @default(cuid())
   name             String
+  productName      String?
+  companyName      String?
+  environment      Environment  @default(PRODUCTION)
   url              String
   description      String?
   icon             String?
   favicon          String?
   ogImage          String?
-  isLive           Boolean   @default(true)
+  isLive           Boolean      @default(true)
   metadataFetchedAt DateTime?
   users            UserApp[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model UserApp {
