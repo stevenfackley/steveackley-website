@@ -17,6 +17,16 @@ if [ -d /run/secrets ]; then
   done
 fi
 
+# Push database schema (creates tables if they don't exist)
+if [ -n "$DATABASE_URL" ]; then
+  # Print sanitized URL for debugging (hide password)
+  echo "  DATABASE_URL host: $(echo "$DATABASE_URL" | sed 's|://[^@]*@|://***@|')"
+  echo "==> Pushing database schema..."
+  node /app/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss 2>&1 || echo "⚠ Prisma db push failed"
+else
+  echo "⚠ DATABASE_URL not set, skipping schema push"
+fi
+
 # Seed admin user if credentials are provided
 if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD_HASH" ]; then
   echo "==> Seeding admin user..."

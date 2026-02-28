@@ -80,13 +80,28 @@ jobs:
             docker compose up -d --remove-orphans
 
             echo "==> Waiting for container to start..."
-            sleep 5
+            sleep 15
 
-            echo "==> Container logs:"
-            docker logs steveackley-web --tail 20 2>&1 || true
+            echo "==> Container logs (full startup):"
+            docker logs steveackley-web 2>&1 || true
 
             echo "==> Container status:"
             docker ps --filter name=steveackley-web --format "{{.Status}}" || true
+
+            echo "==> DB container status:"
+            docker ps --filter name=steveackley-db --format "{{.Status}}" || true
+
+            echo "==> Health check — hitting http://localhost:3000/"
+            curl -sS -o /tmp/health_response.txt -w "HTTP_STATUS: %{http_code}\n" http://localhost:3000/ 2>&1 || true
+            echo "==> Response body (first 500 chars):"
+            head -c 500 /tmp/health_response.txt 2>/dev/null || true
+            echo ""
+
+            echo "==> Health check — hitting http://localhost:3000/admin/login"
+            curl -sS -o /dev/null -w "HTTP_STATUS: %{http_code}\n" http://localhost:3000/admin/login 2>&1 || true
+
+            echo "==> Container logs AFTER health check:"
+            docker logs steveackley-web --tail 40 2>&1 || true
 
             echo "==> Pruning old images"
             docker image prune -f
