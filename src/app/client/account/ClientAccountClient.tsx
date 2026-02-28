@@ -4,12 +4,15 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { ImageUploadButton } from "@/components/admin/ImageUploadButton";
-import { changeClientPassword, updateClientLogo, updateClientName } from "./actions";
+import { changeClientPassword, updateClientLogo, updateClientProfile } from "./actions";
 
 interface Props {
   name: string | null;
   email: string;
   logoUrl: string | null;
+  companyName: string | null;
+  contactFirstName: string | null;
+  contactLastName: string | null;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -30,21 +33,29 @@ function StatusMsg({ result }: { result: { success: boolean; error?: string } | 
   );
 }
 
-export function ClientAccountClient({ name, email, logoUrl }: Props) {
+export function ClientAccountClient({ name, email, logoUrl, companyName, contactFirstName, contactLastName }: Props) {
   const inputCls =
     "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors";
 
   // --- Profile ---
   const [displayName, setDisplayName] = useState(name ?? "");
-  const [nameResult, setNameResult] = useState<{ success: boolean; error?: string } | null>(null);
-  const [namePending, startNameTransition] = useTransition();
+  const [company, setCompany] = useState(companyName ?? "");
+  const [firstName, setFirstName] = useState(contactFirstName ?? "");
+  const [lastName, setLastName] = useState(contactLastName ?? "");
+  const [profileResult, setProfileResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [profilePending, startProfileTransition] = useTransition();
 
-  function handleNameSave(e: React.FormEvent) {
+  function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
-    setNameResult(null);
-    startNameTransition(async () => {
-      const r = await updateClientName(displayName);
-      setNameResult(r);
+    setProfileResult(null);
+    startProfileTransition(async () => {
+      const r = await updateClientProfile({
+        name: displayName,
+        companyName: company,
+        contactFirstName: firstName,
+        contactLastName: lastName,
+      });
+      setProfileResult(r);
     });
   }
 
@@ -137,7 +148,39 @@ export function ClientAccountClient({ name, email, logoUrl }: Props) {
 
       {/* Profile */}
       <Section title="Profile">
-        <form onSubmit={handleNameSave} className="space-y-3 max-w-sm">
+        <form onSubmit={handleProfileSave} className="space-y-3 max-w-sm">
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Company name</label>
+            <input
+              type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className={inputCls}
+              placeholder="Your company name"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">First name</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className={inputCls}
+                placeholder="First name"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Last name</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className={inputCls}
+                placeholder="Last name"
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Display name</label>
             <input
@@ -157,8 +200,8 @@ export function ClientAccountClient({ name, email, logoUrl }: Props) {
               className={inputCls + " opacity-60 cursor-not-allowed"}
             />
           </div>
-          <StatusMsg result={nameResult} />
-          <Button type="submit" variant="primary" size="sm" isLoading={namePending}>
+          <StatusMsg result={profileResult} />
+          <Button type="submit" variant="primary" size="sm" isLoading={profilePending}>
             Save Profile
           </Button>
         </form>

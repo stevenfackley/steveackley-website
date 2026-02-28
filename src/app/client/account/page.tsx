@@ -12,7 +12,15 @@ export default async function ClientAccountPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, name: true, email: true, logo: true },
+    select: { 
+      id: true, 
+      name: true, 
+      email: true, 
+      logo: true,
+      companyName: true,
+      contactFirstName: true,
+      contactLastName: true,
+    },
   });
 
   if (!user) redirect("/admin/login");
@@ -22,6 +30,9 @@ export default async function ClientAccountPage() {
       name={user.name}
       email={user.email}
       logoUrl={user.logo}
+      companyName={user.companyName}
+      contactFirstName={user.contactFirstName}
+      contactLastName={user.contactLastName}
     />
   );
 }

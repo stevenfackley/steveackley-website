@@ -50,14 +50,27 @@ export async function updateClientLogo(logoUrl: string): Promise<ActionResult> {
   }
 }
 
-export async function updateClientName(name: string): Promise<ActionResult> {
+export async function updateClientProfile(data: {
+  name: string;
+  companyName: string;
+  contactFirstName: string;
+  contactLastName: string;
+}): Promise<ActionResult> {
   try {
     const userId = await requireAuth();
-    await prisma.user.update({ where: { id: userId }, data: { name: name.trim() || null } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name.trim() || null,
+        companyName: data.companyName.trim() || null,
+        contactFirstName: data.contactFirstName.trim() || null,
+        contactLastName: data.contactLastName.trim() || null,
+      },
+    });
     revalidatePath("/client");
     return { success: true };
   } catch (err) {
-    console.error("[updateClientName]", err);
-    return { success: false, error: "Failed to update name" };
+    console.error("[updateClientProfile]", err);
+    return { success: false, error: "Failed to update profile" };
   }
 }
