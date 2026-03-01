@@ -47,6 +47,17 @@ function StatusMsg({ result }: { result: { success: boolean; error?: string } | 
 }
 
 const ENV_OPTIONS = ["PRODUCTION", "TEST", "DEVELOPMENT"] as const;
+type AppEnvironment = (typeof ENV_OPTIONS)[number];
+
+type AppFormValues = {
+  name: string;
+  url: string;
+  description: string;
+  icon: string;
+  productName: string;
+  companyName: string;
+  environment: AppEnvironment;
+};
 
 function AppForm({
   initialValues,
@@ -57,16 +68,8 @@ function AppForm({
   submitLabel,
   title,
 }: {
-  initialValues: {
-    name: string;
-    url: string;
-    description: string;
-    icon: string;
-    productName: string;
-    companyName: string;
-    environment: "PRODUCTION" | "TEST" | "DEVELOPMENT";
-  };
-  onSubmit: (values: typeof initialValues) => void;
+  initialValues: AppFormValues;
+  onSubmit: (values: AppFormValues) => void;
   onCancel: () => void;
   isPending: boolean;
   result: { success: boolean; error?: string } | null;
@@ -220,7 +223,7 @@ export function AppsClient({ initialApps, users }: Props) {
     environment: "PRODUCTION" as const,
   };
 
-  function handleAdd(values: typeof emptyForm) {
+  function handleAdd(values: AppFormValues) {
     setAddResult(null);
     startTransition(async () => {
       const r = await createClientApp(
@@ -255,7 +258,7 @@ export function AppsClient({ initialApps, users }: Props) {
     });
   }
 
-  function handleEdit(appId: string, values: typeof emptyForm) {
+  function handleEdit(appId: string, values: AppFormValues) {
     setEditResult(null);
     startTransition(async () => {
       const r = await updateClientApp(appId, values);
