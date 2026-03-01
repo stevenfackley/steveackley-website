@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { db, posts as postsTable } from "@/db";
+import { eq, desc, count } from "drizzle-orm";
 import { PostCard } from "@/components/blog/PostCard";
 import { Pagination } from "@/components/blog/Pagination";
 import type { PostSummary, PaginationInfo } from "@/types";
@@ -21,25 +22,30 @@ export default async function BlogPage({
   const currentPage = Math.max(1, parseInt(p ?? "1", 10));
   const skip = (currentPage - 1) * PER_PAGE;
 
-  const [posts, total] = await Promise.all([
-    prisma.post.findMany({
-      where: { published: true },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: PER_PAGE,
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        coverImage: true,
-        published: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.post.count({ where: { published: true } }),
+  const [posts, [totalResult]] = await Promise.all([
+    db
+      .select({
+        id: postsTable.id,
+        title: postsTable.title,
+        slug: postsTable.slug,
+        excerpt: postsTable.excerpt,
+        coverImage: postsTable.coverImage,
+        published: postsTable.published,
+        createdAt: postsTable.createdAt,
+        updatedAt: postsTable.updatedAt,
+      })
+      .from(postsTable)
+      .where(eq(postsTable.published, true))
+      .orderBy(desc(postsTable.createdAt))
+      .limit(PER_PAGE)
+      .offset(skip),
+    db
+      .select({ count: count() })
+      .from(postsTable)
+      .where(eq(postsTable.published, true)),
   ]);
+
+  const total = totalResult?.count ?? 0;
 
   const totalPages = Math.ceil(total / PER_PAGE);
   const pagination: PaginationInfo = {

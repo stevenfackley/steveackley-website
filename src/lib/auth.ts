@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare, hash } from "bcryptjs";
-import { prisma } from "./prisma";
+import { db, users } from "@/db";
+import { eq } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -21,9 +22,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials.password as string;
 
         // Look up user by email
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
 
         if (!user) {
           // Prevent timing oracle by still hashing
@@ -37,12 +40,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const u = user as typeof user & { role?: "ADMIN" | "CLIENT" };
         return {
-          id: u.id,
-          email: u.email,
-          name: u.name ?? undefined,
-          role: u.role ?? "CLIENT",
+          id: user.id,
+          email: user.email,
+          name: user.name ?? undefined,
+          role: user.role ?? "CLIENT",
         };
       },
     }),

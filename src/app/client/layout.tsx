@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db, users, messages } from "@/db";
+import { eq, and, count } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -14,15 +15,19 @@ export default async function ClientLayout({ children }: { children: React.React
   const session = await auth();
   if (!session?.user?.id) redirect("/admin/login");
 
-  const userWithApps = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
+  const userWithApps = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: {
       name: true,
       email: true,
       logo: true,
+    },
+    with: {
       apps: {
-        select: {
-          app: { select: { id: true, name: true, url: true, icon: true } },
+        with: {
+          app: {
+            columns: { id: true, name: true, url: true, icon: true },
+          },
         },
       },
     },
@@ -32,9 +37,11 @@ export default async function ClientLayout({ children }: { children: React.React
 
   let unreadCount = 0;
   try {
-    unreadCount = await prisma.message.count({
-      where: { toUserId: session.user.id, read: false },
-    });
+    const [result] = await db
+      .select({ count: count() })
+      .from(messages)
+      .where(and(eq(messages.toUserId, session.user.id), eq(messages.read, false)));
+    unreadCount = result?.count ?? 0;
   } catch {
     // ignore
   }

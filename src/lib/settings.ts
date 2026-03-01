@@ -1,22 +1,26 @@
-import { prisma } from "./prisma";
+import { db, siteSettings } from "@/db";
+import { eq, inArray } from "drizzle-orm";
 import { SETTING_KEYS, DEFAULTS } from "./setting-keys";
-
-// Re-export constants for backward compat (server components only)
-export { SETTING_KEYS, DEFAULTS };
 
 export async function getSiteSetting(key: string): Promise<string> {
   try {
-    const row = await prisma.siteSetting.findUnique({ where: { key } });
+    const [row] = await db
+      .select()
+      .from(siteSettings)
+      .where(eq(siteSettings.key, key))
+      .limit(1);
     return row?.value ?? DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
   } catch {
-    /* c8 ignore next */
     return DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
   }
 }
 
 export async function getSiteSettings(keys: string[]): Promise<Record<string, string>> {
   try {
-    const rows = await prisma.siteSetting.findMany({ where: { key: { in: keys } } });
+    const rows = await db
+      .select()
+      .from(siteSettings)
+      .where(inArray(siteSettings.key, keys));
     const map: Record<string, string> = {};
     for (const key of keys) {
       const row = rows.find((r) => r.key === key);
@@ -26,9 +30,10 @@ export async function getSiteSettings(keys: string[]): Promise<Record<string, st
   } catch {
     const map: Record<string, string> = {};
     for (const key of keys) {
-      /* c8 ignore next */
       map[key] = DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
     }
     return map;
   }
 }
+
+export { SETTING_KEYS, DEFAULTS };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db, users } from "@/db";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getSiteSettings, SETTING_KEYS } from "@/lib/settings";
 import { AdminAccountClient } from "./AdminAccountClient";
@@ -11,11 +12,12 @@ export default async function AdminAccountPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/admin/login");
 
-  const [user, settings] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, name: true, email: true },
-    }),
+  const [[user], settings] = await Promise.all([
+    db
+      .select({ id: users.id, name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1),
     getSiteSettings([SETTING_KEYS.AVATAR_URL, SETTING_KEYS.COUPLE_PHOTO_URL]),
   ]);
 

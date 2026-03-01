@@ -3,7 +3,8 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { Nav } from "@/components/ui/Nav";
 import { AdminAccountMenu } from "@/components/admin/AdminAccountMenu";
-import { prisma } from "@/lib/prisma";
+import { db, messages } from "@/db";
+import { eq, and, count } from "drizzle-orm";
 
 export const metadata: Metadata = {
   title: { default: "Admin", template: "%s | Admin — Steve Ackley" },
@@ -20,11 +21,13 @@ export default async function AdminLayout({
   let unreadCount = 0;
   if (session?.user?.id) {
     try {
-      unreadCount = await prisma.message.count({
-        where: { toUserId: session.user.id, read: false },
-      });
+      const [result] = await db
+        .select({ count: count() })
+        .from(messages)
+        .where(and(eq(messages.toUserId, session.user.id), eq(messages.read, false)));
+      unreadCount = result?.count ?? 0;
     } catch {
-      // ignore
+      // Ignore
     }
   }
 

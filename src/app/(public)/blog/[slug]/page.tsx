@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
+import { db, posts } from "@/db";
+import { and, eq } from "drizzle-orm";
 import { PostContent } from "@/components/blog/PostContent";
 import { formatDate } from "@/lib/utils";
 
@@ -17,7 +18,12 @@ interface Props {
 // React.cache deduplicates the DB query between generateMetadata and the page component
 // within the same render pass — no double round-trip to the database.
 const getPost = cache(async (slug: string) => {
-  return prisma.post.findUnique({ where: { slug, published: true } });
+  const [post] = await db
+    .select()
+    .from(posts)
+    .where(and(eq(posts.slug, slug), eq(posts.published, true)))
+    .limit(1);
+  return post ?? null;
 });
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

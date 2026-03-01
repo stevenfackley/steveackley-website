@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { db, users as usersTable } from "@/db";
+import { asc } from "drizzle-orm";
 import { getSiteSettings, SETTING_KEYS } from "@/lib/settings";
 import { SettingsClient } from "./SettingsClient";
 
@@ -7,10 +8,16 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function AdminSettingsPage() {
   const [users, settings] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: { createdAt: "asc" },
-      select: { id: true, email: true, name: true, role: true, createdAt: true },
-    }),
+    db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        name: usersTable.name,
+        role: usersTable.role,
+        createdAt: usersTable.createdAt,
+      })
+      .from(usersTable)
+      .orderBy(asc(usersTable.createdAt)),
     getSiteSettings([
       SETTING_KEYS.AVATAR_URL,
       SETTING_KEYS.COUPLE_PHOTO_URL,

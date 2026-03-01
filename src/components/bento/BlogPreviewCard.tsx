@@ -1,28 +1,45 @@
-import { Card, CardHeader } from "@/components/ui/Card";
 import { cn, formatDateShort } from "@/lib/utils";
-import { prisma } from "@/lib/prisma";
+import { db, posts } from "@/db";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
+
 export async function BlogPreviewCard({ className }: { className?: string }) {
-  const posts = await prisma.post.findMany({ where: { published: true }, orderBy: { createdAt: "desc" }, take: 3, select: { id: true, title: true, slug: true, createdAt: true } });
+  const recentPosts = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      slug: posts.slug,
+      createdAt: posts.createdAt,
+    })
+    .from(posts)
+    .where(eq(posts.published, true))
+    .orderBy(desc(posts.createdAt))
+    .limit(3);
+
   return (
-    <Card className={cn("p-6", className)}>
-      <CardHeader label="Latest Posts">
-        <Link href="/blog" className="text-xs text-[var(--accent)] hover:underline">View all →</Link>
-      </CardHeader>
-      {posts.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)] mt-2">No posts yet. Check back soon!</p>
-      ) : (
-        <div className="space-y-3 mt-1">
-          {posts.map((post) => (
-            <div key={post.id}>
-              <Link href={`/blog/${post.slug}`} className="block group">
-                <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-1">{post.title}</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">{formatDateShort(post.createdAt)}</p>
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
-    </Card>
+    <div className={cn("p-6 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 rounded-2xl border border-purple-200 dark:border-purple-800", className)}>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-2xl">✍️</span>
+        <h2 className="text-xl font-semibold">Recent Posts</h2>
+      </div>
+      <ul className="space-y-3">
+        {recentPosts.map((post) => (
+          <li key={post.id}>
+            <Link
+              href={`/blog/${post.slug}`}
+              className="block group hover:bg-white/50 dark:hover:bg-white/5 rounded-lg p-2 -m-2 transition-colors"
+            >
+              <h3 className="font-medium group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
+                {post.title}
+              </h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">{formatDateShort(post.createdAt)}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link href="/blog" className="text-sm text-purple-600 dark:text-purple-400 hover:underline mt-4 inline-block">
+        View all posts →
+      </Link>
+    </div>
   );
 }

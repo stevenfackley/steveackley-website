@@ -1,6 +1,7 @@
 import { BentoDashboard } from "@/components/bento/BentoDashboard";
 import { TabsDashboard } from "@/components/bento/TabsDashboard";
-import { prisma } from "@/lib/prisma";
+import { db, posts } from "@/db";
+import { eq, desc } from "drizzle-orm";
 import { getPublicRepos, enrichRepos } from "@/lib/github";
 import { getSiteSettings, SETTING_KEYS } from "@/lib/settings";
 
@@ -9,12 +10,18 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const [blogPosts, rawRepos, settings] = await Promise.all([
-    prisma.post.findMany({
-      where: { published: true },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      select: { id: true, title: true, slug: true, excerpt: true, createdAt: true },
-    }),
+    db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        excerpt: posts.excerpt,
+        createdAt: posts.createdAt,
+      })
+      .from(posts)
+      .where(eq(posts.published, true))
+      .orderBy(desc(posts.createdAt))
+      .limit(20),
     getPublicRepos(),
     getSiteSettings([SETTING_KEYS.AVATAR_URL, SETTING_KEYS.COUPLE_PHOTO_URL]),
   ]);

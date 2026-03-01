@@ -1,9 +1,10 @@
 "use server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db, users, messages } from "@/db";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/types";
 import { DEFAULT_ADMIN_EMAIL } from "@/lib/admin";
+import { eq, and, count as drizzleCount } from "drizzle-orm";
 
 async function requireAuth() {
   const session = await auth();
@@ -22,10 +23,11 @@ async function requireAdmin() {
 // Get admin user id
 // ---------------------------------------------------------------------------
 async function getAdminUserId(): Promise<string | null> {
-  const admin = await prisma.user.findUnique({
-    where: { email: DEFAULT_ADMIN_EMAIL },
-    select: { id: true },
-  });
+  const [admin] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, DEFAULT_ADMIN_EMAIL))
+    .limit(1);
   return admin?.id ?? null;
 }
 
@@ -43,9 +45,10 @@ export async function sendMessage(
     if (!subject.trim() || !body.trim()) {
       return { success: false, error: "Subject and body are required" };
     }
-    const msg = await prisma.message.create({
-      data: { fromUserId, toUserId, subject: subject.trim(), body: body.trim(), type },
-    });
+    const [msg] = await db
+      .insert(messages)
+      .values({ fromUserId, toUserId, subject: subject.trim(), body: body.trim(), type })
+      .returning({ id: messages.id });
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true, data: { id: msg.id } };
@@ -65,15 +68,16 @@ export async function sendProjectRequest(body: string): Promise<ActionResult> {
     if (!adminId) return { success: false, error: "Admin not found" };
     if (!body.trim()) return { success: false, error: "Message body is required" };
 
-    const msg = await prisma.message.create({
-      data: {
+    const [msg] = await db
+      .insert(messages)
+      .values({
         fromUserId,
         toUserId: adminId,
         subject: "Project Request",
         body: body.trim(),
         type: "PROJECT_REQUEST",
-      },
-    });
+      })
+      .returning({ id: messages.id });
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true, data: { id: msg.id } };
@@ -96,9 +100,10 @@ export async function sendMessageToClient(
     if (!subject.trim() || !body.trim()) {
       return { success: false, error: "Subject and body are required" };
     }
-    const msg = await prisma.message.create({
-      data: { fromUserId, toUserId, subject: subject.trim(), body: body.trim(), type: "GENERAL" },
-    });
+    const [msg] = await db
+      .insert(messages)
+      .values({ fromUserId, toUserId, subject: subject.trim(), body: body.trim(), type: "GENERAL" })
+      .returning({ id: messages.id });
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true, data: { id: msg.id } };
@@ -115,10 +120,10 @@ export async function markMessageRead(messageId: string): Promise<ActionResult> 
   try {
     const userId = await requireAuth();
     // Only the recipient can mark as read
-    await prisma.message.updateMany({
-      where: { id: messageId, toUserId: userId },
-      data: { read: true },
-    });
+    await db
+      .update(messages)
+      .set({ read: true })
+      .where(and(eq(messages.id, messageId), eq(messages.toUserId, userId)));
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true };
@@ -134,10 +139,10 @@ export async function markMessageRead(messageId: string): Promise<ActionResult> 
 export async function markAllRead(): Promise<ActionResult> {
   try {
     const userId = await requireAuth();
-    await prisma.message.updateMany({
-      where: { toUserId: userId, read: false },
-      data: { read: true },
-    });
+    await db
+      .update(messages)
+      .set({ read: true })
+      .where(and(eq(messages.toUserId, userId), eq(messages.read, false)));
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true };
@@ -153,12 +158,12 @@ export async function markAllRead(): Promise<ActionResult> {
 export async function deleteMessage(messageId: string): Promise<ActionResult> {
   try {
     const userId = await requireAuth();
-    const msg = await prisma.message.findUnique({ where: { id: messageId } });
+    const [msg] = await db.select().from(messages).where(eq(messages.id, messageId)).limit(1);
     if (!msg) return { success: false, error: "Message not found" };
     if (msg.fromUserId !== userId && msg.toUserId !== userId) {
       return { success: false, error: "Unauthorized" };
     }
-    await prisma.message.delete({ where: { id: messageId } });
+    await db.delete(messages).where(eq(messages.id, messageId));
     revalidatePath("/admin/messages");
     revalidatePath("/client/messages");
     return { success: true };
@@ -175,9 +180,11 @@ export async function getUnreadCount(): Promise<number> {
   try {
     const session = await auth();
     if (!session?.user?.id) return 0;
-    return await prisma.message.count({
-      where: { toUserId: session.user.id, read: false },
-    });
+    const [result] = await db
+      .select({ count: drizzleCount() })
+      .from(messages)
+      .where(and(eq(messages.toUserId, session.user.id), eq(messages.read, false)));
+    return result?.count ?? 0;
   } catch {
     return 0;
   }

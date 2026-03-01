@@ -1,6 +1,7 @@
 "use server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db, users, siteSettings, clientApps, userApps } from "@/db";
+import { eq, and } from "drizzle-orm";
 import { compare, hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/types";
@@ -28,14 +29,14 @@ export async function changePassword(
       return { success: false, error: "New password must be at least 8 characters" };
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user) return { success: false, error: "User not found" };
 
     const isValid = await compare(currentPassword, user.passwordHash);
     if (!isValid) return { success: false, error: "Current password is incorrect" };
 
     const newHash = await hash(newPassword, 12);
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash: newHash } });
+    await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
 
     return { success: true };
   } catch (err) {
@@ -51,11 +52,10 @@ export async function changePassword(
 export async function updateSiteSetting(key: string, value: string): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.siteSetting.upsert({
-      where: { key },
-      update: { value },
-      create: { key, value },
-    });
+    await db
+      .insert(siteSettings)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
     revalidatePath("/");
     revalidatePath("/resume");
     return { success: true };
@@ -81,13 +81,14 @@ export async function createUser(
       return { success: false, error: "Password must be at least 8 characters" };
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existing) return { success: false, error: "A user with that email already exists" };
 
     const passwordHash = await hash(password, 12);
-    const user = await prisma.user.create({
-      data: { email, passwordHash, name: name || null, role: "CLIENT" },
-    });
+    const [user] = await db
+      .insert(users)
+      .values({ email, passwordHash, name: name || null, role: "CLIENT" })
+      .returning({ id: users.id });
 
     revalidatePath("/admin/settings");
     return { success: true, data: { id: user.id } };
@@ -102,7 +103,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     const callerId = await requireAdmin();
     if (userId === callerId) return { success: false, error: "You cannot delete your own account" };
 
-    await prisma.user.delete({ where: { id: userId } });
+    await db.delete(users).where(eq(users.id, userId));
     revalidatePath("/admin/settings");
     return { success: true };
   } catch (err) {
@@ -119,7 +120,7 @@ export async function updateUserRole(
     const callerId = await requireAdmin();
     if (userId === callerId) return { success: false, error: "You cannot change your own role" };
 
-    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+    const [targetUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!targetUser) return { success: false, error: "User not found" };
     if (newRole === "ADMIN") {
       return { success: false, error: "Only default admin may have ADMIN role" };
@@ -128,7 +129,7 @@ export async function updateUserRole(
       return { success: false, error: "Cannot change role of default admin" };
     }
 
-    await prisma.user.update({ where: { id: userId }, data: { role: newRole } });
+    await db.update(users).set({ role: newRole }).where(eq(users.id, userId));
     revalidatePath("/admin/settings");
     return { success: true };
   } catch (err) {
@@ -152,8 +153,9 @@ export async function createClientApp(
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
-    const app = await prisma.clientApp.create({
-      data: {
+    const [app] = await db
+      .insert(clientApps)
+      .values({
         name,
         url,
         description: description || null,
@@ -161,8 +163,8 @@ export async function createClientApp(
         productName: productName || null,
         companyName: companyName || null,
         environment: environment || "PRODUCTION",
-      },
-    });
+      })
+      .returning({ id: clientApps.id });
     revalidatePath("/admin/apps");
     return { success: true, data: { id: app.id } };
   } catch (err) {
@@ -185,9 +187,9 @@ export async function updateClientApp(
 ): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.clientApp.update({
-      where: { id: appId },
-      data: {
+    await db
+      .update(clientApps)
+      .set({
         name: data.name,
         url: data.url,
         description: data.description || null,
@@ -195,8 +197,9 @@ export async function updateClientApp(
         productName: data.productName || null,
         companyName: data.companyName || null,
         environment: data.environment,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(clientApps.id, appId));
     revalidatePath("/admin/apps");
     revalidatePath("/client/dashboard");
     return { success: true };
@@ -209,7 +212,7 @@ export async function updateClientApp(
 export async function deleteClientApp(appId: string): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.clientApp.delete({ where: { id: appId } });
+    await db.delete(clientApps).where(eq(clientApps.id, appId));
     revalidatePath("/admin/apps");
     return { success: true };
   } catch (err) {
@@ -221,11 +224,10 @@ export async function deleteClientApp(appId: string): Promise<ActionResult> {
 export async function assignAppToUser(userId: string, appId: string): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.userApp.upsert({
-      where: { userId_appId: { userId, appId } },
-      update: {},
-      create: { userId, appId },
-    });
+    await db
+      .insert(userApps)
+      .values({ userId, appId })
+      .onConflictDoNothing();
     revalidatePath("/admin/apps");
     revalidatePath("/client/dashboard");
     return { success: true };
@@ -238,7 +240,7 @@ export async function assignAppToUser(userId: string, appId: string): Promise<Ac
 export async function removeAppFromUser(userId: string, appId: string): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.userApp.delete({ where: { userId_appId: { userId, appId } } });
+    await db.delete(userApps).where(and(eq(userApps.userId, userId), eq(userApps.appId, appId)));
     revalidatePath("/admin/apps");
     revalidatePath("/client/dashboard");
     return { success: true };

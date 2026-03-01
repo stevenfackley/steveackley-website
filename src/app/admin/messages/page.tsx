@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db, messages, users } from "@/db";
+import { eq, desc, asc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { AdminMessagesClient } from "./AdminMessagesClient";
 
@@ -11,24 +12,28 @@ export default async function AdminMessagesPage() {
   if (!session?.user?.id) redirect("/admin/login");
 
   const [received, sent, clients] = await Promise.all([
-    prisma.message.findMany({
-      where: { toUserId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        fromUser: { select: { id: true, name: true, email: true } },
+    db.query.messages.findMany({
+      where: eq(messages.toUserId, session.user.id),
+      orderBy: [desc(messages.createdAt)],
+      with: {
+        fromUser: {
+          columns: { id: true, name: true, email: true },
+        },
       },
     }),
-    prisma.message.findMany({
-      where: { fromUserId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        toUser: { select: { id: true, name: true, email: true } },
+    db.query.messages.findMany({
+      where: eq(messages.fromUserId, session.user.id),
+      orderBy: [desc(messages.createdAt)],
+      with: {
+        toUser: {
+          columns: { id: true, name: true, email: true },
+        },
       },
     }),
-    prisma.user.findMany({
-      where: { role: "CLIENT" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, email: true },
+    db.query.users.findMany({
+      where: eq(users.role, "CLIENT"),
+      orderBy: [asc(users.name)],
+      columns: { id: true, name: true, email: true },
     }),
   ]);
 

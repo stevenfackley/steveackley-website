@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { db, posts } from "@/db";
+import { eq } from "drizzle-orm";
 import { PostForm } from "@/components/admin/PostForm";
 import { updatePost } from "./actions";
 export const metadata: Metadata = { title: "Edit Post" };
 interface Props { params: Promise<{ id: string }> }
 export default async function EditPostPage({ params }: Props) {
   const { id } = await params;
-  const post = await prisma.post.findUnique({ where: { id } });
+  const [post] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (!post) notFound();
   const action = updatePost.bind(null, id);
   return (
