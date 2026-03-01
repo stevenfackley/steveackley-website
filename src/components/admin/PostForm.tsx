@@ -1,6 +1,11 @@
 "use client";
 import { useState, useTransition, useRef } from "react";
-import { PostEditor } from "./PostEditor";
+import dynamic from "next/dynamic";
+
+const PostEditor = dynamic(
+  () => import("./PostEditor").then((m) => ({ default: m.PostEditor })),
+  { ssr: false, loading: () => <div className="h-64 rounded-xl border border-[var(--border)] bg-[var(--background)] animate-pulse" /> }
+);
 import { ImageUploadButton } from "./ImageUploadButton";
 import { Button } from "@/components/ui/Button";
 import type { ActionResult } from "@/types";
