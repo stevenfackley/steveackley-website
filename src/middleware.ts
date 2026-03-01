@@ -24,7 +24,7 @@ export default auth((req) => {
 
   // /admin/login
   if (isAdminLogin) {
-    if (!isLoggedIn) return; // allow
+    if (!isLoggedIn) return NextResponse.next(); // explicitly return next() instead of undefined
     const dest = role === "ADMIN" ? "/admin/dashboard" : "/client/dashboard";
     return NextResponse.redirect(new URL(dest, req.url));
   }
@@ -39,7 +39,7 @@ export default auth((req) => {
     if (role !== "ADMIN") {
       return NextResponse.redirect(new URL("/client/dashboard", req.url));
     }
-    return;
+    return NextResponse.next(); // explicitly return next()
   }
 
   // /client/* (any authenticated user)
@@ -49,8 +49,11 @@ export default auth((req) => {
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    return;
+    return NextResponse.next(); // explicitly return next()
   }
+
+  // Fallback for unmatched routes (shouldn't happen with matcher config)
+  return NextResponse.next();
 });
 
 export const config = {
