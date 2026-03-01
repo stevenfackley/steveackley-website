@@ -10,14 +10,8 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
-COPY package.json ./
-COPY prisma ./prisma/
-RUN npm install --no-audit --no-fund
-# Dummy DATABASE_URL is only used at build time for `prisma generate` schema validation.
-# The real DATABASE_URL is injected at runtime via web.env (never baked into the image).
-ARG DATABASE_URL="postgresql://build:build@localhost:5432/builddb"
-ENV DATABASE_URL=$DATABASE_URL
-RUN npx prisma generate
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -27,10 +21,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# Dummy DATABASE_URL needed in case Next.js build touches Prisma client validation.
-# Real DATABASE_URL is injected at runtime — this value is never used in production.
-ARG DATABASE_URL="postgresql://build:build@localhost:5432/builddb"
-ENV DATABASE_URL=$DATABASE_URL
 RUN npm run build
 
 # Stage 3: Runner
@@ -48,10 +38,6 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 # Copy entrypoint and seed scripts
 COPY --chown=nextjs:nodejs docker/entrypoint.sh /app/docker/entrypoint.sh
