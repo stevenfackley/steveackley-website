@@ -23,7 +23,8 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@prisma/client": "^7.4.2",
+    "@modelcontextprotocol/server-sequential-thinking": "^2025.12.18",
+    "@prisma/client": "^6.19.2",
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/extension-code-block-lowlight": "^3.20.0",
     "@tiptap/extension-image": "^3.20.0",
@@ -63,11 +64,28 @@
     "eslint-config-next": "16.1.6",
     "jsdom": "^28.1.0",
     "msw": "^2.12.10",
-    "prisma": "^7.0.0",
+    "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.9"
-  }
+  },
+  "description": "[![CI / Deploy to GHCR & EC2](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml)",
+  "main": "test-bcrypt.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevenfackley/steveackley-website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/stevenfackley/steveackley-website/issues"
+  },
+  "homepage": "https://github.com/stevenfackley/steveackley-website#readme"
 }
