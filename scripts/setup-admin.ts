@@ -8,12 +8,10 @@
  */
 import "dotenv/config";
 import { PrismaClient } from "../prisma/generated/client.js";
-import { PrismaPpg } from "@prisma/adapter-ppg";
 import { hash } from "bcryptjs";
 import * as readline from "readline";
 
-const adapter = new PrismaPpg({ connectionString: process.env.DATABASE_URL! });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function prompt(question: string): Promise<string> {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

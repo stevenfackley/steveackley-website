@@ -17,10 +17,9 @@ const nextConfig: NextConfig = {
   // Standalone output for optimized Docker builds
   output: "standalone",
 
-  // Keep Prisma and adapter out of browser/edge bundles (Node.js-only)
+  // Keep Prisma out of browser/edge bundles (Node.js-only)
   serverExternalPackages: [
     "@prisma/client",
-    "@prisma/adapter-ppg",
     "prisma",
   ],
 

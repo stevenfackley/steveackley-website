@@ -190,6 +190,14 @@ node -e "const b=require('bcryptjs');b.hash('yourpassword',12).then(console.log)
 
 ## 🗄️ Database
 
+This application uses **self-hosted PostgreSQL** with **standard Prisma Client** (no driver adapters).
+
+**⚠️ Important:** See [docs/DATABASE.md](./docs/DATABASE.md) for:
+- Complete database architecture and configuration
+- Common mistakes and troubleshooting guide
+- "FATAL: role 'root' does not exist" fix
+- Environment-specific setup instructions
+
 ### Prisma commands
 
 ```bash

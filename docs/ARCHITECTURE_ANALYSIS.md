@@ -16,14 +16,64 @@
 
 ### Application Stack
 ```
-Framework:    Next.js 15 (App Router, Standalone mode)
+Framework:    Next.js 16 (App Router, Standalone mode)
 Language:     TypeScript 5
-Database:     PostgreSQL 16 + Prisma ORM
+Database:     PostgreSQL 16 + Prisma ORM (Standard Connection)
 Auth:         NextAuth.js v5 (Credentials provider)
 Styling:      Tailwind CSS 4
 Rich Text:    Tiptap editor
 Deployment:   Docker + Docker Compose
 ```
+
+### Database Connection Architecture
+
+**CRITICAL: This application uses standard PostgreSQL with standard Prisma Client.**
+
+#### ✅ Correct Setup (Current)
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from "../../prisma/generated/client";
+
+export const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+});
+```
+
+```prisma
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+**Dependencies:** `@prisma/client` only (NO adapters needed)
+
+#### ❌ Common Mistake: Using Prisma Cloud Adapter
+
+**DO NOT USE** `@prisma/adapter-ppg` — this adapter is **only** for Prisma Inc.'s managed cloud Postgres service (`prisma+postgres://` protocol URLs). It does not work with standard `postgresql://` connection strings.
+
+**Symptom of wrong adapter:**
+- Pages return HTTP 500
+- Postgres logs show: `FATAL: role "root" does not exist`
+- App tries to connect via Unix socket as OS user instead of using DATABASE_URL credentials
+
+**Why it breaks:**
+- `@prisma/adapter-ppg` expects `prisma+postgres://` URLs from Prisma's cloud service
+- When given standard `postgresql://user:pass@host:port/db` URLs, it ignores credentials
+- Falls back to Unix socket connection as the OS user (root in CI, runner locally)
+- Database rejects connection because those OS users don't exist as Postgres roles
+
+**If you see database connection errors:**
+1. Check `src/lib/prisma.ts` — should use plain `PrismaClient()` with no adapter
+2. Check `prisma/schema.prisma` — should have `url = env("DATABASE_URL")`
+3. Check `package.json` — should NOT include `@prisma/adapter-ppg`
+4. Verify `DATABASE_URL` uses `postgresql://` protocol (not `prisma+postgres://`)
+
+**For self-hosted PostgreSQL (Docker, EC2, RDS, etc.):**
+- Use standard Prisma Client without any driver adapters
+- Prisma has built-in connection pooling and native PostgreSQL support
+- The `url = env("DATABASE_URL")` in schema.prisma is all you need
 
 ### Key Characteristics
 - **Self-contained**: All dependencies in Docker, no external services required
