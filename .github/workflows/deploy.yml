@@ -122,6 +122,9 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: List generated Prisma files
+        run: find prisma/generated -type f | head -30 || echo "No generated files found"
+
       - name: Apply database migrations
         run: npx prisma migrate deploy
 
