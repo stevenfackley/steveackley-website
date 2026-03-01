@@ -37,11 +37,6 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Generate Prisma client (for TypeScript types)
-        run: npx prisma generate
-        env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-
       - name: Run unit tests
         run: npm run test:unit
 
@@ -64,11 +59,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-
-      - name: Generate Prisma client
-        run: npx prisma generate
-        env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       - name: Run integration tests
         run: npm run test:integration
@@ -121,22 +111,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: List generated Prisma files
-        run: |
-          echo "=== prisma/generated contents ==="
-          ls -la prisma/generated/ 2>/dev/null || echo "prisma/generated directory does not exist"
-          echo "=== all generated files ==="
-          find prisma/generated -type f 2>/dev/null | head -30 || echo "No generated files found"
-          echo "=== prisma/generated index file (first 5 lines) ==="
-          head -5 prisma/generated/index.ts 2>/dev/null || head -5 prisma/generated/index.js 2>/dev/null || echo "No index file found"
-          echo "=== prisma/generated client file (first 5 lines) ==="
-          head -5 prisma/generated/client.ts 2>/dev/null || head -5 prisma/generated/client.js 2>/dev/null || echo "No client file found"
-
       - name: Apply database migrations
-        run: npx prisma migrate deploy
+        run: npm run db:migrate
 
       - name: Install Playwright system dependencies
         run: npx playwright install-deps chromium
