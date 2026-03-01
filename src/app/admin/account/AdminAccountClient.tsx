@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { ImageUploadButton } from "@/components/admin/ImageUploadButton";
 import { changePassword, updateSiteSetting } from "../settings/actions";
-import { SETTING_KEYS } from "@/lib/settings";
+import { SETTING_KEYS } from "@/lib/setting-keys";
 
 interface Props {
   name: string | null;

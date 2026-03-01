@@ -1,13 +1,17 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 
 /**
  * Auth middleware: protects /admin/* and /client/* routes.
+ * Uses edge-compatible authConfig (no Prisma, no Node.js-only imports).
  *
  * - /admin/* (non-login): requires ADMIN role; clients are sent to /client/dashboard
  * - /admin/login: redirects already-authenticated users based on their role
  * - /client/*: requires any authenticated user
  */
+const { auth } = NextAuth(authConfig);
+
 export default auth((req) => {
   const session = req.auth;
   const isLoggedIn = !!session;

@@ -10,7 +10,7 @@ import {
   createUser,
   deleteUser,
 } from "./actions";
-import { SETTING_KEYS } from "@/lib/settings";
+import { SETTING_KEYS } from "@/lib/setting-keys";
 
 interface User {
   id: string;
