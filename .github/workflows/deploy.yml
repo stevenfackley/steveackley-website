@@ -102,6 +102,8 @@ jobs:
       DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
       # AUTH_SECRET must be ≥32 chars — this value is safe for ephemeral CI only
       AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
+      # NextAuth v5 requires AUTH_URL to build callback/redirect URLs
+      AUTH_URL: "http://localhost:3000"
       # bcrypt hash of the string "ci-test-password" — safe for CI only
       ADMIN_PASSWORD_HASH: "$2a$12$ci.placeholder.hash.not.real.xxxxxxxxxxxxxxx"
       NODE_ENV: "test"
