@@ -28,7 +28,8 @@ test.describe("Homepage", () => {
   });
 
   test("contains a navigation bar", async ({ page }) => {
-    const nav = page.getByRole("navigation");
+    // Use first() — the homepage renders multiple nav elements (main nav + tab nav)
+    const nav = page.getByRole("navigation").first();
     await expect(nav).toBeVisible();
   });
 
