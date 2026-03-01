@@ -1,4 +1,3 @@
-import "server-only";
 import { prisma } from "./prisma";
 import { SETTING_KEYS, DEFAULTS } from "./setting-keys";
 
