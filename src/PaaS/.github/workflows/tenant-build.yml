@@ -1,0 +1,481 @@
+name: Tenant-Specific Build & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant_id:
+        description: 'Tenant identifier for schema routing'
+        required: true
+        type: string
+      tenant_name:
+        description: 'Display name for branding'
+        required: true
+        type: string
+      app_bundle_id:
+        description: 'iOS bundle ID / Android package name'
+        required: true
+        type: string
+      primary_color:
+        description: 'Hex color for theme (e.g., #FF5733)'
+        required: true
+        type: string
+      logo_url:
+        description: 'URL to tenant logo asset'
+        required: true
+        type: string
+      ota_endpoint:
+        description: 'Custom OTA API endpoint'
+        required: true
+        type: string
+      platform:
+        description: 'Target platform(s)'
+        required: true
+        type: choice
+        options:
+          - ios
+          - android
+          - windows
+          - all
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  AZURE_KEYVAULT_NAME: 'hybrid-platform-vault'
+
+jobs:
+  prepare:
+    name: Prepare Build Assets
+    runs-on: ubuntu-latest
+    outputs:
+      build_version: ${{ steps.version.outputs.version }}
+      build_number: ${{ steps.version.outputs.build_number }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Version Numbers
+        id: version
+        run: |
+          echo "version=${{ github.run_number }}" >> $GITHUB_OUTPUT
+          echo "build_number=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+
+      - name: Download Tenant Logo
+        run: |
+          mkdir -p assets/logos
+          curl -L -o assets/logos/tenant-logo.png "${{ inputs.logo_url }}"
+          
+      - name: Upload Logo Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tenant-assets
+          path: assets/logos/
+          retention-days: 7
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    needs: prepare
+    if: inputs.platform == 'android' || inputs.platform == 'all'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install Android Workload
+        run: dotnet workload install android
+
+      - name: Download Tenant Assets
+        uses: actions/download-artifact@v4
+        with:
+          name: tenant-assets
+          path: assets/logos/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Fetch Android Keystore from Key Vault
+        uses: azure/get-keyvault-secrets@v1
+        id: fetch-keystore
+        with:
+          keyvault: ${{ env.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            android-keystore-${{ inputs.tenant_id }}
+            android-keystore-password-${{ inputs.tenant_id }}
+
+      - name: Inject Android Manifest & Assets
+        run: |
+          chmod +x scripts/inject-android-manifest.sh
+          ./scripts/inject-android-manifest.sh \
+            "${{ inputs.app_bundle_id }}" \
+            "${{ inputs.tenant_name }}" \
+            "${{ inputs.ota_endpoint }}" \
+            "${{ inputs.primary_color }}" \
+            "assets/logos/tenant-logo.png"
+
+      - name: Restore Dependencies
+        run: dotnet restore src/HybridPlatform.Shell/HybridPlatform.Shell.csproj
+
+      - name: Build Android APK
+        run: |
+          dotnet publish src/HybridPlatform.Shell/HybridPlatform.Shell.csproj \
+            -f net10.0-android \
+            -c Release \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore=release.keystore \
+            -p:AndroidSigningKeyAlias=tenant-key \
+            -p:AndroidSigningKeyPass="${{ steps.fetch-keystore.outputs.android-keystore-password }}" \
+            -p:AndroidSigningStorePass="${{ steps.fetch-keystore.outputs.android-keystore-password }}" \
+            -p:ApplicationId="${{ inputs.app_bundle_id }}" \
+            -p:ApplicationTitle="${{ inputs.tenant_name }}" \
+            -p:ApplicationVersion="${{ needs.prepare.outputs.build_version }}"
+
+      - name: Prepare Keystore
+        run: |
+          echo "${{ steps.fetch-keystore.outputs.android-keystore }}" | base64 -d > release.keystore
+
+      - name: Sign Android APK
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-android/publish
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore ${{ github.workspace }}/release.keystore \
+            -storepass "${{ steps.fetch-keystore.outputs.android-keystore-password }}" \
+            *.apk tenant-key
+
+      - name: Align APK
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-android/publish
+          $ANDROID_HOME/build-tools/*/zipalign -v 4 *.apk aligned.apk
+          mv aligned.apk ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.apk
+
+      - name: Generate SHA-256 Checksum
+        id: checksum
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-android/publish
+          sha256sum ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.apk > checksum.txt
+          echo "sha256=$(cat checksum.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Create OTA Package
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-android/publish
+          mkdir ota-package
+          cp ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.apk ota-package/
+          cd ota-package
+          zip -r ../android-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip .
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-android/publish/${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.apk
+          retention-days: 90
+
+      - name: Upload OTA Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-ota-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-android/publish/android-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip
+          retention-days: 90
+
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    needs: prepare
+    if: inputs.platform == 'ios' || inputs.platform == 'all'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install iOS Workload
+        run: dotnet workload install ios
+
+      - name: Download Tenant Assets
+        uses: actions/download-artifact@v4
+        with:
+          name: tenant-assets
+          path: assets/logos/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Fetch iOS Certificates from Key Vault
+        uses: azure/get-keyvault-secrets@v1
+        id: fetch-certs
+        with:
+          keyvault: ${{ env.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            ios-dist-cert-${{ inputs.tenant_id }}
+            ios-provisioning-profile-${{ inputs.tenant_id }}
+            ios-cert-password-${{ inputs.tenant_id }}
+
+      - name: Install iOS Certificate
+        run: |
+          echo "${{ steps.fetch-certs.outputs.ios-dist-cert }}" | base64 -d > cert.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import cert.p12 -P "${{ steps.fetch-certs.outputs.ios-cert-password }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+
+      - name: Install Provisioning Profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ steps.fetch-certs.outputs.ios-provisioning-profile }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Inject iOS Info.plist & Assets
+        run: |
+          chmod +x scripts/inject-ios-plist.sh
+          ./scripts/inject-ios-plist.sh \
+            "${{ inputs.app_bundle_id }}" \
+            "${{ inputs.tenant_name }}" \
+            "${{ inputs.ota_endpoint }}" \
+            "${{ inputs.primary_color }}" \
+            "assets/logos/tenant-logo.png"
+
+      - name: Restore Dependencies
+        run: dotnet restore src/HybridPlatform.Shell/HybridPlatform.Shell.csproj
+
+      - name: Build iOS IPA
+        run: |
+          dotnet publish src/HybridPlatform.Shell/HybridPlatform.Shell.csproj \
+            -f net10.0-ios \
+            -c Release \
+            -p:ArchiveOnBuild=true \
+            -p:RuntimeIdentifier=ios-arm64 \
+            -p:ApplicationId="${{ inputs.app_bundle_id }}" \
+            -p:ApplicationTitle="${{ inputs.tenant_name }}" \
+            -p:ApplicationVersion="${{ needs.prepare.outputs.build_version }}"
+
+      - name: Generate SHA-256 Checksum
+        id: checksum
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-ios/ios-arm64/publish
+          find . -name "*.ipa" -exec mv {} ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.ipa \;
+          sha256sum ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.ipa > checksum.txt
+          echo "sha256=$(cat checksum.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: Create OTA Package
+        run: |
+          cd src/HybridPlatform.Shell/bin/Release/net10.0-ios/ios-arm64/publish
+          mkdir ota-package
+          cp ${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.ipa ota-package/
+          cd ota-package
+          zip -r ../ios-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip .
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-ios/ios-arm64/publish/${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.ipa
+          retention-days: 90
+
+      - name: Upload OTA Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ota-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-ios/ios-arm64/publish/ios-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip
+          retention-days: 90
+
+  build-windows:
+    name: Build Windows MSIX
+    runs-on: windows-latest
+    needs: prepare
+    if: inputs.platform == 'windows' || inputs.platform == 'all'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Download Tenant Assets
+        uses: actions/download-artifact@v4
+        with:
+          name: tenant-assets
+          path: assets/logos/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Fetch Windows Certificate from Key Vault
+        uses: azure/get-keyvault-secrets@v1
+        id: fetch-cert
+        with:
+          keyvault: ${{ env.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            windows-cert-${{ inputs.tenant_id }}
+            windows-cert-password-${{ inputs.tenant_id }}
+
+      - name: Inject Windows AppxManifest & Assets
+        shell: pwsh
+        run: |
+          .\scripts\inject-windows-appx.ps1 `
+            -BundleId "${{ inputs.app_bundle_id }}" `
+            -TenantName "${{ inputs.tenant_name }}" `
+            -OtaEndpoint "${{ inputs.ota_endpoint }}" `
+            -PrimaryColor "${{ inputs.primary_color }}" `
+            -LogoPath "assets\logos\tenant-logo.png"
+
+      - name: Prepare Certificate
+        shell: pwsh
+        run: |
+          $certBytes = [Convert]::FromBase64String("${{ steps.fetch-cert.outputs.windows-cert }}")
+          [IO.File]::WriteAllBytes("${{ github.workspace }}\cert.pfx", $certBytes)
+
+      - name: Restore Dependencies
+        run: dotnet restore src/HybridPlatform.Shell/HybridPlatform.Shell.csproj
+
+      - name: Build Windows MSIX
+        shell: pwsh
+        run: |
+          dotnet publish src/HybridPlatform.Shell/HybridPlatform.Shell.csproj `
+            -f net10.0-windows10.0.19041.0 `
+            -c Release `
+            -p:PackageCertificateKeyFile="${{ github.workspace }}\cert.pfx" `
+            -p:PackageCertificatePassword="${{ steps.fetch-cert.outputs.windows-cert-password }}" `
+            -p:ApplicationId="${{ inputs.app_bundle_id }}" `
+            -p:ApplicationTitle="${{ inputs.tenant_name }}" `
+            -p:ApplicationVersion="${{ needs.prepare.outputs.build_version }}.0"
+
+      - name: Generate SHA-256 Checksum
+        id: checksum
+        shell: pwsh
+        run: |
+          cd src\HybridPlatform.Shell\bin\Release\net10.0-windows10.0.19041.0\win10-x64\publish
+          $hash = (Get-FileHash -Algorithm SHA256 *.msix).Hash.ToLower()
+          Rename-Item *.msix "${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.msix"
+          echo "sha256=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Create OTA Package
+        shell: pwsh
+        run: |
+          cd src\HybridPlatform.Shell\bin\Release\net10.0-windows10.0.19041.0\win10-x64\publish
+          Compress-Archive -Path "${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.msix" `
+            -DestinationPath "windows-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip"
+
+      - name: Upload MSIX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-windows10.0.19041.0/win10-x64/publish/${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.msix
+          retention-days: 90
+
+      - name: Upload OTA Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-ota-${{ inputs.tenant_id }}
+          path: src/HybridPlatform.Shell/bin/Release/net10.0-windows10.0.19041.0/win10-x64/publish/windows-ota-${{ inputs.tenant_id }}-v${{ needs.prepare.outputs.build_version }}.zip
+          retention-days: 90
+
+  generate-ota-manifest:
+    name: Generate OTA Manifest
+    runs-on: ubuntu-latest
+    needs: [prepare, build-android, build-ios, build-windows]
+    if: always()
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Generate Checksums
+        id: checksums
+        run: |
+          # Android checksum
+          if [ -d "artifacts/android-ota-${{ inputs.tenant_id }}" ]; then
+            ANDROID_SHA=$(sha256sum artifacts/android-ota-${{ inputs.tenant_id }}/*.zip | awk '{print $1}')
+            echo "android_sha256=$ANDROID_SHA" >> $GITHUB_OUTPUT
+          fi
+          
+          # iOS checksum
+          if [ -d "artifacts/ios-ota-${{ inputs.tenant_id }}" ]; then
+            IOS_SHA=$(sha256sum artifacts/ios-ota-${{ inputs.tenant_id }}/*.zip | awk '{print $1}')
+            echo "ios_sha256=$IOS_SHA" >> $GITHUB_OUTPUT
+          fi
+          
+          # Windows checksum
+          if [ -d "artifacts/windows-ota-${{ inputs.tenant_id }}" ]; then
+            WINDOWS_SHA=$(sha256sum artifacts/windows-ota-${{ inputs.tenant_id }}/*.zip | awk '{print $1}')
+            echo "windows_sha256=$WINDOWS_SHA" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create OTA Manifest
+        run: |
+          cat > ota-manifest.json << EOF
+          {
+            "version": "${{ needs.prepare.outputs.build_version }}",
+            "buildNumber": "${{ needs.prepare.outputs.build_number }}",
+            "tenantId": "${{ inputs.tenant_id }}",
+            "tenantName": "${{ inputs.tenant_name }}",
+            "bundleId": "${{ inputs.app_bundle_id }}",
+            "releaseDate": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "ios": {
+                "payloadUrl": "https://cdn.example.com/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/ios.zip",
+                "sha256Checksum": "${{ steps.checksums.outputs.ios_sha256 }}",
+                "minimumVersion": "11.0",
+                "fileSize": $(stat -c%s artifacts/ios-ota-${{ inputs.tenant_id }}/*.zip 2>/dev/null || echo 0)
+              },
+              "android": {
+                "payloadUrl": "https://cdn.example.com/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/android.zip",
+                "sha256Checksum": "${{ steps.checksums.outputs.android_sha256 }}",
+                "minimumVersion": "8.0",
+                "fileSize": $(stat -c%s artifacts/android-ota-${{ inputs.tenant_id }}/*.zip 2>/dev/null || echo 0)
+              },
+              "windows": {
+                "payloadUrl": "https://cdn.example.com/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/windows.zip",
+                "sha256Checksum": "${{ steps.checksums.outputs.windows_sha256 }}",
+                "minimumVersion": "10.0.19041.0",
+                "fileSize": $(stat -c%s artifacts/windows-ota-${{ inputs.tenant_id }}/*.zip 2>/dev/null || echo 0)
+              }
+            },
+            "releaseNotes": "Automated build from commit ${{ github.sha }}",
+            "requiredUpdate": false,
+            "rollbackVersion": null
+          }
+          EOF
+
+      - name: Upload OTA Manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-manifest-${{ inputs.tenant_id }}
+          path: ota-manifest.json
+          retention-days: 365
+
+      - name: Display Manifest
+        run: cat ota-manifest.json
+
+      # Optional: Upload to S3/Azure Blob Storage
+      # - name: Upload to CDN
+      #   run: |
+      #     # Example for S3
+      #     aws s3 cp ota-manifest.json s3://hybrid-platform-cdn/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/manifest.json
+      #     
+      #     # Upload OTA packages
+      #     aws s3 cp artifacts/android-ota-${{ inputs.tenant_id }}/*.zip s3://hybrid-platform-cdn/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/android.zip
+      #     aws s3 cp artifacts/ios-ota-${{ inputs.tenant_id }}/*.zip s3://hybrid-platform-cdn/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/ios.zip
+      #     aws s3 cp artifacts/windows-ota-${{ inputs.tenant_id }}/*.zip s3://hybrid-platform-cdn/ota/${{ inputs.tenant_id }}/v${{ needs.prepare.outputs.build_version }}/windows.zip
