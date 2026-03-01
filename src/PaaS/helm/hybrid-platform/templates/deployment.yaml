@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hybrid-platform.fullname" . }}
+  labels:
+    {{- include "hybrid-platform.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "hybrid-platform.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "hybrid-platform.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "hybrid-platform.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        # CockroachDB Connection
+        - name: ConnectionStrings__CockroachDB
+          value: "Host=cockroachdb-public.{{ .Release.Namespace }}.svc.cluster.local;Port=26257;Database=hybrid_platform;Username=hybrid_user;Password=$(COCKROACH_PASSWORD);SSL Mode=Require;Trust Server Certificate=true;Timeout=30;Command Timeout=30;Pooling=true;Maximum Pool Size=100"
+        - name: COCKROACH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.externalSecrets.enabled | ternary "cockroachdb-password" "cockroachdb-secret" }}
+              key: password
+        # JWT Configuration
+        - name: Jwt__Secret
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.jwt.secretName }}
+              key: jwt-secret
+        - name: Jwt__Issuer
+          value: {{ .Values.jwt.issuer | quote }}
+        - name: Jwt__Audience
+          value: {{ .Values.jwt.audience | quote }}
+        - name: Jwt__ExpirationMinutes
+          value: {{ .Values.jwt.expirationMinutes | quote }}
+        # Logging
+        - name: Logging__LogLevel__Default
+          value: {{ .Values.logging.level | quote }}
+        # ASP.NET Core
+        - name: ASPNETCORE_URLS
+          value: "http://+:8080"
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: app-data
+          mountPath: /app/data
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: app-data
+        emptyDir: {}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

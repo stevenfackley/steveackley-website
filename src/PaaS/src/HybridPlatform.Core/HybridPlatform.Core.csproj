@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Pinned to 10.0.* to track the .NET 10 GA release train.
+      Npgsql 10.x is required for the timestamptz → DateTimeKind.Utc mapping
+      and for NativeAOT-safe interceptors.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore"                      Version="10.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"           Version="10.0.*" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"              Version="10.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite"               Version="10.0.*" />
+  </ItemGroup>
+
+</Project>

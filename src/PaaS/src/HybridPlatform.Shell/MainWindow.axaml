@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv="clr-namespace:Avalonia.WebView;assembly=Avalonia.WebView"
+        x:Class="HybridPlatform.Shell.MainWindow"
+        Title="HybridPlatform"
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen">
+
+    <!--
+      The WebView fills the entire window. The Blazor WASM SPA owns all UI;
+      the native shell is intentionally invisible to the user.
+
+      Source is set in code-behind after the scheme handler is registered
+      (if set here before registration, the first navigation fires before
+      the pp:// interceptor is wired up and Blazor receives a network error).
+    -->
+    <wv:WebView x:Name="WebViewControl"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+
+</Window>

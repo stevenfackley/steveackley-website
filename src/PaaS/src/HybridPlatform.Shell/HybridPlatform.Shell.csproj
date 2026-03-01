@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.*" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.*" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.*" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.*" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.*" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.*" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions" Version="0.12.*" />
+    <!-- Platform-specific ONNX acceleration -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.20.*" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HybridPlatform.Core\HybridPlatform.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+</Project>

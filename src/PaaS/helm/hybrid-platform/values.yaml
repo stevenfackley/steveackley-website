@@ -1,0 +1,217 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Hybrid Platform Helm Chart Values
+# Multi-Tenant PaaS with CockroachDB, Zero-Trust, and CRDT Sync
+# ──────────────────────────────────────────────────────────────────────────────
+
+replicaCount: 3  # HA deployment across 3 availability zones
+
+image:
+  repository: ghcr.io/your-org/hybrid-platform-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Zero-Trust JWT Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+
+jwt:
+  # Secret must be at least 256 bits (32 characters) for HS256
+  # In production: Store in Azure Key Vault and sync via External Secrets Operator
+  secretName: jwt-signing-key
+  issuer: "HybridPlatform.Api"
+  audience: "HybridPlatform.Client"
+  expirationMinutes: 60
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CockroachDB Configuration (Active-Active Multi-Region)
+# ──────────────────────────────────────────────────────────────────────────────
+
+cockroachdb:
+  enabled: true
+  conf:
+    # Active-Active replication across 3 regions
+    cluster-name: "hybrid-platform-prod"
+    # Disable single-node mode (require quorum for writes)
+    single-node: false
+    
+  statefulset:
+    replicas: 3  # Minimum for HA (1 per availability zone)
+    resources:
+      requests:
+        cpu: "2"
+        memory: "8Gi"
+      limits:
+        cpu: "4"
+        memory: "16Gi"
+  
+  storage:
+    persistentVolume:
+      enabled: true
+      size: 100Gi
+      storageClass: "fast-ssd"  # Use regional SSD for low-latency
+  
+  tls:
+    enabled: true
+    certs:
+      selfSigner:
+        enabled: true  # Auto-generate self-signed certs (replace with cert-manager in prod)
+  
+  init:
+    provisioning:
+      enabled: true
+      # SQL statements executed on first boot
+      # Creates database, user, and tenant schema template
+      sql: |
+        CREATE DATABASE IF NOT EXISTS hybrid_platform;
+        CREATE USER IF NOT EXISTS hybrid_user WITH PASSWORD '${COCKROACH_PASSWORD}';
+        GRANT ALL ON DATABASE hybrid_platform TO hybrid_user;
+        
+        -- Create schema provisioning function (called per-tenant)
+        CREATE OR REPLACE FUNCTION create_tenant_schema(tenant_id TEXT) RETURNS VOID AS $$
+        BEGIN
+          EXECUTE format('CREATE SCHEMA IF NOT EXISTS tenant_%s', tenant_id);
+          EXECUTE format('GRANT ALL ON SCHEMA tenant_%s TO hybrid_user', tenant_id);
+        END;
+        $$ LANGUAGE plpgsql;
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Service Configuration
+# ──────────────────────────────────────────────────────────────────────────────
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  annotations: {}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Cloudflare Tunnel Ingress (Zero-Trust Edge)
+# ──────────────────────────────────────────────────────────────────────────────
+
+ingress:
+  enabled: true
+  className: "cloudflare-tunnel"
+  annotations:
+    # Cloudflare Tunnel configuration
+    cloudflare.com/tunnel-id: "${CLOUDFLARE_TUNNEL_ID}"
+    cloudflare.com/tunnel-secret: "${CLOUDFLARE_TUNNEL_SECRET}"
+    # Zero-Trust Access Policy
+    cloudflare.com/access-policy: "default-jwt-validation"
+  hosts:
+    - host: api.hybridplatform.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: cloudflare-tunnel-tls
+      hosts:
+        - api.hybridplatform.example.com
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Resource Limits & Autoscaling
+# ──────────────────────────────────────────────────────────────────────────────
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Pod Security & Topology
+# ──────────────────────────────────────────────────────────────────────────────
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Spread pods across availability zones
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: hybrid-platform-api
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Secrets Management (Azure Key Vault via External Secrets Operator)
+# ──────────────────────────────────────────────────────────────────────────────
+
+externalSecrets:
+  enabled: true
+  refreshInterval: 1h
+  backend: azurekv
+  keyVault:
+    name: "hybrid-platform-kv"
+    tenantId: "${AZURE_TENANT_ID}"
+  secrets:
+    - name: jwt-signing-key
+      key: "jwt-secret"
+    - name: cockroachdb-password
+      key: "cockroach-password"
+    - name: cloudflare-tunnel-secret
+      key: "cloudflare-tunnel-secret"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Monitoring & Observability
+# ──────────────────────────────────────────────────────────────────────────────
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+
+logging:
+  format: "json"
+  level: "Information"
+  outputs:
+    - console
+    - elasticsearch
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Health Checks
+# ──────────────────────────────────────────────────────────────────────────────
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
