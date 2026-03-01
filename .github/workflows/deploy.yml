@@ -123,7 +123,15 @@ jobs:
         run: npx prisma generate
 
       - name: List generated Prisma files
-        run: find prisma/generated -type f | head -30 || echo "No generated files found"
+        run: |
+          echo "=== prisma/generated contents ==="
+          ls -la prisma/generated/ 2>/dev/null || echo "prisma/generated directory does not exist"
+          echo "=== all generated files ==="
+          find prisma/generated -type f 2>/dev/null | head -30 || echo "No generated files found"
+          echo "=== prisma/generated index file (first 5 lines) ==="
+          head -5 prisma/generated/index.ts 2>/dev/null || head -5 prisma/generated/index.js 2>/dev/null || echo "No index file found"
+          echo "=== prisma/generated client file (first 5 lines) ==="
+          head -5 prisma/generated/client.ts 2>/dev/null || head -5 prisma/generated/client.js 2>/dev/null || echo "No client file found"
 
       - name: Apply database migrations
         run: npx prisma migrate deploy
