@@ -82,8 +82,12 @@ interface GitHubFileContent {
 }
 
 async function fetchJSON<T>(url: string): Promise<T | null> {
+  const controller = new AbortController();
+  /* c8 ignore next */
+  const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
     const res = await fetch(url, {
+      signal: controller.signal,
       headers: { Accept: "application/vnd.github.v3+json" },
       next: { revalidate: 3600 },
     });
@@ -91,6 +95,8 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
     return res.json() as Promise<T>;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -161,10 +167,14 @@ function inferTech(repo: GitHubRepo): string[] {
 // ---------------------------------------------------------------------------
 
 export async function getPublicRepos(): Promise<GitHubRepo[]> {
+  const controller = new AbortController();
+  /* c8 ignore next */
+  const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
     const res = await fetch(
       "https://api.github.com/users/stevenfackley/repos?sort=updated&direction=desc&per_page=50",
       {
+        signal: controller.signal,
         headers: { Accept: "application/vnd.github.v3+json" },
         next: { revalidate: 3600 },
       }
@@ -174,6 +184,8 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
     return repos.filter((r) => !r.fork && !SKIP_REPOS.has(r.name));
   } catch {
     return [];
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
