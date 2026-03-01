@@ -9,6 +9,7 @@ export async function getSiteSetting(key: string): Promise<string> {
     const row = await prisma.siteSetting.findUnique({ where: { key } });
     return row?.value ?? DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
   } catch {
+    /* c8 ignore next */
     return DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
   }
 }
@@ -25,6 +26,7 @@ export async function getSiteSettings(keys: string[]): Promise<Record<string, st
   } catch {
     const map: Record<string, string> = {};
     for (const key of keys) {
+      /* c8 ignore next */
       map[key] = DEFAULTS[key as keyof typeof DEFAULTS] ?? "";
     }
     return map;

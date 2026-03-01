@@ -136,4 +136,39 @@ describe("POST /api/upload", () => {
     const [, savedName] = mockSave.mock.calls[0] as [Buffer, string];
     expect(savedName).toMatch(/\.png$/);
   });
+
+  it("returns 400 when the multipart form data cannot be parsed", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "1", role: "ADMIN" } });
+
+    // A request with Content-Type: application/json causes .formData() to throw
+    // in the WHATWG fetch spec (not multipart/form-data or application/x-www-form-urlencoded)
+    const req = new Request("http://localhost/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ not: "a form" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/invalid multipart/i);
+  });
+
+  it("returns 400 when the 'file' field is a string, not a File instance", async () => {
+    mockAuth.mockResolvedValueOnce({ user: { id: "1", role: "ADMIN" } });
+
+    // FormData with a string value for "file" — not a File instance
+    const formData = new FormData();
+    formData.append("file", "i-am-a-string");
+
+    const req = new Request("http://localhost/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toMatch(/no file/i);
+  });
 });

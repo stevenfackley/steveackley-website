@@ -105,6 +105,12 @@ describe("getSiteSettings", () => {
     expect(result[SETTING_KEYS.HERO_TAGLINE]).toBe(DEFAULTS[SETTING_KEYS.HERO_TAGLINE]);
   });
 
+  it("returns empty string for unknown keys when Prisma throws (catch ?? '' branch)", async () => {
+    mockFindMany.mockRejectedValueOnce(new Error("DB error"));
+    const result = await getSiteSettings(["unknown_key_in_catch"]);
+    expect(result["unknown_key_in_catch"]).toBe("");
+  });
+
   it("returns empty string for unknown keys with no default", async () => {
     mockFindMany.mockResolvedValueOnce([]);
     const result = await getSiteSettings(["unknown_key"]);
@@ -115,5 +121,22 @@ describe("getSiteSettings", () => {
     mockFindMany.mockResolvedValueOnce([]);
     const result = await getSiteSettings([]);
     expect(result).toEqual({});
+  });
+
+  it("falls back to DEFAULTS when a found row has a null value (null-coalescing branch)", async () => {
+    // row exists but value is null → should use DEFAULTS[key]
+    mockFindMany.mockResolvedValueOnce([
+      { key: SETTING_KEYS.AVATAR_URL, value: null },
+    ]);
+    const result = await getSiteSettings([SETTING_KEYS.AVATAR_URL]);
+    expect(result[SETTING_KEYS.AVATAR_URL]).toBe(DEFAULTS[SETTING_KEYS.AVATAR_URL]);
+  });
+
+  it("falls back to empty string when row value is null and key has no default", async () => {
+    mockFindMany.mockResolvedValueOnce([
+      { key: "unknown_key", value: null },
+    ]);
+    const result = await getSiteSettings(["unknown_key"]);
+    expect(result["unknown_key"]).toBe("");
   });
 });
