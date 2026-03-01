@@ -154,17 +154,22 @@ jobs:
       - name: Wait for server to be ready
         run: |
           echo "Waiting for Next.js to accept connections on port 3000..."
-          for i in $(seq 1 30); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -qE "^(200|301|302|307|308)$"; then
-              echo "Server is up ✓"
+          for i in $(seq 1 60); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:3000/ 2>/dev/null || echo "000")
+            if echo "$HTTP_CODE" | grep -qE "^[1-9][0-9][0-9]$"; then
+              echo "Server is up (HTTP $HTTP_CODE) ✓"
               exit 0
             fi
-            echo "  attempt $i/30 — not ready yet, sleeping 2s..."
+            echo "  attempt $i/60 — HTTP $HTTP_CODE, not ready yet, sleeping 2s..."
+            if [ "$i" -eq 30 ]; then
+              echo "=== Server log at attempt 30 ==="
+              tail -20 /tmp/nextjs-server.log || echo "(no log)"
+            fi
             sleep 2
           done
           echo "Server did not start in time ✗"
-          echo "=== Last 50 lines of server log ==="
-          tail -50 /tmp/nextjs-server.log || echo "(no log)"
+          echo "=== Last 80 lines of server log ==="
+          tail -80 /tmp/nextjs-server.log || echo "(no log)"
           exit 1
 
       - name: Run E2E tests
