@@ -7,11 +7,20 @@ const globalForDb = globalThis as unknown as {
 };
 
 // Create the postgres client
+const dbUrl = process.env.DATABASE_URL!;
+try {
+  const parsedUrl = new URL(dbUrl);
+  console.log(`[Database] Initializing connection to ${parsedUrl.hostname}:${parsedUrl.port}/${parsedUrl.pathname.replace('/', '')}`);
+} catch {
+  console.log(`[Database] Initializing connection with custom URL format`);
+}
+
 export const queryClient =
   globalForDb.queryClient ??
-  postgres(process.env.DATABASE_URL!, {
+  postgres(dbUrl, {
     max: process.env.NODE_ENV === "production" ? 10 : 1,
     prepare: false, // Required for query batching
+    connect_timeout: 15, // Fail faster if the DB is unreachable (e.g., in CI)
   });
 
 if (process.env.NODE_ENV !== "production") {

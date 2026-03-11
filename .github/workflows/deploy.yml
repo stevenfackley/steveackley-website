@@ -80,9 +80,10 @@ jobs:
         env:
           NODE_ENV: production
           PORT: 3000
+          HOST: "0.0.0.0"
       - name: Wait for server to be ready
         run: |
-          echo "Waiting for Astro to accept connections on port 3000..."
+          echo "Waiting for Astro to accept connections on 127.0.0.1:3000..."
           for i in $(seq 1 60); do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3000/ 2>/dev/null || echo "000")
             if echo "$HTTP_CODE" | grep -qE "^[1-9][0-9][0-9]$"; then
@@ -92,12 +93,19 @@ jobs:
             sleep 2
           done
           echo "Server did not start in time ✗"
-          tail -80 /tmp/astro-server.log
+          echo "=== Astro Server Startup Logs ==="
+          cat /tmp/astro-server.log
           exit 1
       - name: Run E2E tests
         run: npm run test:e2e
         env:
           BASE_URL: "http://127.0.0.1:3000"
+      - name: Show server logs on failure
+        if: failure()
+        run: |
+          echo "=== Astro Server Logs (/tmp/astro-server.log) ==="
+          tail -n 200 /tmp/astro-server.log
+          echo "=== End of Logs ==="
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"
