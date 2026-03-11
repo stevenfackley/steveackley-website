@@ -29,6 +29,7 @@ Next.js project test optimization and achieving 100% code coverage.
         - Modified `deploy.yml` to set `HOST: "0.0.0.0"` for Astro server.
         - Modified `deploy.yml` to print server logs `/tmp/astro-server.log` on failure of the E2E step.
         - Reverted problematic `install-deps` from Playwright installation step.
+        - Cleaned up `vitest.config.ts` to remove Prisma/Next.js references and correctly target Astro `src/pages/api` for coverage.
 
 ## Next Steps
 - Monitor Run #89 (ID: TBD) for green status on E2E tests.

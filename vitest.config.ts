@@ -23,17 +23,17 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["src/lib/**", "src/app/api/**"],
+      include: ["src/lib/**", "src/pages/api/**"],
       // Exclude infrastructure files that require external runtime dependencies
-      // (database, bcrypt, NextAuth session machinery) and cannot be unit-tested
+      // (database, bcrypt, Better-Auth session machinery) and cannot be unit-tested
       // without a full integration environment.
       exclude: [
-        // NextAuth + Prisma + bcrypt initialisation — requires live DB
+        // Better-Auth + Drizzle initialisation — requires live DB
         "src/lib/auth.ts",
-        // Prisma singleton — requires DATABASE_URL and pg adapter
-        "src/lib/prisma.ts",
-        // NextAuth route re-export — just `export const { GET, POST } = handlers`
-        "src/app/api/auth/**",
+        // Re-export of DB instance
+        "src/lib/db.ts",
+        // Auth route handler — just `return auth.handler(context.request)`
+        "src/pages/api/auth/**",
         // Standard vitest exclusions
         "**/*.d.ts",
         "**/node_modules/**",
