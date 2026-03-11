@@ -31,8 +31,7 @@ Next.js project test optimization and achieving 100% code coverage.
         - Reverted problematic `install-deps` from Playwright installation step.
         - Cleaned up `vitest.config.ts` to remove Prisma/Next.js references and correctly target Astro `src/pages/api` for coverage.
         - **Update (Run #89 FAILURE)**: Discovered `PostgresError: connection timeout` in server logs during E2E.
-        - **Update (Run #92)**: Added detailed Docker container logs for all services to debug potential database crashes.
-        - **Update (Run #92)**: Added job-level timeout (15 min) to prevent hangs.
+        - **Update (Run #92 IN PROGRESS)**: `timeout-minutes: 15` on E2E job appears ineffective, job still running past 30 minutes. Triggering new run to clear queue.
 
 ## Next Steps
 - Monitor Run #89 (ID: TBD) for green status on E2E tests.

@@ -41,6 +41,8 @@ jobs:
     needs: [unit-tests, integration-tests]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Temporary comment to trigger a new CI run
+    # This is part of troubleshooting persistent E2E job hangs.
     services:
       postgres:
         image: postgres:16-alpine
