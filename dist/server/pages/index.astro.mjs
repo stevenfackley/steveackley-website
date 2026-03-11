@@ -1,13 +1,15 @@
-import { e as createComponent, m as maybeRenderHead, g as addAttribute, p as renderSlot, r as renderTemplate, h as createAstro, k as renderComponent } from '../chunks/astro/server_dRnksWFu.mjs';
+import { e as createComponent, m as maybeRenderHead, g as addAttribute, l as renderSlot, r as renderTemplate, h as createAstro, k as renderComponent } from '../chunks/astro/server_B-1XR7Cx.mjs';
 import 'piccolore';
-import { $ as $$PublicLayout } from '../chunks/PublicLayout_CiHoD-lD.mjs';
-import { c as cn, a as formatDateShort } from '../chunks/utils_B0Kx7Grw.mjs';
+import { $ as $$PublicLayout } from '../chunks/PublicLayout_BFjoUw8x.mjs';
+import { c as cn, f as formatDateShort } from '../chunks/utils_CPMI-xBA.mjs';
 import 'clsx';
+import { d as db, p as posts } from '../chunks/index_BS2BhPuU.mjs';
+import { eq, desc } from 'drizzle-orm';
 export { renderers } from '../renderers.mjs';
 
-const $$Astro$7 = createAstro();
+const $$Astro$8 = createAstro();
 const $$Card = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$7, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$8, $$props, $$slots);
   Astro2.self = $$Card;
   const { href, external = false, class: className } = Astro2.props;
   const base = cn(
@@ -19,9 +21,9 @@ const $$Card = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${href && external ? renderTemplate`${maybeRenderHead()}<a${addAttribute(href, "href")} target="_blank" rel="noopener noreferrer"${addAttribute(base, "class")}>${renderSlot($$result, $$slots["default"])}</a>` : href ? renderTemplate`<a${addAttribute(href, "href")}${addAttribute(base, "class")}>${renderSlot($$result, $$slots["default"])}</a>` : renderTemplate`<div${addAttribute(base, "class")}>${renderSlot($$result, $$slots["default"])}</div>`}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/ui/Card.astro", void 0);
 
-const $$Astro$6 = createAstro();
+const $$Astro$7 = createAstro();
 const $$HeroCard = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$6, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$7, $$props, $$slots);
   Astro2.self = $$HeroCard;
   const { class: className, avatarUrl = "https://avatars.githubusercontent.com/u/stevenfackley" } = Astro2.props;
   const heroTagline = "Building enterprise-grade software with the Microsoft stack. Staff Engineer at Lockheed Martin, 12+ years shipping production systems in C#, .NET, Azure, Angular, and SQL Server.";
@@ -36,9 +38,9 @@ Available for opportunities
 </span> </div> </div> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/HeroCard.astro", void 0);
 
-const $$Astro$5 = createAstro();
+const $$Astro$6 = createAstro();
 const $$SkillsCard = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$5, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$6, $$props, $$slots);
   Astro2.self = $$SkillsCard;
   const { class: className } = Astro2.props;
   const skills = [
@@ -52,9 +54,9 @@ const $$SkillsCard = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "Card", $$Card, { "class": cn("p-6", className) }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="flex items-center justify-between mb-3"> <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">Skills & Stack</span> </div> <ul class="space-y-3 mt-2"> ${skills.map((skill) => renderTemplate`<li> <div class="flex items-center justify-between mb-1"> <span class="text-sm text-[var(--text-secondary)]">${skill.name}</span> <div class="flex gap-0.5"> ${Array.from({ length: 5 }).map((_, i) => renderTemplate`<span class="h-1.5 w-4 rounded-full transition-colors"${addAttribute(i < skill.level ? "background: linear-gradient(90deg, #2563eb, #7c3aed)" : "background: var(--border)", "style")}></span>`)} </div> </div> </li>`)} </ul> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/SkillsCard.astro", void 0);
 
-const $$Astro$4 = createAstro();
+const $$Astro$5 = createAstro();
 const $$AboutCard = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$4, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$5, $$props, $$slots);
   Astro2.self = $$AboutCard;
   const { class: className } = Astro2.props;
   const bioText = "Staff Software Engineer at Lockheed Martin with 12+ years building enterprise software across defense, energy, and healthcare. Microsoft stack from day one. Passionate about clean architecture and systems built to last.";
@@ -72,9 +74,9 @@ const $$AboutCard = createComponent(($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "Card", $$Card, { "class": cn("p-6", className) }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="flex items-center justify-between mb-3"> <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">About</span> </div> <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-4"> ${bioText} </p> <div class="grid grid-cols-2 gap-1.5"> ${interests.map((interest) => renderTemplate`<div class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 bg-[var(--surface-hover)] text-xs text-[var(--text-secondary)]"> ${interest.mason ? renderTemplate`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[var(--accent)] shrink-0" aria-label="Masonic square and compasses"> <path d="M12 2 L3 18 M12 2 L21 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path> <circle cx="12" cy="2" r="1.5" fill="currentColor"></circle> <path d="M3 6 L12 22 L21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path> <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="bold" fill="currentColor" font-family="Georgia, serif">G</text> </svg>` : renderTemplate`<span>${interest.icon}</span>`} <span>${interest.label}</span> </div>`)} </div> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/AboutCard.astro", void 0);
 
-const $$Astro$3 = createAstro();
+const $$Astro$4 = createAstro();
 const $$Badge = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$3, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$4, $$props, $$slots);
   Astro2.self = $$Badge;
   const { variant = "default", class: className } = Astro2.props;
   const variantClasses = {
@@ -140,10 +142,15 @@ async function fetchJSON(url) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8e3);
   try {
+    const headers = {
+      Accept: "application/vnd.github.v3+json"
+    };
+    if (process.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    }
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: "application/vnd.github.v3+json" },
-      next: { revalidate: 3600 }
+      headers
     });
     if (!res.ok) return null;
     return res.json();
@@ -184,12 +191,17 @@ async function getPublicRepos() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8e3);
   try {
+    const headers = {
+      Accept: "application/vnd.github.v3+json"
+    };
+    if (process.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    }
     const res = await fetch(
       "https://api.github.com/users/stevenfackley/repos?sort=updated&direction=desc&per_page=50",
       {
         signal: controller.signal,
-        headers: { Accept: "application/vnd.github.v3+json" },
-        next: { revalidate: 3600 }
+        headers
       }
     );
     if (!res.ok) return [];
@@ -219,54 +231,43 @@ async function enrichRepos(repos) {
   }));
 }
 
-const $$Astro$2 = createAstro();
-const $$ProjectsCard = createComponent(async ($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
+const $$Astro$3 = createAstro();
+const $$ProjectsCard = createComponent(($$result, $$props, $$slots) => {
+  const Astro2 = $$result.createAstro($$Astro$3, $$props, $$slots);
   Astro2.self = $$ProjectsCard;
-  const { class: className } = Astro2.props;
+  const { class: className, repos } = Astro2.props;
   const FEATURED_NAMES = ["OmniSift", "axon-main", "TrustLog", "steveackley-website", "SortCompare"];
-  let publicToShow = [];
-  try {
-    const rawRepos = await getPublicRepos();
-    const enriched = await enrichRepos(rawRepos);
-    const sorted = [...enriched].sort((a, b) => {
-      const ai = FEATURED_NAMES.indexOf(a.name);
-      const bi = FEATURED_NAMES.indexOf(b.name);
-      if (ai !== -1 && bi !== -1) return ai - bi;
-      if (ai !== -1) return -1;
-      if (bi !== -1) return 1;
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-    });
-    publicToShow = sorted.slice(0, 4);
-  } catch {
-  }
-  return renderTemplate`${renderComponent($$result, "Card", $$Card, { "class": cn("p-6", className) }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="flex items-center justify-between mb-3"> <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">Projects & Portfolio</span> </div> <div class="space-y-1.5 mt-1"> <!-- P1 Ops Hub - private, always first --> ${PRIVATE_PROJECTS.map((p) => {
-    const inner = renderTemplate`<div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer"> <div class="flex items-center justify-between"> <div class="flex items-center gap-3 min-w-0"> <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white" style="background: linear-gradient(135deg, #2563eb, #7c3aed)">P</div> <div class="min-w-0"> <p class="text-sm font-medium text-[var(--text-primary)] truncate">${p.name}</p> <p class="text-xs text-[var(--text-muted)] truncate">Private repository</p> </div> </div> ${renderComponent($$result2, "Badge", $$Badge, { "variant": "success" }, { "default": async ($$result3) => renderTemplate`Active` })} </div> ${p.badges.length > 0 && renderTemplate`<div class="flex flex-wrap gap-1 mt-2 ml-10"> ${p.badges.map((b) => renderTemplate`<img${addAttribute(b.imageUrl, "src")}${addAttribute(b.label, "alt")} class="h-5">`)} </div>`} </div>`;
+  const sortedRepos = [...repos].sort((a, b) => {
+    const ai = FEATURED_NAMES.indexOf(a.name);
+    const bi = FEATURED_NAMES.indexOf(b.name);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+  const publicToShow = sortedRepos.slice(0, 4);
+  return renderTemplate`${renderComponent($$result, "Card", $$Card, { "class": cn("p-6", className) }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="flex items-center justify-between mb-3"> <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">Projects & Portfolio</span> </div> <div class="space-y-1.5 mt-1"> <!-- P1 Ops Hub - private, always first --> ${PRIVATE_PROJECTS.map((p) => {
+    const inner = renderTemplate`<div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer"> <div class="flex items-center justify-between"> <div class="flex items-center gap-3 min-w-0"> <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white" style="background: linear-gradient(135deg, #2563eb, #7c3aed)">P</div> <div class="min-w-0"> <p class="text-sm font-medium text-[var(--text-primary)] truncate">${p.name}</p> <p class="text-xs text-[var(--text-muted)] truncate">Private repository</p> </div> </div> ${renderComponent($$result2, "Badge", $$Badge, { "variant": "success" }, { "default": ($$result3) => renderTemplate`Active` })} </div> ${p.badges.length > 0 && renderTemplate`<div class="flex flex-wrap gap-1 mt-2 ml-10"> ${p.badges.map((b) => renderTemplate`<img${addAttribute(b.imageUrl, "src")}${addAttribute(b.label, "alt")} class="h-5">`)} </div>`} </div>`;
     return p.html_url && p.html_url !== "#" ? renderTemplate`<a${addAttribute(p.html_url, "href")} target="_blank" rel="noopener noreferrer">${inner}</a>` : inner;
   })} <!-- Public GitHub repos --> ${publicToShow.map((repo) => {
     const year = new Date(repo.created_at).getFullYear();
-    return renderTemplate`<a${addAttribute(repo.html_url, "href")} target="_blank" rel="noopener noreferrer"> <div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer"> <div class="flex items-center justify-between"> <div class="flex items-center gap-3 min-w-0"> <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 bg-[var(--surface-hover)] text-[var(--text-secondary)]"> ${repo.name[0].toUpperCase()} </div> <div class="min-w-0"> <p class="text-sm font-medium text-[var(--text-primary)] truncate">${repo.name}</p> <p class="text-xs text-[var(--text-muted)] truncate"> ${repo.language ?? "Code"} &middot; ${year} </p> </div> </div> ${renderComponent($$result2, "Badge", $$Badge, { "variant": "info" }, { "default": async ($$result3) => renderTemplate`GitHub` })} </div> ${repo.badges.length > 0 && renderTemplate`<div class="flex flex-wrap gap-1 mt-2 ml-10"> ${repo.badges.map((b) => renderTemplate`<img${addAttribute(b.imageUrl, "src")}${addAttribute(b.label, "alt")} class="h-5">`)} </div>`} </div> </a>`;
+    return renderTemplate`<a${addAttribute(repo.html_url, "href")} target="_blank" rel="noopener noreferrer"> <div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer"> <div class="flex items-center justify-between"> <div class="flex items-center gap-3 min-w-0"> <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 bg-[var(--surface-hover)] text-[var(--text-secondary)]"> ${repo.name[0].toUpperCase()} </div> <div class="min-w-0"> <p class="text-sm font-medium text-[var(--text-primary)] truncate">${repo.name}</p> <p class="text-xs text-[var(--text-muted)] truncate"> ${repo.language ?? "Code"} &middot; ${year} </p> </div> </div> ${renderComponent($$result2, "Badge", $$Badge, { "variant": "info" }, { "default": ($$result3) => renderTemplate`GitHub` })} </div> ${repo.badges.length > 0 && renderTemplate`<div class="flex flex-wrap gap-1 mt-2 ml-10"> ${repo.badges.map((b) => renderTemplate`<img${addAttribute(b.imageUrl, "src")}${addAttribute(b.label, "alt")} class="h-5">`)} </div>`} </div> </a>`;
   })} </div> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/ProjectsCard.astro", void 0);
 
-const $$Astro$1 = createAstro();
+const $$Astro$2 = createAstro();
 const $$BlogPreviewCard = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
   Astro2.self = $$BlogPreviewCard;
-  const { class: className } = Astro2.props;
-  const recentPosts = [
-    { id: "1", title: "Building a Portfolio Site with Astro and React", slug: "building-portfolio-astro-react", createdAt: /* @__PURE__ */ new Date("2026-02-15") },
-    { id: "2", title: "Why .NET is Still My Go-To Stack", slug: "why-dotnet-still-my-go-to", createdAt: /* @__PURE__ */ new Date("2026-01-28") },
-    { id: "3", title: "Clean Architecture in Practice", slug: "clean-architecture-in-practice", createdAt: /* @__PURE__ */ new Date("2026-01-10") }
-  ];
-  return renderTemplate`${maybeRenderHead()}<div${addAttribute(cn("p-6 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 rounded-2xl border border-purple-200 dark:border-purple-800", className), "class")}> <div class="flex items-center gap-2 mb-4"> <span class="text-2xl">✍️</span> <h2 class="text-xl font-semibold">Recent Posts</h2> </div> <ul class="space-y-3"> ${recentPosts.map((post) => renderTemplate`<li> <a${addAttribute(`/blog/${post.slug}`, "href")} class="block group hover:bg-white/50 dark:hover:bg-white/5 rounded-lg p-2 -m-2 transition-colors"> <h3 class="font-medium group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1"> ${post.title} </h3> <p class="text-sm text-neutral-600 dark:text-neutral-400">${formatDateShort(post.createdAt)}</p> </a> </li>`)} </ul> <a href="/blog" class="text-sm text-purple-600 dark:text-purple-400 hover:underline mt-4 inline-block">
+  const { class: className, posts } = Astro2.props;
+  return renderTemplate`${maybeRenderHead()}<div${addAttribute(cn("p-6 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 rounded-2xl border border-purple-200 dark:border-purple-800", className), "class")}> <div class="flex items-center gap-2 mb-4"> <span class="text-2xl">✍️</span> <h2 class="text-xl font-semibold">Recent Posts</h2> </div> ${posts.length > 0 ? renderTemplate`<ul class="space-y-3"> ${posts.map((post) => renderTemplate`<li> <a${addAttribute(`/blog/${post.slug}`, "href")} class="block group hover:bg-white/50 dark:hover:bg-white/5 rounded-lg p-2 -m-2 transition-colors"> <h3 class="font-medium group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1"> ${post.title} </h3> <p class="text-sm text-neutral-600 dark:text-neutral-400">${formatDateShort(post.createdAt)}</p> </a> </li>`)} </ul>` : renderTemplate`<p class="text-sm text-neutral-600 dark:text-neutral-400 py-4">No posts yet. Stay tuned!</p>`} <a href="/blog" class="text-sm text-purple-600 dark:text-purple-400 hover:underline mt-4 inline-block">
 View all posts →
 </a> </div>`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/BlogPreviewCard.astro", void 0);
 
-const $$Astro = createAstro();
+const $$Astro$1 = createAstro();
 const $$CTACard = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$CTACard;
   const { class: className } = Astro2.props;
   const linkedin = "https://www.linkedin.com/in/stevenackley";
@@ -280,12 +281,26 @@ Send an Email
 </a> </div> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/CTACard.astro", void 0);
 
+const $$Astro = createAstro();
 const $$BentoDashboard = createComponent(($$result, $$props, $$slots) => {
-  return renderTemplate`${maybeRenderHead()}<div class="bg-mesh"> <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> ${renderComponent($$result, "HeroCard", $$HeroCard, { "class": "lg:col-span-2" })} ${renderComponent($$result, "SkillsCard", $$SkillsCard, {})} ${renderComponent($$result, "AboutCard", $$AboutCard, {})} ${renderComponent($$result, "ProjectsCard", $$ProjectsCard, { "class": "lg:col-span-2" })} ${renderComponent($$result, "BlogPreviewCard", $$BlogPreviewCard, { "class": "lg:col-span-2" })} ${renderComponent($$result, "CTACard", $$CTACard, {})} </div> </div>`;
+  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
+  Astro2.self = $$BentoDashboard;
+  const { blogPosts, githubRepos, avatarUrl, couplePhotoUrl } = Astro2.props;
+  return renderTemplate`${maybeRenderHead()}<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> ${renderComponent($$result, "HeroCard", $$HeroCard, { "class": "lg:col-span-2", "avatarUrl": avatarUrl })} ${renderComponent($$result, "SkillsCard", $$SkillsCard, {})} ${renderComponent($$result, "AboutCard", $$AboutCard, { "couplePhotoUrl": couplePhotoUrl })} ${renderComponent($$result, "ProjectsCard", $$ProjectsCard, { "class": "lg:col-span-2", "repos": githubRepos })} ${renderComponent($$result, "BlogPreviewCard", $$BlogPreviewCard, { "class": "lg:col-span-2", "posts": blogPosts })} ${renderComponent($$result, "CTACard", $$CTACard, {})} </div>`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/bento/BentoDashboard.astro", void 0);
 
-const $$Index = createComponent(($$result, $$props, $$slots) => {
-  return renderTemplate`${renderComponent($$result, "PublicLayout", $$PublicLayout, { "title": "Steve Ackley", "description": "Staff Software Engineer - .NET, Azure, Full-Stack" }, { "default": ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8"> ${renderComponent($$result2, "BentoDashboard", $$BentoDashboard, {})} </div> ` })}`;
+const $$Index = createComponent(async ($$result, $$props, $$slots) => {
+  const blogPosts = await db.select().from(posts).where(eq(posts.published, true)).orderBy(desc(posts.createdAt)).limit(3);
+  let githubRepos = [];
+  try {
+    const rawRepos = await getPublicRepos();
+    githubRepos = await enrichRepos(rawRepos);
+  } catch (e) {
+    console.error("Failed to fetch GitHub repos:", e);
+  }
+  const avatarUrl = "https://avatars.githubusercontent.com/u/stevenfackley";
+  const couplePhotoUrl = "";
+  return renderTemplate`${renderComponent($$result, "PublicLayout", $$PublicLayout, { "title": "Steve Ackley", "description": "Staff Software Engineer - .NET, Azure, Full-Stack" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="py-8"> ${renderComponent($$result2, "BentoDashboard", $$BentoDashboard, { "blogPosts": blogPosts, "githubRepos": githubRepos, "avatarUrl": avatarUrl, "couplePhotoUrl": couplePhotoUrl })} </div> ` })}`;
 }, "C:/Users/steve/projects/steveackleyorg/src/pages/index.astro", void 0);
 
 const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/index.astro";

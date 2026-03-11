@@ -1,0 +1,29 @@
+import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../../../chunks/astro/server_B-1XR7Cx.mjs';
+import 'piccolore';
+import { $ as $$AdminLayout } from '../../../chunks/AdminLayout_DaB8Bxoe.mjs';
+import { P as PostForm } from '../../../chunks/PostForm_Cf5QOab9.mjs';
+import { a as actions } from '../../../chunks/virtual__lkE-L3Q.mjs';
+export { renderers } from '../../../renderers.mjs';
+
+const $$Astro = createAstro();
+const $$New = createComponent(async ($$result, $$props, $$slots) => {
+  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
+  Astro2.self = $$New;
+  return renderTemplate`${renderComponent($$result, "AdminLayout", $$AdminLayout, { "title": "New Post" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="max-w-4xl mx-auto"> <div class="mb-8"> <a href="/admin/dashboard" class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+&larr; Back to Dashboard
+</a> <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)] mt-4">Create New Post</h1> </div> ${renderComponent($$result2, "PostForm", PostForm, { "client:load": true, "action": actions.createPost, "client:component-hydration": "load", "client:component-path": "@/components/admin/PostForm", "client:component-export": "PostForm" })} </div> ` })}`;
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/admin/posts/new.astro", void 0);
+
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/admin/posts/new.astro";
+const $$url = "/admin/posts/new";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$New,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

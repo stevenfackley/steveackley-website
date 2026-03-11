@@ -84,7 +84,7 @@ jobs:
         run: |
           echo "Waiting for Astro to accept connections on port 3000..."
           for i in $(seq 1 60); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:3000/ 2>/dev/null || echo "000")
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3000/ 2>/dev/null || echo "000")
             if echo "$HTTP_CODE" | grep -qE "^[1-9][0-9][0-9]$"; then
               echo "Server is up (HTTP $HTTP_CODE) ✓"
               exit 0
@@ -97,7 +97,7 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          BASE_URL: "http://localhost:3000"
+          BASE_URL: "http://127.0.0.1:3000"
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"

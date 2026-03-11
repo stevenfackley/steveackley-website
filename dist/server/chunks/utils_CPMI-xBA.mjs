@@ -19,4 +19,4 @@ function formatDateShort(date) {
   }).format(new Date(date));
 }
 
-export { formatDateShort as a, cn as c, formatDate as f };
+export { formatDate as a, cn as c, formatDateShort as f };

@@ -12,7 +12,7 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   integrations: [react()],
   server: {
-    host: '0.0.0.0',
+    host: '127.0.0.1',
     port: 3000,
   },
   vite: {

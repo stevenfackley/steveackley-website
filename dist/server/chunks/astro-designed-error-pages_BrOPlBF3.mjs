@@ -1,5 +1,6 @@
 import { parse, stringify } from 'devalue';
-import { ao as REDIRECT_STATUS_CODES, A as AstroError, ap as ActionsReturnedInvalidDataError, D as DEFAULT_404_COMPONENT } from './astro/server_dRnksWFu.mjs';
+import { A as AstroError, a7 as ActionCalledFromServerError, ap as REDIRECT_STATUS_CODES, aq as ActionsReturnedInvalidDataError, D as DEFAULT_404_COMPONENT } from './astro/server_B-1XR7Cx.mjs';
+import { c as appendForwardSlash$1 } from './path_CLTPhSP2.mjs';
 import { escape } from 'html-escaper';
 
 const ACTION_QUERY_PARAMS$1 = {
@@ -8,6 +9,7 @@ const ACTION_RPC_ROUTE_PATTERN = "/_actions/[...path]";
 
 const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": undefined, "SSR": true};
 const ACTION_QUERY_PARAMS = ACTION_QUERY_PARAMS$1;
+const appendForwardSlash = appendForwardSlash$1;
 const codeToStatusMap = {
   // Implemented from IANA HTTP Status Code Registry
   // https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
@@ -112,6 +114,23 @@ class ActionInputError extends ActionError {
         this.fields[key]?.push(issue.message);
       }
     }
+  }
+}
+async function callSafely(handler) {
+  try {
+    const data = await handler();
+    return { data, error: void 0 };
+  } catch (e) {
+    if (e instanceof ActionError) {
+      return { data: void 0, error: e };
+    }
+    return {
+      data: void 0,
+      error: new ActionError({
+        message: e instanceof Error ? e.message : "Unknown error",
+        code: "INTERNAL_SERVER_ERROR"
+      })
+    };
   }
 }
 function getActionQueryString(name) {
@@ -219,6 +238,9 @@ const actionResultErrorStack = /* @__PURE__ */ (function actionResultErrorStackF
     }
   };
 })();
+function astroCalledServerError() {
+  return new AstroError(ActionCalledFromServerError);
+}
 
 function template({
   title,
@@ -355,4 +377,4 @@ const default404Instance = {
   default: default404Page
 };
 
-export { ActionError as A, DEFAULT_404_ROUTE as D, deserializeActionResult as a, ACTION_RPC_ROUTE_PATTERN as b, ACTION_QUERY_PARAMS as c, default404Instance as d, ensure404Route as e, getActionQueryString as g, serializeActionResult as s };
+export { ActionError as A, DEFAULT_404_ROUTE as D, astroCalledServerError as a, ACTION_QUERY_PARAMS as b, appendForwardSlash as c, deserializeActionResult as d, default404Instance as e, ensure404Route as f, getActionQueryString as g, callSafely as h, ActionInputError as i, ACTION_RPC_ROUTE_PATTERN as j, serializeActionResult as s };

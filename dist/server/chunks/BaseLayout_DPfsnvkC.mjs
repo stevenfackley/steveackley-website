@@ -1,11 +1,12 @@
-import { e as createComponent, m as maybeRenderHead, g as addAttribute, r as renderTemplate, o as renderScript, h as createAstro, n as renderHead, k as renderComponent, p as renderSlot } from './astro/server_dRnksWFu.mjs';
+import { e as createComponent, m as maybeRenderHead, g as addAttribute, r as renderTemplate, p as renderScript, h as createAstro, o as renderHead, k as renderComponent, l as renderSlot } from './astro/server_B-1XR7Cx.mjs';
 import 'piccolore';
 import 'clsx';
-/* empty css                          */
+/* empty css                             */
+/* empty css                             */
 
-const $$Astro$2 = createAstro();
+const $$Astro$1 = createAstro();
 const $$Nav = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$2, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
   Astro2.self = $$Nav;
   const navLinks = [
     { href: "/", label: "Home" },
@@ -40,21 +41,14 @@ Email
 </a> </div> </div> </div> </footer>`;
 }, "C:/Users/steve/projects/steveackleyorg/src/components/ui/Footer.astro", void 0);
 
-const $$Astro$1 = createAstro();
+const $$Astro = createAstro();
 const $$BaseLayout = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
+  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$BaseLayout;
   const { title = "Steve Ackley", description = "Staff Software Engineer - .NET, Azure, Full-Stack" } = Astro2.props;
   const fullTitle = title === "Steve Ackley" ? title : `${title} | Steve Ackley`;
-  return renderTemplate`<html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description"${addAttribute(description, "content")}><title>${fullTitle}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">${renderHead()}</head> <body class="min-h-screen flex flex-col"> ${renderComponent($$result, "Nav", $$Nav, {})} <main class="flex-1"> ${renderSlot($$result, $$slots["default"])} </main> ${renderComponent($$result, "Footer", $$Footer, {})} </body></html>`;
+  const avatarUrl = "https://avatars.githubusercontent.com/u/stevenfackley";
+  return renderTemplate`<html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><meta name="description"${addAttribute(description, "content")}><title>${fullTitle}</title><!-- Favicon --><link rel="icon" type="image/png"${addAttribute(avatarUrl, "href")}><link rel="apple-touch-icon"${addAttribute(avatarUrl, "href")}><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">${renderHead()}</head> <body class="min-h-screen flex flex-col bg-mesh selection:bg-blue-500/30"> ${renderComponent($$result, "Nav", $$Nav, {})} <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"> ${renderSlot($$result, $$slots["default"])} </main> ${renderComponent($$result, "Footer", $$Footer, {})} </body></html>`;
 }, "C:/Users/steve/projects/steveackleyorg/src/layouts/BaseLayout.astro", void 0);
 
-const $$Astro = createAstro();
-const $$PublicLayout = createComponent(($$result, $$props, $$slots) => {
-  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
-  Astro2.self = $$PublicLayout;
-  const { title, description } = Astro2.props;
-  return renderTemplate`${renderComponent($$result, "BaseLayout", $$BaseLayout, { "title": title, "description": description }, { "default": ($$result2) => renderTemplate` ${renderSlot($$result2, $$slots["default"])} ` })}`;
-}, "C:/Users/steve/projects/steveackleyorg/src/layouts/PublicLayout.astro", void 0);
-
-export { $$PublicLayout as $ };
+export { $$BaseLayout as $ };

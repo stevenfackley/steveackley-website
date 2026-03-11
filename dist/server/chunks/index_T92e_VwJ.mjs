@@ -1,8 +1,9 @@
-import { J as decryptString, K as createSlotValueFromString, O as isAstroComponentFactory, k as renderComponent, r as renderTemplate, w as REROUTE_DIRECTIVE_HEADER, A as AstroError, P as i18nNoLocaleFoundInPath, Q as ResponseSentError, S as originPathnameSymbol, T as RewriteWithBodyUsed, V as GetStaticPathsRequired, W as InvalidGetStaticPathsReturn, X as InvalidGetStaticPathsEntry, Y as GetStaticPathsExpectedParams, Z as GetStaticPathsInvalidRouteParam, _ as PageNumberParamNotFound, D as DEFAULT_404_COMPONENT, $ as NoMatchingStaticPathFound, a0 as PrerenderDynamicEndpointPathCollide, a1 as ReservedSlotName, a2 as renderSlotToString, a3 as renderJSX, a4 as chunkToString, a5 as isRenderInstruction, x as ActionNotFoundError, a6 as MiddlewareNoDataOrNextCalled, a7 as MiddlewareNotAResponse, a8 as SessionStorageInitError, a9 as SessionStorageSaveError, v as ROUTE_TYPE_HEADER, aa as ForbiddenRewrite, ab as ASTRO_VERSION, ac as CspNotEnabled, ad as LocalsReassigned, ae as generateCspDigest, af as PrerenderClientAddressNotAvailable, y as clientAddressSymbol, ag as ClientAddressNotAvailable, ah as StaticClientAddressNotAvailable, ai as AstroResponseHeadersReassigned, G as responseSentSymbol$1, aj as renderPage, ak as REWRITE_DIRECTIVE_HEADER_KEY, al as REWRITE_DIRECTIVE_HEADER_VALUE, am as renderEndpoint } from './astro/server_dRnksWFu.mjs';
+import { K as decryptString, O as createSlotValueFromString, P as isAstroComponentFactory, k as renderComponent, r as renderTemplate, w as REROUTE_DIRECTIVE_HEADER, A as AstroError, Q as i18nNoLocaleFoundInPath, S as ResponseSentError, T as originPathnameSymbol, V as RewriteWithBodyUsed, W as GetStaticPathsRequired, X as InvalidGetStaticPathsReturn, Y as InvalidGetStaticPathsEntry, Z as GetStaticPathsExpectedParams, _ as GetStaticPathsInvalidRouteParam, $ as PageNumberParamNotFound, D as DEFAULT_404_COMPONENT, a0 as NoMatchingStaticPathFound, a1 as PrerenderDynamicEndpointPathCollide, a2 as ReservedSlotName, a3 as renderSlotToString, a4 as renderJSX, a5 as chunkToString, a6 as isRenderInstruction, a7 as ActionCalledFromServerError, x as ActionNotFoundError, a8 as MiddlewareNoDataOrNextCalled, a9 as MiddlewareNotAResponse, aa as SessionStorageInitError, ab as SessionStorageSaveError, v as ROUTE_TYPE_HEADER, ac as ForbiddenRewrite, ad as ASTRO_VERSION, ae as CspNotEnabled, af as LocalsReassigned, ag as generateCspDigest, ah as PrerenderClientAddressNotAvailable, y as clientAddressSymbol, ai as ClientAddressNotAvailable, aj as StaticClientAddressNotAvailable, ak as AstroResponseHeadersReassigned, G as responseSentSymbol$1, al as renderPage, am as REWRITE_DIRECTIVE_HEADER_KEY, an as REWRITE_DIRECTIVE_HEADER_VALUE, ao as renderEndpoint } from './astro/server_B-1XR7Cx.mjs';
 import colors from 'piccolore';
 import 'clsx';
 import 'es-module-lexer';
-import { g as getActionQueryString, a as deserializeActionResult, D as DEFAULT_404_ROUTE, A as ActionError, s as serializeActionResult, b as ACTION_RPC_ROUTE_PATTERN, c as ACTION_QUERY_PARAMS } from './astro-designed-error-pages_DTzAqPRz.mjs';
+import { g as getActionQueryString, d as deserializeActionResult, D as DEFAULT_404_ROUTE, h as callSafely, A as ActionError, i as ActionInputError, s as serializeActionResult, j as ACTION_RPC_ROUTE_PATTERN, b as ACTION_QUERY_PARAMS } from './astro-designed-error-pages_BrOPlBF3.mjs';
+import { z } from 'zod';
 import { c as appendForwardSlash, j as joinPaths, b as removeTrailingForwardSlash, p as prependForwardSlash, t as trimSlashes } from './path_CLTPhSP2.mjs';
 import { serialize, parse } from 'cookie';
 import { unflatten as unflatten$1, stringify as stringify$1 } from 'devalue';
@@ -13,6 +14,10 @@ const formContentTypes = ["application/x-www-form-urlencoded", "multipart/form-d
 function hasContentType(contentType, expected) {
   const type = contentType.split(";")[0].toLowerCase();
   return expected.some((t) => type === t);
+}
+function isActionAPIContext(ctx) {
+  const symbol = Reflect.get(ctx, ACTION_API_CONTEXT_SYMBOL);
+  return symbol === true;
 }
 
 function hasActionPayload(locals) {
@@ -1294,6 +1299,122 @@ class Slots {
   }
 }
 
+function defineAction({
+  accept,
+  input: inputSchema,
+  handler
+}) {
+  const serverHandler = accept === "form" ? getFormServerHandler(handler, inputSchema) : getJsonServerHandler(handler, inputSchema);
+  async function safeServerHandler(unparsedInput) {
+    if (typeof this === "function" || !isActionAPIContext(this)) {
+      throw new AstroError(ActionCalledFromServerError);
+    }
+    return callSafely(() => serverHandler(unparsedInput, this));
+  }
+  Object.assign(safeServerHandler, {
+    orThrow(unparsedInput) {
+      if (typeof this === "function") {
+        throw new AstroError(ActionCalledFromServerError);
+      }
+      return serverHandler(unparsedInput, this);
+    }
+  });
+  return safeServerHandler;
+}
+function getFormServerHandler(handler, inputSchema) {
+  return async (unparsedInput, context) => {
+    if (!(unparsedInput instanceof FormData)) {
+      throw new ActionError({
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        message: "This action only accepts FormData."
+      });
+    }
+    if (!inputSchema) return await handler(unparsedInput, context);
+    const baseSchema = unwrapBaseObjectSchema(inputSchema, unparsedInput);
+    const parsed = await inputSchema.safeParseAsync(
+      baseSchema instanceof z.ZodObject ? formDataToObject(unparsedInput, baseSchema) : unparsedInput
+    );
+    if (!parsed.success) {
+      throw new ActionInputError(parsed.error.issues);
+    }
+    return await handler(parsed.data, context);
+  };
+}
+function getJsonServerHandler(handler, inputSchema) {
+  return async (unparsedInput, context) => {
+    if (unparsedInput instanceof FormData) {
+      throw new ActionError({
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        message: "This action only accepts JSON."
+      });
+    }
+    if (!inputSchema) return await handler(unparsedInput, context);
+    const parsed = await inputSchema.safeParseAsync(unparsedInput);
+    if (!parsed.success) {
+      throw new ActionInputError(parsed.error.issues);
+    }
+    return await handler(parsed.data, context);
+  };
+}
+function formDataToObject(formData, schema) {
+  const obj = schema._def.unknownKeys === "passthrough" ? Object.fromEntries(formData.entries()) : {};
+  for (const [key, baseValidator] of Object.entries(schema.shape)) {
+    let validator = baseValidator;
+    while (validator instanceof z.ZodOptional || validator instanceof z.ZodNullable || validator instanceof z.ZodDefault) {
+      if (validator instanceof z.ZodDefault && !formData.has(key)) {
+        obj[key] = validator._def.defaultValue();
+      }
+      validator = validator._def.innerType;
+    }
+    if (!formData.has(key) && key in obj) {
+      continue;
+    } else if (validator instanceof z.ZodBoolean) {
+      const val = formData.get(key);
+      obj[key] = val === "true" ? true : val === "false" ? false : formData.has(key);
+    } else if (validator instanceof z.ZodArray) {
+      obj[key] = handleFormDataGetAll(key, formData, validator);
+    } else {
+      obj[key] = handleFormDataGet(key, formData, validator, baseValidator);
+    }
+  }
+  return obj;
+}
+function handleFormDataGetAll(key, formData, validator) {
+  const entries = Array.from(formData.getAll(key));
+  const elementValidator = validator._def.type;
+  if (elementValidator instanceof z.ZodNumber) {
+    return entries.map(Number);
+  } else if (elementValidator instanceof z.ZodBoolean) {
+    return entries.map(Boolean);
+  }
+  return entries;
+}
+function handleFormDataGet(key, formData, validator, baseValidator) {
+  const value = formData.get(key);
+  if (!value) {
+    return baseValidator instanceof z.ZodOptional ? void 0 : null;
+  }
+  return validator instanceof z.ZodNumber ? Number(value) : value;
+}
+function unwrapBaseObjectSchema(schema, unparsedInput) {
+  while (schema instanceof z.ZodEffects || schema instanceof z.ZodPipeline) {
+    if (schema instanceof z.ZodEffects) {
+      schema = schema._def.schema;
+    }
+    if (schema instanceof z.ZodPipeline) {
+      schema = schema._def.in;
+    }
+  }
+  if (schema instanceof z.ZodDiscriminatedUnion) {
+    const typeKey = schema._def.discriminator;
+    const typeValue = unparsedInput.get(typeKey);
+    if (typeof typeValue !== "string") return schema;
+    const objSchema = schema._def.optionsMap.get(typeValue);
+    if (!objSchema) return schema;
+    return objSchema;
+  }
+  return schema;
+}
 function getActionContext(context) {
   const callerInfo = getCallerInfo(context);
   const actionResultAlreadySet = Boolean(context.locals._actionPayload);
@@ -2684,4 +2805,4 @@ function defineMiddleware(fn) {
   return fn;
 }
 
-export { PERSIST_SYMBOL as P, RouteCache as R, SERVER_ISLAND_COMPONENT as S, normalizeTheLocale as a, redirectToFallback as b, redirectToDefaultLocale as c, defineMiddleware as d, requestHasLocale as e, SERVER_ISLAND_ROUTE as f, createEndpoint as g, findRouteToRewrite as h, isRequestServerIsland as i, RenderContext as j, getSetCookiesFromResponse as k, matchRoute as m, notFound as n, requestIs404Or500 as r, sequence as s, validateAndDecodePathname as v };
+export { PERSIST_SYMBOL as P, RouteCache as R, SERVER_ISLAND_COMPONENT as S, defineAction as a, normalizeTheLocale as b, redirectToFallback as c, defineMiddleware as d, redirectToDefaultLocale as e, requestHasLocale as f, getActionContext as g, SERVER_ISLAND_ROUTE as h, isRequestServerIsland as i, createEndpoint as j, findRouteToRewrite as k, RenderContext as l, matchRoute as m, notFound as n, getSetCookiesFromResponse as o, requestIs404Or500 as r, sequence as s, validateAndDecodePathname as v };

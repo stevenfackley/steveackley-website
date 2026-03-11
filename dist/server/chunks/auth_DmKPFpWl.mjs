@@ -38,6 +38,14 @@ const auth = betterAuth({
         required: false
       }
     }
+  },
+  // Ensure the cookie is secure in production
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60
+      // 5 minutes
+    }
   }
 });
 
