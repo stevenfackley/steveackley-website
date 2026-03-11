@@ -45,11 +45,12 @@ jobs:
       image: mcr.microsoft.com/playwright/python:latest # Use a Playwright image for Node/TS
       env:
         DATABASE_URL: "postgresql://testuser:testpassword@postgres:5432/e2etest" # Use service name
+        PGUSER: "testuser" # Explicitly set PGUSER
+        PGPASSWORD: "testpassword" # Explicitly set PGPASSWORD
         BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
         BETTER_AUTH_URL: "http://localhost:3000" # Target localhost within the container
         NODE_ENV: "test"
         CI: "true"
-
     services:
       postgres:
         image: postgres:16-alpine

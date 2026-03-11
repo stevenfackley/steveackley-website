@@ -34,7 +34,8 @@ Next.js project test optimization and achieving 100% code coverage.
         - **Update (Run #94)**: Refactored E2E job to run in a Docker container (`mcr.microsoft.com/playwright/python:latest`) to resolve persistent database connection issues.
         - **Update (Run #95 FAILURE)**: E2E job failed at "Apply database migrations" step in containerized setup.
         - **Update (Run #96 FAILURE)**: E2E job failed at "Verify PostgreSQL service connectivity" due to `nc: not found` in container image.
-        - **Update (Run #97)**: Removed `nc -zv` check. Will proceed to `Apply database migrations` directly.
+        - **Update (Run #97 FAILURE)**: Drizzle `db:migrate` failed with `ECONNREFUSED` and Postgres logs showed `FATAL: role "root" does not exist`.
+        - **Update (Run #98)**: Added explicit `PGUSER` and `PGPASSWORD` to E2E container environment to force correct user for migrations.
         - **Update (Run #92 IN PROGRESS)**: `timeout-minutes: 15` on E2E job appears ineffective, job still running past 30 minutes. Triggering new run to clear queue.
 
 ## Next Steps
