@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { cn, formatDateShort } from "@/lib/utils";
 import type { PostSummary } from "@/types";
-import Link from "next/link";
 import { PRIVATE_PROJECTS, type EnrichedRepo } from "@/lib/github";
 
 const TABS = [
@@ -155,7 +153,7 @@ function AboutPanel({ avatarUrl, couplePhotoUrl }: { avatarUrl: string; couplePh
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", transform: "scale(1.1)" }}
                 aria-hidden
               />
-              <Image
+              <img
                 src={avatarUrl}
                 alt="Steve Ackley"
                 width={96}
@@ -167,7 +165,7 @@ function AboutPanel({ avatarUrl, couplePhotoUrl }: { avatarUrl: string; couplePh
             {/* Steve and Brooke photo */}
             <div className="relative shrink-0">
               {couplePhotoUrl ? (
-                <Image
+                <img
                   src={couplePhotoUrl}
                   alt="About photo"
                   width={160}
@@ -572,9 +570,9 @@ function BlogPanel({ posts }: { posts: TabsDashboardProps["blogPosts"] }) {
         <p className="text-sm text-[var(--text-muted)]">
           {posts.length === 0 ? "No posts yet." : `${posts.length} published post${posts.length !== 1 ? "s" : ""}`}
         </p>
-        <Link href="/blog" className="text-sm text-[var(--accent)] hover:underline underline-offset-2">
+        <a href="/blog" className="text-sm text-[var(--accent)] hover:underline underline-offset-2">
           View all posts
-        </Link>
+        </a>
       </div>
 
       {posts.length === 0 ? (
@@ -583,7 +581,7 @@ function BlogPanel({ posts }: { posts: TabsDashboardProps["blogPosts"] }) {
         </Section>
       ) : (
         posts.map((post) => (
-          <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
+          <a key={post.id} href={`/blog/${post.slug}`} className="block group">
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 card-glow">
               <div className="flex items-start justify-between gap-4">
                 <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug">
@@ -600,7 +598,7 @@ function BlogPanel({ posts }: { posts: TabsDashboardProps["blogPosts"] }) {
               )}
               <span className="mt-3 inline-block text-xs text-[var(--accent)]">Read more</span>
             </div>
-          </Link>
+          </a>
         ))
       )}
     </div>
@@ -682,13 +680,13 @@ function ConnectPanel() {
           View the interactive version or save a PDF copy.
         </p>
         <div className="flex flex-col gap-3">
-          <Link
+          <a
             href="/resume"
             className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-white text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
           >
             View Interactive Resume
-          </Link>
+          </a>
         </div>
       </Section>
     </div>

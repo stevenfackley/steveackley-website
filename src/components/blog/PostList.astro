@@ -1,0 +1,22 @@
+---
+import PostCard from './PostCard.astro';
+import type { PostSummary } from '@/types';
+
+interface Props {
+  posts: PostSummary[];
+}
+
+const { posts } = Astro.props;
+---
+
+{posts.length === 0 ? (
+  <div class="text-center py-20">
+    <p class="text-[var(--text-muted)] text-lg">No posts yet. Check back soon!</p>
+  </div>
+) : (
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {posts.map((post) => (
+      <PostCard post={post} />
+    ))}
+  </div>
+)}

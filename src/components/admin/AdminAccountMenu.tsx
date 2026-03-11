@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export function AdminAccountMenu() {
@@ -51,21 +50,21 @@ export function AdminAccountMenu() {
 
       {open && (
         <div className="absolute top-full left-0 mt-2 min-w-[140px] rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg py-1 z-50">
-          <Link
+          <a
             href="/admin/account"
             onClick={() => setOpen(false)}
             className={itemCls}
           >
             My Account
-          </Link>
+          </a>
           <div className="my-1 border-t border-[var(--border)]" />
-          <Link
+          <a
             href="/admin/settings"
             onClick={() => setOpen(false)}
             className={itemCls}
           >
             Settings
-          </Link>
+          </a>
         </div>
       )}
     </div>

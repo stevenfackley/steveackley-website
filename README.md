@@ -1,27 +1,21 @@
 # steveackley.org
 [![CI / Deploy to GHCR & EC2](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml)
 
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white) ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white) ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TailwindCSS](https://img.shields.io/badge/tailwind%20css-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Astro](https://img.shields.io/badge/Astro-BC52EE?style=for-the-badge&logo=astro&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white) ![Drizzle](https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TailwindCSS](https://img.shields.io/badge/tailwind%20css-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
 
 
-A modern, mobile-first personal website and blog for Steve Ackley — built with Next.js 15, Tailwind CSS, and PostgreSQL.
-
-[](https://nextjs.org/)
-[](https://www.typescriptlang.org/)
-[](https://tailwindcss.com/)
-[](https://www.postgresql.org/)
-[](https://www.docker.com/)
+A modern, mobile-first personal website and blog for Steve Ackley — built with Astro 5, React, Tailwind CSS, and PostgreSQL.
 
 ---
 
 ## ✨ Features
 
-- **Bento-box dashboard** — Visually engaging CSS Grid home page that showcases skills, projects, and contact links
-- **Dark & Light mode** — Automatically respects system `prefers-color-scheme`, WCAG AA compliant in both themes
+- **Bento-box dashboard** — Visually engaging home page that showcases skills, projects, and contact links
+- **Astro 5 Islands** — Static speed with React interactive components where needed
+- **Dark & Light mode** — Automatically respects system `prefers-color-scheme`, WCAG AA compliant
 - **Blog** — Full-featured blog backed by PostgreSQL with rich-text editing (Tiptap)
-- **Admin panel** — Secure, single-user CMS at `/admin` for creating, editing, and publishing posts
-- **Image uploads** — Admin can upload images directly into blog posts; stored in a Docker volume
-- **Resume download** — Direct PDF download from the home CTA
+- **Better-Auth** — Secure, modern authentication with role-based access control
+- **Cloudflare R2 Storage** — Durable, high-performance object storage for images
 - **Fully Dockerized** — Multi-stage build, docker-compose for local development and production
 
 ---
@@ -30,23 +24,16 @@ A modern, mobile-first personal website and blog for Steve Ackley — built with
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Astro 5 (Server Mode) |
+| Frontend | React 19 (Islands) |
 | Language | TypeScript 5 |
 | Styling | Tailwind CSS 4 |
 | Database | PostgreSQL 16 |
-| ORM | Prisma 6 |
-| Auth | NextAuth.js v5 (Auth.js) |
+| ORM | Drizzle ORM |
+| Auth | Better-Auth |
+| Storage | Cloudflare R2 |
 | Rich Text | Tiptap 2 |
 | Containerization | Docker + Docker Compose |
-
----
-
-## 📋 Prerequisites
-
-- **Node.js** 20.x LTS
-- **npm** 10.x
-- **Docker** 24.x+
-- **Docker Compose** v2.x
 
 ---
 
@@ -55,14 +42,14 @@ A modern, mobile-first personal website and blog for Steve Ackley — built with
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/steveackleyorg.git
+git clone https://github.com/stevenfackley/steveackley-website.git
 cd steveackleyorg
 ```
 
 ### 2. Install dependencies
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 ### 3. Configure environment variables
@@ -82,25 +69,14 @@ docker compose -f docker-compose.dev.yml up -d db
 ### 5. Run database migrations
 
 ```bash
-npx prisma migrate dev
+npm run db:push
 ```
 
-### 6. Create the admin user
-
-```bash
-npm run setup:admin
-```
-
-You'll be prompted for your email and password. The bcrypt hash will be saved to `.env.local`.
-
-### 7. Start the development server
+### 6. Start the development server
 
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.  
-Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 
 ---
 
@@ -109,238 +85,25 @@ Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 ### Start everything with Docker Compose
 
 ```bash
-# Copy environment template and fill in your values
-cp .env.example .env.local
-
-# Start the database only (recommended for local dev)
-docker compose -f docker-compose.dev.yml up -d db
-npm run dev
-```
-
-For a full Docker stack locally:
-
-```bash
-# web.env is required by docker-compose.yml
-# Create it with your local values:
-printf 'DATABASE_URL=postgresql://steveackley:devpassword@db:5432/steveackleydb\nAUTH_SECRET=your-secret-here\nADMIN_PASSWORD_HASH=your-hash-here\n' > web.env
-
-# Also create the postgres secret file
-mkdir -p secrets && echo "devpassword" > secrets/postgres_password.txt
-
 docker compose up --build
 ```
 
 The app will be available at [http://localhost:3000](http://localhost:3000).
 
-### Stop and clean up
-
-```bash
-docker compose down
-```
-
-### Stop and remove volumes (⚠️ destroys all data)
-
-```bash
-docker compose down -v
-```
-
-### View logs
-
-```bash
-docker compose logs -f web   # Application logs
-docker compose logs -f db    # Database logs
-```
-
 ---
 
 ## 🔑 Environment Variables
 
-Copy `.env.example` to `.env.local` (development) or `.env` (Docker production).
-
-| Variable | Required | Description | Example |
-|---|---|---|---|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/steveackleydb` |
-| `AUTH_SECRET` | ✅ | JWT signing secret (min 32 chars) | `openssl rand -base64 32` |
-| `AUTH_URL` | ✅ | Application base URL | `http://localhost:3000` |
-| `ADMIN_EMAIL` | ✅ | Admin login email | `stevenfackley@gmail.com` |
-| `ADMIN_PASSWORD_HASH` | ✅ | bcrypt hash of admin password | Generated by `npm run setup:admin` |
-| `NEXT_PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL | `https://linkedin.com/in/stevenfackley` |
-| `NEXT_PUBLIC_EMAIL` | ✅ | Contact email | `stevenfackley@gmail.com` |
-| `NEXT_PUBLIC_P1_OPS_HUB_URL` | ✅ | P1 Ops Hub project URL | `https://p1opshub.example.com` |
-| `UPLOAD_DIR` | ✅ | Image upload path | `./uploads` (local) or `/app/uploads` (Docker) |
-| `MAX_UPLOAD_SIZE_MB` | ✅ | Max upload size | `5` |
-
-> **Security Note:** Never commit `.env` or `.env.local` files. See [SECURITY.md](./docs/SECURITY.md).
-
-### Generating AUTH_SECRET
-
-```bash
-openssl rand -base64 32
-```
-
-### Generating ADMIN_PASSWORD_HASH
-
-```bash
-npm run setup:admin
-# or manually:
-node -e "const b=require('bcryptjs');b.hash('yourpassword',12).then(console.log)"
-```
-
----
-
-## 🗄️ Database
-
-This application uses **self-hosted PostgreSQL** with **standard Prisma Client** (no driver adapters).
-
-**⚠️ Important:** See [docs/DATABASE.md](./docs/DATABASE.md) for:
-- Complete database architecture and configuration
-- Common mistakes and troubleshooting guide
-- "FATAL: role 'root' does not exist" fix
-- Environment-specific setup instructions
-
-### Prisma commands
-
-```bash
-# Create and apply a new migration
-npx prisma migrate dev --name my-change
-
-# Apply pending migrations (production)
-npx prisma migrate deploy
-
-# Open Prisma Studio (database GUI)
-npx prisma studio
-
-# Regenerate Prisma client after schema changes
-npx prisma generate
-
-# Reset database (⚠️ development only — deletes all data)
-npx prisma migrate reset
-```
-
-### Schema overview
-
-```
-User    — Admin user account (single user, credentials auth)
-Post    — Blog posts with title, slug, content (HTML), cover image, published flag
-```
-
-See `prisma/schema.prisma` for the full schema and `docs/SDD.md` for detailed design.
-
----
-
-## 📝 Blog Admin Usage
-
-1. Navigate to `/admin/login`
-2. Log in with your configured admin credentials
-3. **Dashboard** — View all posts (drafts + published), with edit/delete/publish actions
-4. **New Post** (`/admin/posts/new`)
-   - Write with the Tiptap rich-text editor
-   - Use the toolbar: headings, bold, italic, lists, code blocks, links
-   - Upload images via the image toolbar button (max 5MB, JPEG/PNG/WebP/GIF)
-   - Set a cover image, title, and optional excerpt
-   - Save as **Draft** or publish immediately
-5. **Edit Post** — Click any post in the dashboard to edit
-
----
-
-## 📁 Project Structure
-
-```
-steveackleyorg/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── (public)/           # Public pages
-│   │   ├── admin/              # Protected admin pages
-│   │   └── api/                # API routes
-│   ├── components/
-│   │   ├── bento/              # Home dashboard cards
-│   │   ├── blog/               # Blog components
-│   │   ├── admin/              # Admin components
-│   │   └── ui/                 # Shared UI primitives
-│   ├── lib/                    # Server-side utilities
-│   └── types/                  # TypeScript types
-├── prisma/
-│   ├── schema.prisma           # Database schema
-│   └── migrations/             # Migration history
-├── docker/
-│   ├── entrypoint.sh           # Container startup script
-│   └── seed-admin.js           # Admin user seeding script
-├── scripts/
-│   └── setup-admin.ts          # Interactive local admin setup
-├── public/
-│   └── resume.pdf              # Resume (place your PDF here)
-├── docs/                       # Project documentation
-│   ├── PRD.md                  # Product Requirements
-│   ├── SDD.md                  # Software Design
-│   ├── DATA_FLOW.md            # Data flow diagrams
-│   ├── SECURITY.md             # Security guidelines
-│   └── deployment/             # Deployment & infrastructure docs
-│       ├── CLOUDFLARE_TUNNEL_SETUP.md
-│       ├── CLOUDFLARE_AUTO_CACHE_CLEAR.md
-│       └── SERVER_CONFIG.md
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # CI/CD pipeline
-├── Dockerfile                  # Multi-stage production build
-├── docker-compose.yml          # Production orchestration
-├── docker-compose.dev.yml      # Development (DB only)
-├── docker-compose.tunnel.yml   # Alternative: cloudflared as Docker container
-├── .env.example                # Environment variable template
-├── DEPLOYMENT_GUIDE.md         # Full deployment documentation
-├── QUICK_DEPLOY.md             # Quick-reference commands
-└── README.md                   # This file
-```
-
----
-
-## 🎨 Design System
-
-The site features a dual-theme design that automatically switches based on the user's OS setting:
-
-| Element | Light Mode | Dark Mode |
-|---|---|---|
-| Background | `#fafafa` | `#0a0a0a` |
-| Card Surface | `#ffffff` | `#141414` |
-| Text Primary | `#171717` | `#ededed` |
-| Text Secondary | `#525252` | `#a3a3a3` |
-| Accent | `#2563eb` (blue) | `#60a5fa` (blue) |
-| Border | `#e5e5e5` | `#2a2a2a` |
-
-Typography: Inter (via `next/font` — zero CLS)  
-Both themes meet WCAG AA contrast requirements (≥ 4.5:1 body text).
-
----
-
-## 🚢 Production Deployment (AWS + Cloudflare Tunnel)
-
-Production is deployed automatically via GitHub Actions on every push to `main`. The pipeline:
-
-1. Builds the Docker image and pushes it to GitHub Container Registry (GHCR)
-2. SSHes into the EC2 instance, writes secrets to `web.env` and `secrets/postgres_password.txt`, pulls the new image, and restarts containers
-3. Purges the Cloudflare cache so users immediately see the new build
-
-Traffic is served through a **Cloudflare Tunnel** — no ports 80 or 443 are exposed on the server. The `cloudflared` daemon runs as a systemd service and routes traffic to the Next.js container on port 3000.
-
-See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for the full architecture, CI/CD walkthrough, required GitHub secrets, and troubleshooting steps.
-
-See [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) for copy-paste commands.
-
-### Adding Your Resume
-
-Place your resume PDF at `public/resume.pdf`. It will be served at `/resume.pdf` and linked from the CTA card's "Download Resume" button.
-
----
-
-## 🔒 Security
-
-See [docs/SECURITY.md](./docs/SECURITY.md) for the full security documentation, including:
-
-- Authentication implementation (NextAuth.js + bcrypt)
-- SQL injection prevention (Prisma ORM)
-- File upload security (MIME validation, filename sanitization)
-- XSS prevention (DOMPurify sanitization)
-- Security headers configuration
-- Environment variable security
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | Secret for Better-Auth |
+| `BETTER_AUTH_URL` | Base URL for auth callbacks |
+| `R2_ACCOUNT_ID` | Cloudflare Account ID |
+| `R2_ACCESS_KEY_ID` | R2 API Access Key |
+| `R2_SECRET_ACCESS_KEY` | R2 API Secret Key |
+| `R2_BUCKET` | R2 Bucket name |
+| `R2_PUBLIC_URL` | Public URL for R2 objects |
 
 ---
 
@@ -348,28 +111,12 @@ See [docs/SECURITY.md](./docs/SECURITY.md) for the full security documentation, 
 
 | Document | Description |
 |---|---|
-| [docs/PRD.md](./docs/PRD.md) | Product Requirements Document |
-| [docs/SDD.md](./docs/SDD.md) | Software Design Document |
-| [docs/DATA_FLOW.md](./docs/DATA_FLOW.md) | Data Flow Document |
-| [docs/SECURITY.md](./docs/SECURITY.md) | Security Guidelines |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | CI/CD, Docker, and infrastructure |
-| [QUICK_DEPLOY.md](./QUICK_DEPLOY.md) | Quick-reference deployment commands |
-| [docs/deployment/CLOUDFLARE_TUNNEL_SETUP.md](./docs/deployment/CLOUDFLARE_TUNNEL_SETUP.md) | Cloudflare Tunnel configuration |
-| [docs/deployment/SERVER_CONFIG.md](./docs/deployment/SERVER_CONFIG.md) | EC2 server configuration |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution Guidelines |
+| [docs/DATABASE.md](./docs/DATABASE.md) | Database architecture and schema |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Security guidelines |
+| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | CI/CD and production setup |
 
 ---
 
 ## 📜 License
 
-Copyright (c) 2025 Steve Ackley. See [LICENSE](./LICENSE) for full terms.
-
-In short: you may fork and use the code as a reference for your own project, but you may not copy it verbatim, and you may not use photographs or likenesses of Steve Ackley or his family under any circumstances.
-
----
-
-## 📬 Contact
-
-- **Website:** [steveackley.org](https://steveackley.org)
-- **LinkedIn:** See the site CTA
-- **Email:** See the site CTA
+Copyright (c) 2025-2026 Steve Ackley. See [LICENSE](./LICENSE) for full terms.

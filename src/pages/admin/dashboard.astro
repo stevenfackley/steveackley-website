@@ -1,0 +1,34 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { AdminPostTable } from '@/components/admin/AdminPostTable';
+import { db, posts as postsTable } from '@/db';
+import { desc } from 'drizzle-orm';
+
+// Fetch all posts for the admin table
+const posts = await db
+  .select()
+  .from(postsTable)
+  .orderBy(desc(postsTable.createdAt));
+---
+
+<AdminLayout title="Dashboard" description="Admin Dashboard Overview">
+  <div class="space-y-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Admin Dashboard</h1>
+        <p class="text-[var(--text-secondary)] mt-1.5">Manage your posts and site content</p>
+      </div>
+      <a 
+        href="/admin/posts/new" 
+        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all hover:-translate-y-0.5 active:translate-y-0"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        New Post
+      </a>
+    </div>
+
+    <AdminPostTable client:load posts={posts} />
+  </div>
+</AdminLayout>

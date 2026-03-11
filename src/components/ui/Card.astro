@@ -1,0 +1,32 @@
+---
+import { cn } from '@/lib/utils';
+
+interface Props {
+  href?: string;
+  external?: boolean;
+  class?: string;
+}
+
+const { href, external = false, class: className } = Astro.props;
+
+const base = cn(
+  'bg-[var(--surface)] border border-[var(--border)] rounded-2xl',
+  'transition-all duration-200',
+  href && 'hover:border-[var(--border-hover)] hover:-translate-y-0.5 hover:shadow-sm cursor-pointer',
+  className
+);
+---
+
+{href && external ? (
+  <a href={href} target="_blank" rel="noopener noreferrer" class={base}>
+    <slot />
+  </a>
+) : href ? (
+  <a href={href} class={base}>
+    <slot />
+  </a>
+) : (
+  <div class={base}>
+    <slot />
+  </div>
+)}

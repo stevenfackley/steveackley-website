@@ -23,6 +23,7 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" Version="2.1.*" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.*" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Extensions" Version="0.12.*" />
+    <PackageReference Include="Wasmtime" Version="22.0.0" />
     <!-- Platform-specific ONNX acceleration -->
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.20.*" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
   </ItemGroup>

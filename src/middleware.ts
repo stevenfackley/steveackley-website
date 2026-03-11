@@ -1,61 +1,32 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
-import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { defineMiddleware } from "astro:middleware";
 
-/**
- * Auth middleware: protects /admin/* and /client/* routes.
- * Uses edge-compatible authConfig (no Prisma, no Node.js-only imports).
- *
- * - /admin/* (non-login): requires ADMIN role; clients are sent to /client/dashboard
- * - /admin/login: redirects already-authenticated users based on their role
- * - /client/*: requires any authenticated user
- */
-const { auth } = NextAuth(authConfig);
+export const onRequest = defineMiddleware(async (context, next) => {
+  const session = await auth.api.getSession({
+    headers: context.request.headers,
+  });
 
-export default auth((req) => {
-  const session = req.auth;
-  const isLoggedIn = !!session;
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  const pathname = req.nextUrl.pathname;
-
-  const isAdminLogin = pathname === "/admin/login";
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isClientRoute = pathname.startsWith("/client");
-
-  // /admin/login
-  if (isAdminLogin) {
-    if (!isLoggedIn) return NextResponse.next(); // explicitly return next() instead of undefined
-    const dest = role === "ADMIN" ? "/admin/dashboard" : "/client/dashboard";
-    return NextResponse.redirect(new URL(dest, req.url));
+  if (session) {
+    context.locals.user = session.user;
+    context.locals.session = session.session;
+  } else {
+    context.locals.user = null;
+    context.locals.session = null;
   }
 
-  // /admin/* (protected)
-  if (isAdminRoute) {
-    if (!isLoggedIn) {
-      const loginUrl = new URL("/admin/login", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+  // Redirect to login if accessing /admin or /client without a session
+  const url = new URL(context.request.url);
+  if (url.pathname.startsWith("/admin") && url.pathname !== "/admin/login") {
+    if (!session || session.user.role !== "ADMIN") {
+      return context.redirect("/admin/login");
     }
-    if (role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/client/dashboard", req.url));
-    }
-    return NextResponse.next(); // explicitly return next()
   }
 
-  // /client/* (any authenticated user)
-  if (isClientRoute) {
-    if (!isLoggedIn) {
-      const loginUrl = new URL("/admin/login", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+  if (url.pathname.startsWith("/client")) {
+    if (!session) {
+      return context.redirect("/admin/login"); // Or wherever client login is
     }
-    return NextResponse.next(); // explicitly return next()
   }
 
-  // Fallback for unmatched routes (shouldn't happen with matcher config)
-  return NextResponse.next();
+  return next();
 });
-
-export const config = {
-  matcher: ["/admin/:path*", "/client/:path*"],
-};

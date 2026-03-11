@@ -1,0 +1,40 @@
+---
+import { cn } from '@/lib/utils';
+import type { PaginationInfo } from '@/types';
+
+interface Props {
+  pagination: PaginationInfo;
+  basePath: string;
+}
+
+const { pagination, basePath } = Astro.props;
+const { currentPage, totalPages, hasPreviousPage, hasNextPage } = pagination;
+
+function cls(active?: boolean, disabled?: boolean) {
+  return cn(
+    'inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition-all',
+    active
+      ? 'bg-[var(--accent)] text-white'
+      : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-hover)]',
+    disabled && 'opacity-40 pointer-events-none'
+  );
+}
+---
+
+{totalPages > 1 && (
+  <nav class="flex items-center justify-center gap-2 mt-12">
+    {hasPreviousPage ? (
+      <a href={`${basePath}?page=${currentPage - 1}`} class={cls()}>&#8249;</a>
+    ) : (
+      <span class={cls(false, true)}>&#8249;</span>
+    )}
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+      <a href={`${basePath}?page=${p}`} class={cls(p === currentPage)} aria-current={p === currentPage ? 'page' : undefined}>{p}</a>
+    ))}
+    {hasNextPage ? (
+      <a href={`${basePath}?page=${currentPage + 1}`} class={cls()}>&#8250;</a>
+    ) : (
+      <span class={cls(false, true)}>&#8250;</span>
+    )}
+  </nav>
+)}

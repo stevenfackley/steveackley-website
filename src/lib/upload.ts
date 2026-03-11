@@ -1,6 +1,27 @@
 import { randomUUID } from "crypto";
 import path from "path";
-import fs from "fs/promises";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+// Cloudflare R2 Config from Env (wrapped in functions to allow test overrides)
+const getR2Config = () => ({
+  ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+  ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+  SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+  BUCKET: process.env.R2_BUCKET,
+  PUBLIC_URL: process.env.R2_PUBLIC_URL,
+});
+
+const createS3Client = () => {
+  const config = getR2Config();
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${config.ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: config.ACCESS_KEY_ID || "",
+      secretAccessKey: config.SECRET_ACCESS_KEY || "",
+    },
+  });
+};
 
 // Allowlisted MIME types — SVG intentionally excluded (XSS risk)
 export const ALLOWED_MIME_TYPES = [
@@ -18,13 +39,6 @@ export const MIME_TO_EXT: Record<AllowedMimeType, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
-
-/**
- * Returns the upload directory path from env, defaulting to ./uploads.
- */
-export function getUploadDir(): string {
-  return process.env.UPLOAD_DIR ?? "./uploads";
-}
 
 /**
  * Returns the maximum file size in bytes from env, defaulting to 5MB.
@@ -58,45 +72,53 @@ export function isAllowedMimeType(mime: string): mime is AllowedMimeType {
 }
 
 /**
- * Ensure the upload directory exists, creating it if necessary.
- */
-export async function ensureUploadDir(): Promise<void> {
-  const uploadDir = getUploadDir();
-  await fs.mkdir(uploadDir, { recursive: true });
-}
-
-/**
- * Save a file buffer to the uploads directory.
- * Returns the public URL path (e.g., /uploads/uuid-filename.jpg).
+ * Save a file buffer to Cloudflare R2.
+ * Returns the public URL of the uploaded object.
  */
 export async function saveUploadedFile(
   buffer: Buffer,
-  filename: string
+  filename: string,
+  contentType: string
 ): Promise<string> {
-  await ensureUploadDir();
-  const uploadDir = getUploadDir();
-  const filePath = path.join(uploadDir, filename);
-  await fs.writeFile(filePath, buffer);
-  return `/uploads/${filename}`;
+  const config = getR2Config();
+  if (!config.BUCKET) throw new Error("R2_BUCKET not configured");
+
+  const s3 = createS3Client();
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: config.BUCKET,
+      Key: filename,
+      Body: buffer,
+      ContentType: contentType,
+    })
+  );
+
+  // Ensure R2_PUBLIC_URL doesn't end with a slash for clean concatenation
+  const baseUrl = config.PUBLIC_URL?.replace(/\/$/, "") || "";
+  return `${baseUrl}/${filename}`;
 }
 
 /**
- * Delete an uploaded file by its URL path.
- * e.g., /uploads/uuid-file.jpg → removes from filesystem.
- * Silently ignores if file does not exist.
+ * Delete an uploaded file by its URL path or full URL.
+ * Silently ignores if deletion fails.
  */
-export async function deleteUploadedFile(urlPath: string): Promise<void> {
-  if (!urlPath.startsWith("/uploads/")) return;
-  const filename = urlPath.replace("/uploads/", "");
+export async function deleteUploadedFile(url: string): Promise<void> {
+  const config = getR2Config();
+  if (!config.BUCKET) return;
 
-  // Prevent path traversal
-  const safeName = path.basename(filename);
-  const uploadDir = getUploadDir();
-  const filePath = path.join(uploadDir, safeName);
+  // Extract key from URL
+  const filename = url.split("/").pop();
+  if (!filename) return;
 
   try {
-    await fs.unlink(filePath);
+    const s3 = createS3Client();
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: config.BUCKET,
+        Key: filename,
+      })
+    );
   } catch {
-    // File may already be gone — that's fine
+    // Fail silently
   }
 }

@@ -1,0 +1,50 @@
+---
+import { cn } from '@/lib/utils';
+import Card from '@/components/ui/Card.astro';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+const bioText = 'Staff Software Engineer at Lockheed Martin with 12+ years building enterprise software across defense, energy, and healthcare. Microsoft stack from day one. Passionate about clean architecture and systems built to last.';
+
+const interests = [
+  { icon: '🔧', label: 'Tinkering & Tech', mason: false },
+  { icon: '🌲', label: 'Camping & Hiking', mason: false },
+  { icon: '🎬', label: 'Movies', mason: false },
+  { icon: '👽', label: 'Aliens & The Unknown', mason: false },
+  { icon: null,  label: 'Freemasonry', mason: true },
+  { icon: '⌚',  label: 'Fitness (WHOOP)', mason: false },
+  { icon: '🚗',  label: 'Cars', mason: false },
+  { icon: '☕',  label: 'Craft Coffee', mason: false },
+  { icon: '🌿',  label: 'Fragrances', mason: false },
+];
+---
+
+<Card class={cn('p-6', className)}>
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">About</span>
+  </div>
+  <p class="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+    {bioText}
+  </p>
+  <div class="grid grid-cols-2 gap-1.5">
+    {interests.map((interest) => (
+      <div class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 bg-[var(--surface-hover)] text-xs text-[var(--text-secondary)]">
+        {interest.mason ? (
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[var(--accent)] shrink-0" aria-label="Masonic square and compasses">
+            <path d="M12 2 L3 18 M12 2 L21 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="12" cy="2" r="1.5" fill="currentColor" />
+            <path d="M3 6 L12 22 L21 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="bold" fill="currentColor" font-family="Georgia, serif">G</text>
+          </svg>
+        ) : (
+          <span>{interest.icon}</span>
+        )}
+        <span>{interest.label}</span>
+      </div>
+    ))}
+  </div>
+</Card>

@@ -1,0 +1,74 @@
+---
+import { cn } from '@/lib/utils';
+import Card from '@/components/ui/Card.astro';
+
+interface Props {
+  class?: string;
+  avatarUrl?: string;
+}
+
+const { class: className, avatarUrl = 'https://avatars.githubusercontent.com/u/stevenfackley' } = Astro.props;
+const heroTagline = 'Building enterprise-grade software with the Microsoft stack. Staff Engineer at Lockheed Martin, 12+ years shipping production systems in C#, .NET, Azure, Angular, and SQL Server.';
+---
+
+<Card class={cn('relative overflow-hidden min-h-[240px] p-0', className)}>
+  <!-- Gradient background strip -->
+  <div
+    class="absolute inset-0 pointer-events-none"
+    aria-hidden="true"
+    style="background: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(124,58,237,0.08) 60%, transparent 100%);"
+  ></div>
+  <!-- Decorative blurred orbs -->
+  <div
+    class="absolute -top-10 -right-10 h-40 w-40 rounded-full blur-3xl opacity-20 pointer-events-none"
+    style="background: radial-gradient(circle, #7c3aed, transparent);"
+    aria-hidden="true"
+  ></div>
+
+  <div class="relative z-10 flex flex-col justify-between h-full p-8 gap-6">
+    <!-- Top row - avatar + name -->
+    <div class="flex items-start gap-5">
+      <!-- Avatar with gradient ring -->
+      <div class="relative shrink-0">
+        <div
+          class="absolute inset-0 rounded-full blur-sm opacity-60"
+          style="background: linear-gradient(135deg, #2563eb, #7c3aed); transform: scale(1.12);"
+          aria-hidden="true"
+        ></div>
+        <img
+          src={avatarUrl}
+          alt="Steve Ackley"
+          width="72"
+          height="72"
+          class="relative rounded-full ring-2 ring-white/20 object-cover"
+        />
+      </div>
+
+      <!-- Name + title -->
+      <div class="pt-1 min-w-0">
+        <h1 class="text-2xl font-extrabold leading-tight tracking-tight gradient-text">
+          Steve Ackley
+        </h1>
+        <p class="text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+          Software Engineer &middot; .NET &middot; Azure &middot; Full-Stack
+        </p>
+      </div>
+    </div>
+
+    <!-- Bio summary -->
+    <p class="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
+      {heroTagline}
+    </p>
+
+    <!-- Status row -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <span class="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 pulse-dot shrink-0"></span>
+        Available for opportunities
+      </span>
+      <span class="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5">
+        📍 United States
+      </span>
+    </div>
+  </div>
+</Card>

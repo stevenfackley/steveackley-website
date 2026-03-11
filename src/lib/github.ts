@@ -86,10 +86,17 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
   /* c8 ignore next */
   const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    if (process.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    }
+
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: "application/vnd.github.v3+json" },
-      next: { revalidate: 3600 },
+      headers,
     });
     if (!res.ok) return null;
     return res.json() as Promise<T>;
@@ -171,12 +178,19 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
   /* c8 ignore next */
   const timeout = setTimeout(() => controller.abort(), 8_000);
   try {
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github.v3+json",
+    };
+
+    if (process.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    }
+
     const res = await fetch(
       "https://api.github.com/users/stevenfackley/repos?sort=updated&direction=desc&per_page=50",
       {
         signal: controller.signal,
-        headers: { Accept: "application/vnd.github.v3+json" },
-        next: { revalidate: 3600 },
+        headers,
       }
     );
     if (!res.ok) return [];

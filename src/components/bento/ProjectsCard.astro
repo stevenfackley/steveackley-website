@@ -1,0 +1,93 @@
+---
+import { cn } from '@/lib/utils';
+import Card from '@/components/ui/Card.astro';
+import Badge from '@/components/ui/Badge.astro';
+import { PRIVATE_PROJECTS } from '@/lib/github';
+
+interface Props {
+  class?: string;
+  repos: any[];
+}
+
+const { class: className, repos } = Astro.props;
+
+const FEATURED_NAMES = ['OmniSift', 'axon-main', 'TrustLog', 'steveackley-website', 'SortCompare'];
+
+const sortedRepos = [...repos].sort((a, b) => {
+  const ai = FEATURED_NAMES.indexOf(a.name);
+  const bi = FEATURED_NAMES.indexOf(b.name);
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+  return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+});
+
+const publicToShow = sortedRepos.slice(0, 4);
+---
+
+<Card class={cn('p-6', className)}>
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">Projects & Portfolio</span>
+  </div>
+  <div class="space-y-1.5 mt-1">
+    <!-- P1 Ops Hub - private, always first -->
+    {PRIVATE_PROJECTS.map((p) => {
+      const inner = (
+        <div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white" style="background: linear-gradient(135deg, #2563eb, #7c3aed)">P</div>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
+                <p class="text-xs text-[var(--text-muted)] truncate">Private repository</p>
+              </div>
+            </div>
+            <Badge variant="success">Active</Badge>
+          </div>
+          {p.badges.length > 0 && (
+            <div class="flex flex-wrap gap-1 mt-2 ml-10">
+              {p.badges.map((b) => (
+                <img src={b.imageUrl} alt={b.label} class="h-5" />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+      return p.html_url && p.html_url !== '#' ? (
+        <a href={p.html_url} target="_blank" rel="noopener noreferrer">{inner}</a>
+      ) : inner;
+    })}
+
+    <!-- Public GitHub repos -->
+    {publicToShow.map((repo) => {
+      const year = new Date(repo.created_at).getFullYear();
+      return (
+        <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
+          <div class="rounded-xl px-3 py-2.5 border border-transparent transition-all duration-150 hover:bg-[var(--surface-hover)] hover:border-[var(--border)] cursor-pointer">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 bg-[var(--surface-hover)] text-[var(--text-secondary)]">
+                  {repo.name[0].toUpperCase()}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-[var(--text-primary)] truncate">{repo.name}</p>
+                  <p class="text-xs text-[var(--text-muted)] truncate">
+                    {repo.language ?? 'Code'} &middot; {year}
+                  </p>
+                </div>
+              </div>
+              <Badge variant="info">GitHub</Badge>
+            </div>
+            {repo.badges.length > 0 && (
+              <div class="flex flex-wrap gap-1 mt-2 ml-10">
+                {repo.badges.map((b: any) => (
+                  <img src={b.imageUrl} alt={b.label} class="h-5" />
+                ))}
+              </div>
+            )}
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</Card>

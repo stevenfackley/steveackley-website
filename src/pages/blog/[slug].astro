@@ -1,0 +1,48 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+import PostContent from '@/components/blog/PostContent.astro';
+import { formatDate } from '@/lib/utils';
+import { db, posts as postsTable } from '@/db';
+import { eq } from 'drizzle-orm';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect('/blog');
+}
+
+// Get the post from the DB
+const [post] = await db
+  .select()
+  .from(postsTable)
+  .where(eq(postsTable.slug, slug))
+  .limit(1);
+
+if (!post || !post.published) {
+  return Astro.redirect('/blog');
+}
+---
+
+<PublicLayout title={post.title} description={post.excerpt || post.title}>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12">
+    <a href="/blog" class="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-8 transition-colors">
+      ← Back to Blog
+    </a>
+
+    <article>
+      <header class="mb-8">
+        <time class="text-sm text-[var(--text-muted)]">{formatDate(post.createdAt)}</time>
+        <h1 class="mt-2 text-3xl font-bold text-[var(--text-primary)] leading-tight">
+          {post.title}
+        </h1>
+        {post.excerpt && (
+          <p class="mt-3 text-lg text-[var(--text-secondary)] leading-relaxed">
+            {post.excerpt}
+          </p>
+        )}
+      </header>
+
+      <PostContent content={post.content} />
+    </article>
+  </div>
+</PublicLayout>

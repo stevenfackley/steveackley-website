@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, pgEnum, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, pgEnum, index, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Enums
@@ -6,17 +6,58 @@ export const roleEnum = pgEnum("Role", ["ADMIN", "CLIENT"]);
 export const messageTypeEnum = pgEnum("MessageType", ["GENERAL", "PROJECT_REQUEST"]);
 export const environmentEnum = pgEnum("Environment", ["PRODUCTION", "TEST", "DEVELOPMENT"]);
 
-// User table
+// User table (mapped for better-auth)
 export const users = pgTable("User", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   email: text("email").notNull().unique(),
-  passwordHash: text("passwordHash").notNull(),
+  passwordHash: text("passwordHash"), // renamed from password for legacy compatibility
   name: text("name"),
+  emailVerified: boolean("emailVerified").notNull().default(false),
+  image: text("image"),
   companyName: text("companyName"),
   contactFirstName: text("contactFirstName"),
   contactLastName: text("contactLastName"),
   role: roleEnum("role").notNull().default("CLIENT"),
   logo: text("logo"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+// Better-Auth Session table
+export const sessions = pgTable("Session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
+  ipAddress: text("ipAddress"),
+  userAgent: text("userAgent"),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+});
+
+// Better-Auth Account table
+export const accounts = pgTable("Account", {
+  id: text("id").primaryKey(),
+  accountId: text("accountId").notNull(),
+  providerId: text("providerId").notNull(),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  idToken: text("idToken"),
+  accessTokenExpiresAt: timestamp("accessTokenExpiresAt", { mode: "date" }),
+  refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt", { mode: "date" }),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+// Better-Auth Verification table
+export const verifications = pgTable("Verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -90,6 +131,22 @@ export const usersRelations = relations(users, ({ many }) => ({
   apps: many(userApps),
   sentMessages: many(messages, { relationName: "SentMessages" }),
   receivedMessages: many(messages, { relationName: "ReceivedMessages" }),
+  sessions: many(sessions),
+  accounts: many(accounts),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
 }));
 
 export const clientAppsRelations = relations(clientApps, ({ many }) => ({
@@ -123,6 +180,12 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
+export type Account = typeof accounts.$inferSelect;
+export type NewAccount = typeof accounts.$inferInsert;
+export type Verification = typeof verifications.$inferSelect;
+export type NewVerification = typeof verifications.$inferInsert;
 export type ClientApp = typeof clientApps.$inferSelect;
 export type NewClientApp = typeof clientApps.$inferInsert;
 export type UserApp = typeof userApps.$inferSelect;

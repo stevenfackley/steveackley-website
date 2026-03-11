@@ -1,0 +1,50 @@
+---
+import { cn } from '@/lib/utils';
+
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  external?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const { variant = 'primary', size = 'md', href, external = false, class: className, ...rest } = Astro.props;
+
+const variantClasses: Record<string, string> = {
+  primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2',
+  secondary: 'bg-[var(--surface)] text-[var(--text-primary)] border border-[var(--border)] hover:bg-[var(--surface-hover)] hover:border-[var(--border-hover)]',
+  ghost: 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]',
+  danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2',
+};
+
+const sizeClasses: Record<string, string> = {
+  sm: 'px-3 py-1.5 text-xs font-medium rounded-lg',
+  md: 'px-4 py-2 text-sm font-medium rounded-xl',
+  lg: 'px-6 py-3 text-base font-medium rounded-xl',
+};
+
+const classes = cn(
+  'inline-flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none cursor-pointer',
+  variantClasses[variant],
+  sizeClasses[size],
+  className
+);
+---
+
+{href ? (
+  external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" class={classes} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <a href={href} class={classes} {...rest}>
+      <slot />
+    </a>
+  )
+) : (
+  <button class={classes} {...rest}>
+    <slot />
+  </button>
+)}

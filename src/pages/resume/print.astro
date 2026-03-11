@@ -1,0 +1,393 @@
+---
+import '@/styles/globals.css';
+
+const EMAIL = 'stevenfackley@gmail.com';
+const PHONE = '475-777-1139';
+const LINKEDIN = 'linkedin.com/in/stevenackley';
+const GITHUB = 'github.com/stevenfackley';
+const LOCATION = 'Derby, CT';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Steve Ackley - Resume</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      @page {
+        size: letter;
+        margin: 0.65in 0.7in;
+      }
+      * { box-sizing: border-box; }
+      body {
+        background: #f4f4f5;
+        font-family: 'Georgia', 'Times New Roman', serif;
+      }
+      .resume-doc {
+        max-width: 8.5in;
+        margin: 2rem auto 4rem;
+        background: #ffffff;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+        padding: 0.7in 0.75in;
+        color: #1a1a1a;
+        font-size: 10.5pt;
+        line-height: 1.45;
+      }
+      .doc-header {
+        border-bottom: 2.5px solid #1e3a8a;
+        padding-bottom: 0.55rem;
+        margin-bottom: 0.75rem;
+      }
+      .doc-name-block { margin-bottom: 0.25rem; }
+      .doc-name {
+        font-size: 24pt;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #0f172a;
+        line-height: 1.1;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+      }
+      .doc-title {
+        font-size: 11pt;
+        color: #1e3a8a;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-top: 0.1rem;
+      }
+      .doc-contact {
+        font-size: 8.5pt;
+        color: #4b5563;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        margin-top: 0.3rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        align-items: center;
+      }
+      .doc-contact a { color: #1e3a8a; text-decoration: none; }
+      .doc-sep { color: #9ca3af; font-size: 8pt; }
+      .doc-section { margin-bottom: 0.75rem; }
+      .doc-section-title {
+        font-size: 10pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #1e3a8a;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        border-bottom: 1px solid #bfdbfe;
+        padding-bottom: 0.2rem;
+        margin-bottom: 0.5rem;
+      }
+      .doc-text {
+        font-size: 9.5pt;
+        color: #374151;
+        line-height: 1.5;
+      }
+      .doc-job { margin-bottom: 0.65rem; }
+      .doc-job-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.1rem;
+      }
+      .doc-company {
+        font-weight: 700;
+        font-size: 10pt;
+        color: #0f172a;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+      }
+      .doc-job-location {
+        font-size: 9pt;
+        color: #6b7280;
+      }
+      .doc-date {
+        font-size: 9pt;
+        color: #6b7280;
+        white-space: nowrap;
+        font-style: italic;
+      }
+      .doc-role {
+        font-size: 9.5pt;
+        font-style: italic;
+        color: #374151;
+        margin-bottom: 0.25rem;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+      }
+      .doc-role-date {
+        font-size: 8.5pt;
+        color: #6b7280;
+        font-weight: 400;
+      }
+      .doc-role-block { margin-bottom: 0.35rem; }
+      .doc-bullets {
+        margin: 0.15rem 0 0 0;
+        padding-left: 1.1rem;
+        font-size: 9.5pt;
+        color: #374151;
+        line-height: 1.5;
+      }
+      .doc-bullets li { margin-bottom: 0.2rem; }
+      .doc-skills-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+      .doc-skills-table td { vertical-align: top; padding: 0.15rem 0.4rem 0.15rem 0; line-height: 1.45; }
+      .doc-skill-label {
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        width: 140px;
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        font-size: 9pt;
+      }
+      .doc-certs { display: flex; flex-direction: column; gap: 0.3rem; }
+      .doc-cert { display: flex; justify-content: space-between; align-items: baseline; font-size: 9.5pt; }
+      .doc-cert-name { font-weight: 600; color: #0f172a; }
+      .doc-cert-issuer { font-style: italic; color: #6b7280; font-size: 9pt; }
+      @media print {
+        body { background: white; }
+        .no-print { display: none !important; }
+        .resume-doc {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+          box-shadow: none;
+          font-size: 10pt;
+        }
+        .doc-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .doc-section-title { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .doc-job { page-break-inside: avoid; }
+      }
+      @media screen {
+        .resume-doc {
+          border-top: 4px solid #1e3a8a;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Print trigger button -->
+    <div class="no-print" style="position:fixed;top:1rem;right:1rem;z-index:50;display:flex;gap:0.5rem;">
+      <button
+        onclick="window.print()"
+        style="display:inline-flex;align-items:center;gap:0.5rem;border-radius:0.5rem;padding:0.5rem 1rem;font-size:0.875rem;font-weight:600;background:#2563eb;color:white;border:none;cursor:pointer;"
+      >
+        Save as PDF
+      </button>
+      <a
+        href="/resume"
+        style="display:inline-flex;align-items:center;gap:0.5rem;border-radius:0.5rem;padding:0.5rem 1rem;font-size:0.875rem;font-weight:600;background:white;border:1px solid #e5e7eb;color:#374151;text-decoration:none;"
+      >
+        Back
+      </a>
+    </div>
+
+    <!-- Resume Document -->
+    <div id="resume-doc" class="resume-doc">
+      <header class="doc-header">
+        <div class="doc-name-block">
+          <h1 class="doc-name">Steve Ackley</h1>
+          <p class="doc-title">Staff Software Engineer</p>
+        </div>
+        <div class="doc-contact">
+          <span>{PHONE}</span>
+          <span class="doc-sep">|</span>
+          <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <span class="doc-sep">|</span>
+          <span>{LOCATION}</span>
+          <span class="doc-sep">|</span>
+          <span>{LINKEDIN}</span>
+          <span class="doc-sep">|</span>
+          <span>{GITHUB}</span>
+        </div>
+      </header>
+
+      <section class="doc-section">
+        <h2 class="doc-section-title">Professional Summary</h2>
+        <p class="doc-text">
+          Results-driven Staff Software Engineer at Lockheed Martin with 12+ years of enterprise software
+          experience across defense, energy, and healthcare sectors. Deep specialization in the Microsoft
+          technology stack including C# / .NET 10, ASP.NET Core, SQL Server, Azure, and Angular. Proven
+          track record architecting and delivering mission-critical systems under strict quality and compliance
+          standards. Certified SOA Architect with demonstrated ability to lead cross-functional engineering
+          teams, drive coding standards, and deliver on time at scale.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2 class="doc-section-title">Work Experience</h2>
+
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Lockheed Martin</span>
+              <span class="doc-job-location"> &mdash; Shelton, CT</span>
+            </div>
+            <span class="doc-date">December 2020 &ndash; Present</span>
+          </div>
+
+          <div class="doc-role-block">
+            <p class="doc-role">Staff Software Engineer <span class="doc-role-date">(May 2022 &ndash; Present)</span></p>
+            <ul class="doc-bullets">
+              <li>Spearheaded ground-up development of a web-based Interactive Electronic Technical Manual (IETM) platform for the F-16 fighter aircraft, modernizing legacy documentation workflows with a browser-native, containerized solution.</li>
+              <li>Maintained a 95% on-schedule delivery rate across multiple release cycles while consistently meeting defense-grade quality thresholds.</li>
+              <li>Established and enforced structured code review processes that drove a 50% reduction in post-merge defects across the engineering team.</li>
+              <li><strong>Stack:</strong> Angular, ASP.NET Core, C#, AWS, Node.js, PostgreSQL, SQLite, Docker, GitLab CI/CD</li>
+            </ul>
+          </div>
+
+          <div class="doc-role-block">
+            <p class="doc-role">Senior Software Engineer <span class="doc-role-date">(December 2020 &ndash; May 2022)</span></p>
+            <ul class="doc-bullets">
+              <li>Architected and delivered a disconnected desktop-based IETM application for the HH-60W Combat Rescue Helicopter with real-time bidirectional synchronization to cloud-hosted USAF IMDS infrastructure via SymmetricDS.</li>
+              <li>Scaled cross-functional ownership by leading a 10-engineer team, consistently exceeding performance benchmarks and driving a 20% productivity uplift quarter-over-quarter.</li>
+              <li>Authored engineering coding standards and documentation adopted across a shared 30-engineer monorepo, reducing onboarding friction and improving consistency.</li>
+              <li><strong>Stack:</strong> WPF, C#, XAML, SQL Server, SQLite, SymmetricDS, Jenkins, Bitbucket, Azure</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Flexi Software</span>
+              <span class="doc-job-location"> &mdash; Shelton, CT</span>
+            </div>
+            <span class="doc-date">July 2020 &ndash; December 2020</span>
+          </div>
+          <p class="doc-role">Software Architect</p>
+          <ul class="doc-bullets">
+            <li>Designed and delivered a cloud-hosted SaaS license authorization and distribution platform from concept to production, serving as the sole principal engineer on system architecture.</li>
+            <li>Produced comprehensive technical specifications from raw business requirements, coordinating a globally distributed team of 15+ engineers across three office locations, two countries, and two time zones.</li>
+            <li><strong>Stack:</strong> ASP.NET Core, C#, Azure, Azure DevOps, C++, WPF</li>
+          </ul>
+        </div>
+
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Sila Solutions Group</span>
+              <span class="doc-job-location"> &mdash; Shelton, CT</span>
+            </div>
+            <span class="doc-date">September 2016 &ndash; July 2020</span>
+          </div>
+          <p class="doc-role">Sr. Specialist, Software Engineering & Integration, DevOps</p>
+          <ul class="doc-bullets">
+            <li>Embedded consulting engineer at Lockheed Martin / Sikorsky Aircraft, contributing to mission-critical IETM software for the HH-60W Combat Rescue Helicopter across a multi-year engagement.</li>
+            <li>Introduced and drove agile development practices across the team, resulting in a measurable 15% improvement in team throughput and delivery predictability.</li>
+            <li><strong>Stack:</strong> WPF, C#, XAML, SQL Server, SQLite, SymmetricDS, Jenkins, GitLab</li>
+          </ul>
+        </div>
+
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Emerson Process Management</span>
+              <span class="doc-job-location"> &mdash; Watertown, CT</span>
+            </div>
+            <span class="doc-date">May 2014 &ndash; September 2016</span>
+          </div>
+          <p class="doc-role">.NET Developer / Junior Developer</p>
+          <ul class="doc-bullets">
+            <li>Owned ongoing maintenance and feature development for Catapult, a proprietary Enterprise Asset Management (EAM) platform serving oil and gas reliability consulting clients.</li>
+            <li>Engineered a RESTful Web API service integrated into every Catapult installation, and architected a KPI analytics web application using MVC5, Entity Framework, Bootstrap, and n-tier architecture patterns.</li>
+            <li><strong>Stack:</strong> C#, ASP.NET MVC, Web API, SQL Server, WinForms, Entity Framework, jQuery, Bootstrap</li>
+          </ul>
+        </div>
+
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">SMC Partners, LLC</span>
+              <span class="doc-job-location"> &mdash; Healthcare Consulting</span>
+            </div>
+            <span class="doc-date">January 2013 &ndash; June 2014</span>
+          </div>
+          <p class="doc-role">Computer Programmer / Analyst</p>
+          <ul class="doc-bullets">
+            <li>Delivered healthcare technology consulting across multiple clients. Led development of a modern C# / ASP.NET web application replacing a legacy VB6 QA auditing system at Connecticare (CT), implementing bit-mask role-based security and stored procedure-driven data access.</li>
+            <li>Supported data warehouse implementation and SSRS report rationalization at Hometown Health (NV), consolidating a fragmented reporting estate by 40% while improving accuracy and maintainability.</li>
+            <li><strong>Stack:</strong> C#, ASP.NET, WCF, SQL Server, SSRS, jQuery, AJAX</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2 class="doc-section-title">Technical Skills</h2>
+        <table class="doc-skills-table">
+          <tbody>
+            <tr>
+              <td class="doc-skill-label">Microsoft Backend</td>
+              <td>C# / .NET 10, ASP.NET Core, Web API, WPF, XAML, ML.NET, Entity Framework Core, SignalR</td>
+            </tr>
+            <tr>
+              <td class="doc-skill-label">Data & Reporting</td>
+              <td>SQL Server (advanced T-SQL), SSIS, SSAS, SSRS, Tableau, PostgreSQL, SQLite, Data Warehousing</td>
+            </tr>
+            <tr>
+              <td class="doc-skill-label">Cloud & DevOps</td>
+              <td>Azure (App Service, Functions, Service Bus, Key Vault, AKS), Azure DevOps, AWS, Docker, Kubernetes, Jenkins, GitLab CI/CD</td>
+            </tr>
+            <tr>
+              <td class="doc-skill-label">Frontend</td>
+              <td>Angular (primary), TypeScript, React / Next.js, CSS, SCSS, Bootstrap, Tailwind CSS</td>
+            </tr>
+            <tr>
+              <td class="doc-skill-label">Architecture</td>
+              <td>SOA, Microservices, Clean Architecture, DDD, REST, WCF, SymmetricDS, Disconnected Systems</td>
+            </tr>
+            <tr>
+              <td class="doc-skill-label">Tools</td>
+              <td>Git, GitHub, GitLab, Bitbucket, Jira, Scrum / Agile, xUnit, NUnit, C++, Node.js</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="doc-section">
+        <h2 class="doc-section-title">Certifications</h2>
+        <div class="doc-certs">
+          <div class="doc-cert">
+            <span class="doc-cert-name">Certified SOA Architect</span>
+            <span class="doc-cert-issuer">Arcitura Education &mdash; 2018</span>
+          </div>
+          <div class="doc-cert">
+            <span class="doc-cert-name">Microsoft Technology Associate (MCPS &mdash; Software Development)</span>
+            <span class="doc-cert-issuer">Microsoft &mdash; 2014</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2 class="doc-section-title">Education</h2>
+        <div class="doc-job">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Central Connecticut State University</span>
+              <span class="doc-job-location"> &mdash; New Britain, CT</span>
+            </div>
+            <span class="doc-date">2016</span>
+          </div>
+          <p class="doc-role">Bachelor of Science, Computer Science &mdash; Minor: Management Information Systems</p>
+        </div>
+        <div class="doc-job" style="margin-bottom: 0;">
+          <div class="doc-job-header">
+            <div>
+              <span class="doc-company">Naugatuck Valley Community College</span>
+            </div>
+            <span class="doc-date">2012</span>
+          </div>
+          <p class="doc-role">Associate of Science, Computer Science</p>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Auto-print on load
+      setTimeout(() => window.print(), 600);
+    </script>
+  </body>
+</html>

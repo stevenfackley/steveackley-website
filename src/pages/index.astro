@@ -1,0 +1,38 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+import BentoDashboard from '@/components/bento/BentoDashboard.astro';
+import { db, posts as postsTable } from '@/db';
+import { eq, desc } from 'drizzle-orm';
+import { getPublicRepos, enrichRepos } from '@/lib/github';
+
+// Fetch live blog posts for the preview
+const blogPosts = await db
+  .select()
+  .from(postsTable)
+  .where(eq(postsTable.published, true))
+  .orderBy(desc(postsTable.createdAt))
+  .limit(3);
+
+// Fetch live GitHub repos
+let githubRepos = [];
+try {
+  const rawRepos = await getPublicRepos();
+  githubRepos = await enrichRepos(rawRepos);
+} catch (e) {
+  console.error("Failed to fetch GitHub repos:", e);
+}
+
+const avatarUrl = 'https://avatars.githubusercontent.com/u/stevenfackley';
+const couplePhotoUrl = ''; // Add your R2 URL here if available
+---
+
+<PublicLayout title="Steve Ackley" description="Staff Software Engineer - .NET, Azure, Full-Stack">
+  <div class="py-8">
+    <BentoDashboard 
+      blogPosts={blogPosts} 
+      githubRepos={githubRepos} 
+      avatarUrl={avatarUrl}
+      couplePhotoUrl={couplePhotoUrl}
+    />
+  </div>
+</PublicLayout>

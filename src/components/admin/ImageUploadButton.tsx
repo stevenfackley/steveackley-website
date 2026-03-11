@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 interface Props { onUpload: (url: string) => void; }
 export function ImageUploadButton({ onUpload }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);

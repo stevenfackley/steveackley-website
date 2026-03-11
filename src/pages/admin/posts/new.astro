@@ -1,0 +1,27 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { PostForm } from '@/components/admin/PostForm';
+import { actions } from 'astro:actions';
+
+// The PostForm expects an 'action' prop which is a function that takes FormData
+// We can wrap the Astro Action call
+const createPostAction = async (formData: FormData) => {
+  // This is a bit of a shim because React client components call this
+  // In a pure Astro way, we'd use the Action directly from the form
+  const result = await actions.createPost(formData);
+  return result;
+};
+---
+
+<AdminLayout title="New Post">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+      <a href="/admin/dashboard" class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
+        &larr; Back to Dashboard
+      </a>
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)] mt-4">Create New Post</h1>
+    </div>
+
+    <PostForm client:load action={actions.createPost} />
+  </div>
+</AdminLayout>
