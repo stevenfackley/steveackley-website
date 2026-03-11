@@ -66,12 +66,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    env:
-      DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest" # Use localhost for GH Actions service environments
-      BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
-      BETTER_AUTH_URL: "http://127.0.0.1:3000"
-      NODE_ENV: "test"
-      CI: "true"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

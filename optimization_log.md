@@ -36,7 +36,8 @@ Next.js project test optimization and achieving 100% code coverage.
         - **Update (Run #96 FAILURE)**: E2E job failed at "Verify PostgreSQL service connectivity" due to `nc: not found` in container image.
         - **Update (Run #97 FAILURE)**: Drizzle `db:migrate` failed with `ECONNREFUSED` and Postgres logs showed `FATAL: role "root" does not exist`.
         - **Update (Run #98 FAILURE)**: `ECONNREFUSED 127.0.0.1:5432` during migrations. `localhost` incorrectly resolved to `127.0.0.1`.
-        - **Update (Run #99)**: Corrected `DATABASE_URL` in container environment to `postgresql://testuser:testpassword@postgres:5432/e2etest` to use service name directly.
+        - **Update (Run #99 FAILURE)**: Logs confirmed redundant job-level `env` block was overriding container's `DATABASE_URL`.
+        - **Update (Run #100)**: Removed redundant job-level `env` block from `e2e-tests` job in `deploy.yml`.
         - **Update (Run #92 IN PROGRESS)**: `timeout-minutes: 15` on E2E job appears ineffective, job still running past 30 minutes. Triggering new run to clear queue.
 
 ## Next Steps
