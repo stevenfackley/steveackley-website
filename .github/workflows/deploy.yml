@@ -39,10 +39,17 @@ jobs:
   e2e-tests:
     name: "🌐 E2E Tests"
     needs: [unit-tests, integration-tests]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Keep runs-on for the setup steps
     timeout-minutes: 15
-    # Temporary comment to trigger a new CI run
-    # This is part of troubleshooting persistent E2E job hangs.
+    container: # Run the core steps in a container
+      image: mcr.microsoft.com/playwright/python:latest # Use a Playwright image for Node/TS
+      env:
+        DATABASE_URL: "postgresql://testuser:testpassword@postgres:5432/e2etest" # Use service name
+        BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
+        BETTER_AUTH_URL: "http://localhost:3000" # Target localhost within the container
+        NODE_ENV: "test"
+        CI: "true"
+
     services:
       postgres:
         image: postgres:16-alpine

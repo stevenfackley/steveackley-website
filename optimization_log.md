@@ -31,7 +31,8 @@ Next.js project test optimization and achieving 100% code coverage.
         - Reverted problematic `install-deps` from Playwright installation step.
         - Cleaned up `vitest.config.ts` to remove Prisma/Next.js references and correctly target Astro `src/pages/api` for coverage.
         - **Update (Run #92 FAILURE)**: `PostgresError: connection timeout` confirmed via `web_fetch` summarization of GitHub Actions UI logs.
-        - **Update (Run #93)**: Changing `DATABASE_URL` from `127.0.0.1` to `localhost` in `deploy.yml` to address potential network routing issues for services in GitHub Actions.
+        - **Update (Run #94)**: Refactored E2E job to run in a Docker container (`mcr.microsoft.com/playwright/python:latest`) to resolve persistent database connection issues.
+        - **Update (Run #94)**: Changed `DATABASE_URL` to `postgresql://testuser:testpassword@postgres:5432/e2etest` and `BETTER_AUTH_URL` to `http://localhost:3000` to utilize the container's isolated network.
         - **Update (Run #92 IN PROGRESS)**: `timeout-minutes: 15` on E2E job appears ineffective, job still running past 30 minutes. Triggering new run to clear queue.
 
 ## Next Steps
