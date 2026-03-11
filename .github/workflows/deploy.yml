@@ -107,6 +107,13 @@ jobs:
           echo "=== Astro Server Logs (/tmp/astro-server.log) ==="
           tail -n 200 /tmp/astro-server.log
           echo "=== End of Logs ==="
+          echo "=== Docker Container Logs ==="
+          docker ps -a
+          for container in $(docker ps -aq); do
+            echo "--- Logs for $container ---"
+            docker logs $container | tail -n 100
+          done
+          echo "=== End of Container Logs ==="
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"
