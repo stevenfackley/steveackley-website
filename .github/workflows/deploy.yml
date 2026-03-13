@@ -45,6 +45,7 @@ jobs:
       DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
       BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
       BETTER_AUTH_URL: "http://localhost:3000"
+      GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
       NODE_ENV: "test"
       CI: "true"
     services:
@@ -70,8 +71,8 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm install --no-audit --no-fund --legacy-peer-deps
-      - name: Apply database migrations
-        run: npm run db:migrate
+      - name: Apply database schema
+        run: npx drizzle-kit push --force
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Build Astro app

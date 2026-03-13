@@ -19,7 +19,7 @@ const [post] = await db
   .limit(1);
 
 if (!post || !post.published) {
-  return Astro.redirect('/blog');
+  return Astro.redirect('/404');
 }
 ---
 
