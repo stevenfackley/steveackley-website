@@ -39,19 +39,14 @@ jobs:
   e2e-tests:
     name: "🌐 E2E Tests"
     needs: [unit-tests, integration-tests]
-    runs-on: ubuntu-latest # Keep runs-on for the setup steps
-    timeout-minutes: 15
-    container: # Run the core steps in a container
-      image: mcr.microsoft.com/playwright/python:latest # Use a Playwright image for Node/TS
-      env:
-        DATABASE_URL: "postgresql://testuser:testpassword@postgres:5432/e2etest" # Use service name 'postgres' for containerized job
-
-        PGUSER: "testuser" # Explicitly set PGUSER
-        PGPASSWORD: "testpassword" # Explicitly set PGPASSWORD
-        BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
-        BETTER_AUTH_URL: "http://localhost:3000" # Target localhost within the container
-        NODE_ENV: "test"
-        CI: "true"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
+      BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      NODE_ENV: "test"
+      CI: "true"
     services:
       postgres:
         image: postgres:16-alpine
@@ -78,7 +73,7 @@ jobs:
       - name: Apply database migrations
         run: npm run db:migrate
       - name: Install Playwright browsers
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium
       - name: Build Astro app
         run: npm run build
       - name: Start Astro production server
@@ -96,6 +91,7 @@ jobs:
               echo "Server is up (HTTP $HTTP_CODE) ✓"
               exit 0
             fi
+            echo "Attempt $i/60: HTTP $HTTP_CODE — waiting 2s..."
             sleep 2
           done
           echo "Server did not start in time ✗"
@@ -110,15 +106,8 @@ jobs:
         if: failure()
         run: |
           echo "=== Astro Server Logs (/tmp/astro-server.log) ==="
-          tail -n 200 /tmp/astro-server.log
+          tail -n 200 /tmp/astro-server.log 2>/dev/null || echo "(log file not found)"
           echo "=== End of Logs ==="
-          echo "=== Docker Container Logs ==="
-          docker ps -a
-          for container in $(docker ps -aq); do
-            echo "--- Logs for $container ---"
-            docker logs $container | tail -n 100
-          done
-          echo "=== End of Container Logs ==="
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"
