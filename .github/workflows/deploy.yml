@@ -77,6 +77,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Build Astro app
         run: npm run build
+        env:
+          NODE_ENV: production
       - name: Start Astro production server
         run: node ./dist/server/entry.mjs > /tmp/astro-server.log 2>&1 &
         env:
