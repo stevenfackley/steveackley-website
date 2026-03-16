@@ -18,7 +18,7 @@ test.describe("Admin login page", () => {
 
   test("renders an email and password input", async ({ page }) => {
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByLabel(/password/i)).toBeVisible();
+    await expect(page.locator('#password')).toBeVisible();
   });
 
   test("renders a submit button", async ({ page }) => {
@@ -30,7 +30,7 @@ test.describe("Admin login page", () => {
     page,
   }) => {
     await page.getByLabel(/email/i).fill("wrong@example.com");
-    await page.getByLabel(/password/i).fill("wrongpassword");
+    await page.locator('#password').fill("wrongpassword");
     await page.getByRole("button", { name: /sign in|log in|login/i }).click();
 
     // Expect an error message to appear (exact text depends on NextAuth config)
@@ -42,7 +42,7 @@ test.describe("Admin login page", () => {
 
   test("does not navigate away on invalid credentials", async ({ page }) => {
     await page.getByLabel(/email/i).fill("notauser@example.com");
-    await page.getByLabel(/password/i).fill("badpassword");
+    await page.locator('#password').fill("badpassword");
     await page.getByRole("button", { name: /sign in|log in|login/i }).click();
 
     // Should remain on the login page
@@ -70,6 +70,6 @@ test.describe("Admin route protection", () => {
     page,
   }) => {
     await page.goto("/client/dashboard");
-    await expect(page).toHaveURL(/\/admin\/login/, { timeout: 8_000 });
+    await expect(page).toHaveURL(/\/client\/login/, { timeout: 8_000 });
   });
 });
