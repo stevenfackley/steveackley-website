@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate } from '../chunks/astro/server_brmzxYiS.mjs';
 import 'piccolore';
-import { $ as $$PublicLayout } from '../chunks/PublicLayout_CMFGUKIL.mjs';
+import { $ as $$PublicLayout } from '../chunks/PublicLayout_CqgctOFt.mjs';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { useRef, useState, useEffect } from 'react';
 export { renderers } from '../renderers.mjs';
@@ -816,9 +816,9 @@ function ResumeClient({ avatarUrl }) {
 const $$Index = createComponent(($$result, $$props, $$slots) => {
   const avatarUrl = "https://github.com/stevenfackley.png";
   return renderTemplate`${renderComponent($$result, "PublicLayout", $$PublicLayout, { "title": "Resume", "description": "Steve Ackley - Staff Software Engineer resume" }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "ResumeClient", ResumeClient, { "client:load": true, "avatarUrl": avatarUrl, "client:component-hydration": "load", "client:component-path": "@/components/ResumeClient", "client:component-export": "ResumeClient" })} ` })}`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/resume/index.astro", void 0);
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/resume/index.astro", void 0);
 
-const $$file = "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/resume/index.astro";
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/resume/index.astro";
 const $$url = "/resume";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

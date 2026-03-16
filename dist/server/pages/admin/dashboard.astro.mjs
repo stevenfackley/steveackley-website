@@ -1,12 +1,12 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../../chunks/astro/server_brmzxYiS.mjs';
 import 'piccolore';
-import { $ as $$AdminLayout } from '../../chunks/AdminLayout_BLErPWt7.mjs';
+import { $ as $$AdminLayout } from '../../chunks/AdminLayout_C4y9P9UC.mjs';
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { useTransition, useState } from 'react';
 import { cva } from 'class-variance-authority';
 import { c as cn, f as formatDateShort } from '../../chunks/utils_CPMI-xBA.mjs';
 import { B as Button } from '../../chunks/button_DeZP_JW1.mjs';
-import { a as actions } from '../../chunks/virtual_Cqrgk55d.mjs';
+import { a as actions } from '../../chunks/virtual_Bq_Mh8Iw.mjs';
 import { d as db, p as posts } from '../../chunks/index_BYBdbJMu.mjs';
 import { desc } from 'drizzle-orm';
 export { renderers } from '../../renderers.mjs';
@@ -87,9 +87,9 @@ const $$Dashboard = createComponent(async ($$result, $$props, $$slots) => {
   return renderTemplate`${renderComponent($$result, "AdminLayout", $$AdminLayout, { "title": "Dashboard", "description": "Admin Dashboard Overview" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="space-y-8"> <div class="flex items-center justify-between"> <div> <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Admin Dashboard</h1> <p class="text-[var(--text-secondary)] mt-1.5">Manage your posts and site content</p> </div> <a href="/admin/posts/new" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all hover:-translate-y-0.5 active:translate-y-0"> <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path> </svg>
 New Post
 </a> </div> ${renderComponent($$result2, "AdminPostTable", AdminPostTable, { "client:load": true, "posts": posts$1, "client:component-hydration": "load", "client:component-path": "@/components/admin/AdminPostTable", "client:component-export": "AdminPostTable" })} </div> ` })}`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/dashboard.astro", void 0);
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/admin/dashboard.astro", void 0);
 
-const $$file = "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/dashboard.astro";
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/admin/dashboard.astro";
 const $$url = "/admin/dashboard";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

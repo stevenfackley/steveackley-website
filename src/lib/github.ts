@@ -25,7 +25,7 @@ export const PRIVATE_PROJECTS = [
     name: "P1 Ops Hub",
     description:
       "Operational management platform for P1 workflows. Enterprise platform centralising processes, reporting, and automation.",
-    html_url: process.env.NEXT_PUBLIC_P1_OPS_HUB_URL ?? "#",
+    html_url: import.meta.env.PUBLIC_P1_OPS_HUB_URL ?? "#",
     created_at: "2024-01-01T00:00:00Z",
     language: "Python",
     topics: ["django", "python", "postgresql", "docker"],
@@ -90,8 +90,8 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
       Accept: "application/vnd.github.v3+json",
     };
 
-    if (process.env.GH_API_TOKEN) {
-      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    if (import.meta.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${import.meta.env.GH_API_TOKEN}`;
     }
 
     const res = await fetch(url, {
@@ -182,8 +182,8 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
       Accept: "application/vnd.github.v3+json",
     };
 
-    if (process.env.GH_API_TOKEN) {
-      headers["Authorization"] = `token ${process.env.GH_API_TOKEN}`;
+    if (import.meta.env.GH_API_TOKEN) {
+      headers["Authorization"] = `token ${import.meta.env.GH_API_TOKEN}`;
     }
 
     const res = await fetch(

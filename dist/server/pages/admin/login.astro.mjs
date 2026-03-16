@@ -148,9 +148,9 @@ Sign in to manage your site
 </p> </div> <!-- Glass card --> <div class="rounded-2xl p-8" style="background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 25px 50px rgba(0,0,0,0.5);" data-astro-cid-rf56lckb> ${renderComponent($$result, "LoginForm", LoginForm, { "client:load": true, "client:component-hydration": "load", "client:component-path": "@/components/admin/LoginForm", "client:component-export": "LoginForm", "data-astro-cid-rf56lckb": true })} </div> <!-- Footer --> <p class="mt-8 text-center text-xs" style="color: rgba(191,219,254,0.22);" data-astro-cid-rf56lckb>
 &copy; ${(/* @__PURE__ */ new Date()).getFullYear()} Steve Ackley &mdash; All rights reserved
 </p> </div> </body></html>`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/login.astro", void 0);
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/admin/login.astro", void 0);
 
-const $$file = "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/login.astro";
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/admin/login.astro";
 const $$url = "/admin/login";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

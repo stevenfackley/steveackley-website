@@ -19,9 +19,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "generate:resume-pdf": "node scripts/generate-resume-pdf.mjs"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.7",
     "@astrojs/node": "^9.5.5",
     "@astrojs/react": "^5.0.0",
     "@aws-sdk/client-s3": "^3.1005.0",
@@ -72,7 +74,7 @@
     "msw": "^2.12.10",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.9"
   },

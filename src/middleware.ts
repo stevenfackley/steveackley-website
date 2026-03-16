@@ -14,17 +14,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.session = null;
   }
 
-  // Redirect to login if accessing /admin or /client without a session
   const url = new URL(context.request.url);
+
+  // Admin routes: require ADMIN role
   if (url.pathname.startsWith("/admin") && url.pathname !== "/admin/login") {
     if (!session || session.user.role !== "ADMIN") {
       return context.redirect("/admin/login");
     }
   }
 
-  if (url.pathname.startsWith("/client")) {
+  // Client routes: require any authenticated session
+  if (url.pathname.startsWith("/client") && url.pathname !== "/client/login") {
     if (!session) {
-      return context.redirect("/admin/login"); // Or wherever client login is
+      return context.redirect("/client/login");
+    }
+    // Clients trying to access admin area get redirected to client portal
+    if (session.user.role === "CLIENT" && url.pathname.startsWith("/admin")) {
+      return context.redirect("/client/dashboard");
     }
   }
 

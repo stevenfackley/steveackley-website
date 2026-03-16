@@ -9,6 +9,7 @@ export const SETTING_KEYS = {
   COUPLE_PHOTO_URL: "couple_photo_url",
   BIO_TEXT: "bio_text",
   HERO_TAGLINE: "hero_tagline",
+  SITE_THEME: "site_theme",
 } as const;
 
 export const DEFAULTS = {
@@ -18,4 +19,5 @@ export const DEFAULTS = {
     "Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem. C#, .NET, Azure, Angular, and SQL Server.",
   [SETTING_KEYS.HERO_TAGLINE]:
     "12+ years designing and shipping enterprise-grade software. Core stack is C# / .NET on Azure, with deep experience across full-stack, cloud architecture, and technical leadership.",
+  [SETTING_KEYS.SITE_THEME]: "light",
 } as const;

@@ -1,6 +1,6 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../chunks/astro/server_brmzxYiS.mjs';
 import 'piccolore';
-import { $ as $$PublicLayout } from '../chunks/PublicLayout_CMFGUKIL.mjs';
+import { $ as $$PublicLayout } from '../chunks/PublicLayout_CqgctOFt.mjs';
 import { d as db, p as posts } from '../chunks/index_BYBdbJMu.mjs';
 import { eq, desc } from 'drizzle-orm';
 export { renderers } from '../renderers.mjs';
@@ -10,8 +10,8 @@ const $$BentoDashboard = createComponent(($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
   Astro2.self = $$BentoDashboard;
   const { blogPosts, githubRepos, avatarUrl, couplePhotoUrl } = Astro2.props;
-  return renderTemplate`${renderComponent($$result, "TabsDashboard", null, { "client:only": "react", "blogPosts": blogPosts, "githubRepos": githubRepos, "avatarUrl": avatarUrl, "couplePhotoUrl": couplePhotoUrl, "client:component-hydration": "only", "client:component-path": "/mnt/c/Users/steve/projects/steveackleyorg/src/components/bento/TabsDashboard", "client:component-export": "TabsDashboard" })}`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/components/bento/BentoDashboard.astro", void 0);
+  return renderTemplate`${renderComponent($$result, "TabsDashboard", null, { "client:only": "react", "blogPosts": blogPosts, "githubRepos": githubRepos, "avatarUrl": avatarUrl, "couplePhotoUrl": couplePhotoUrl, "client:component-hydration": "only", "client:component-path": "C:/Users/steve/projects/steveackleyorg/src/components/bento/TabsDashboard", "client:component-export": "TabsDashboard" })}`;
+}, "C:/Users/steve/projects/steveackleyorg/src/components/bento/BentoDashboard.astro", void 0);
 
 const SKIP_REPOS = /* @__PURE__ */ new Set(["public", "public-website"]);
 [
@@ -167,9 +167,9 @@ const $$Index = createComponent(async ($$result, $$props, $$slots) => {
   const avatarUrl = "https://github.com/stevenfackley.png";
   const couplePhotoUrl = "";
   return renderTemplate`${renderComponent($$result, "PublicLayout", $$PublicLayout, { "title": "Steve Ackley", "description": "Staff Software Engineer - .NET, Azure, Full-Stack" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="py-8"> ${renderComponent($$result2, "BentoDashboard", $$BentoDashboard, { "blogPosts": blogPosts, "githubRepos": githubRepos, "avatarUrl": avatarUrl, "couplePhotoUrl": couplePhotoUrl })} </div> ` })}`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/index.astro", void 0);
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/index.astro", void 0);
 
-const $$file = "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/index.astro";
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/index.astro";
 const $$url = "";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

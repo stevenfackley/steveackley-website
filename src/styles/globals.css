@@ -29,27 +29,25 @@
 }
 
 /* ============================================================
-   Dark Mode
+   Dark Mode — class-based (.dark on <html>), no OS auto-switch
    ============================================================ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #07080f;
-    --surface: #0f1117;
-    --surface-hover: #181c28;
-    --border: #1e2235;
-    --border-hover: #2d3352;
-    --text-primary: #f0f2ff;
-    --text-secondary: #8b91b0;
-    --text-muted: #555c7a;
-    --accent: #60a5fa;
-    --accent-hover: #93c5fd;
-    --accent-text: #07080f;
-    --accent-glow: rgba(96, 165, 250, 0.20);
-    --gradient-start: #60a5fa;
-    --gradient-end: #a78bfa;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-    --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(96,165,250,0.12);
-  }
+html.dark {
+  --background: #07080f;
+  --surface: #0f1117;
+  --surface-hover: #181c28;
+  --border: #1e2235;
+  --border-hover: #2d3352;
+  --text-primary: #f0f2ff;
+  --text-secondary: #8b91b0;
+  --text-muted: #555c7a;
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --accent-text: #07080f;
+  --accent-glow: rgba(96, 165, 250, 0.20);
+  --gradient-start: #60a5fa;
+  --gradient-end: #a78bfa;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(96,165,250,0.12);
 }
 
 /* ============================================================
@@ -72,12 +70,10 @@ body {
     radial-gradient(ellipse 60% 40% at 80% 10%, rgba(124,58,237,0.08), transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  .bg-mesh {
-    background-image:
-      radial-gradient(ellipse 80% 50% at 20% -5%, rgba(96,165,250,0.12), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(167,139,250,0.08), transparent);
-  }
+html.dark .bg-mesh {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -5%, rgba(96,165,250,0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(167,139,250,0.08), transparent);
 }
 
 /* ============================================================
@@ -112,11 +108,9 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.3);
 }
-@media (prefers-color-scheme: dark) {
-  .glass-card {
-    background: rgba(15,17,23,0.7);
-    border: 1px solid rgba(255,255,255,0.06);
-  }
+html.dark .glass-card {
+  background: rgba(15,17,23,0.7);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 /* ============================================================
@@ -160,10 +154,8 @@ body {
   scrollbar-color: #d4d4d4 transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  * {
-    scrollbar-color: #3a3a3a transparent;
-  }
+html.dark * {
+  scrollbar-color: #3a3a3a transparent;
 }
 
 /* ============================================================

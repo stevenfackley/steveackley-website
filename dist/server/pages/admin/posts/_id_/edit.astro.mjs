@@ -1,7 +1,7 @@
 import { e as createComponent, k as renderComponent, r as renderTemplate, h as createAstro, m as maybeRenderHead } from '../../../../chunks/astro/server_brmzxYiS.mjs';
 import 'piccolore';
-import { $ as $$AdminLayout } from '../../../../chunks/AdminLayout_BLErPWt7.mjs';
-import { P as PostForm } from '../../../../chunks/PostForm_B5J5FCyy.mjs';
+import { $ as $$AdminLayout } from '../../../../chunks/AdminLayout_C4y9P9UC.mjs';
+import { P as PostForm } from '../../../../chunks/PostForm_B5828eWI.mjs';
 import { d as db, p as posts } from '../../../../chunks/index_BYBdbJMu.mjs';
 import { eq } from 'drizzle-orm';
 export { renderers } from '../../../../renderers.mjs';
@@ -27,9 +27,9 @@ const $$Edit = createComponent(async ($$result, $$props, $$slots) => {
     coverImage: post.coverImage,
     published: post.published
   }, "client:component-hydration": "load", "client:component-path": "@/components/admin/PostForm", "client:component-export": "PostForm" })} </div> ` })}`;
-}, "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/posts/[id]/edit.astro", void 0);
+}, "C:/Users/steve/projects/steveackleyorg/src/pages/admin/posts/[id]/edit.astro", void 0);
 
-const $$file = "/mnt/c/Users/steve/projects/steveackleyorg/src/pages/admin/posts/[id]/edit.astro";
+const $$file = "C:/Users/steve/projects/steveackleyorg/src/pages/admin/posts/[id]/edit.astro";
 const $$url = "/admin/posts/[id]/edit";
 
 const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

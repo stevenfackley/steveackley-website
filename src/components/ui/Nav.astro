@@ -10,6 +10,12 @@ const isHomePage = currentPath === '/';
 const isResumePage = currentPath === '/resume' || currentPath === '/resume/';
 const hideNameInitially = isHomePage || isResumePage;
 const placeholderAvatar = 'https://github.com/stevenfackley.png';
+
+const user = Astro.locals.user;
+const isLoggedIn = !!user;
+const userName = user?.name || user?.email?.split('@')[0] || 'User';
+const accountHref = user?.role === 'ADMIN' ? '/admin/account' : '/client/account';
+const greeting = `Hello, ${userName.split(' ')[0]}`;
 ---
 
 <nav class="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md">
@@ -53,28 +59,83 @@ const placeholderAvatar = 'https://github.com/stevenfackley.png';
             {link.label}
           </a>
         ))}
-        <a
-          href="/admin/login"
-          class="ml-2 text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-150"
-          title="Sign In"
+
+        <!-- Dark mode toggle -->
+        <button
+          id="theme-toggle"
+          type="button"
+          title="Toggle dark mode"
+          aria-label="Toggle dark mode"
+          class="ml-1 p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all duration-150"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
-            <path fill-rule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1ZM6 4.5a2 2 0 1 1 4 0V6H6V4.5Z" clip-rule="evenodd" />
+          <!-- Sun icon (shown in dark mode) -->
+          <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden">
+            <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.061 1.06l1.061 1.061zM5.404 6.464a.75.75 0 001.06-1.06L5.404 4.343a.75.75 0 10-1.06 1.06l1.06 1.061z" />
           </svg>
-          <span class="text-xs hidden sm:inline">Sign In</span>
-        </a>
+          <!-- Moon icon (shown in light mode) -->
+          <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+            <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <!-- Greeting (logged in only) -->
+        {isLoggedIn && (
+          <span class="ml-2 text-xs text-[var(--text-muted)] hidden md:inline">
+            {greeting}
+          </span>
+        )}
+
+        <!-- Account / Sign In button -->
+        {isLoggedIn ? (
+          <a
+            href={accountHref}
+            class="ml-1 text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-150"
+            title="My Account"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
+              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
+            </svg>
+            <span class="text-xs hidden sm:inline">My Account</span>
+          </a>
+        ) : (
+          <a
+            href="/admin/login"
+            class="ml-1 text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-150"
+            title="Sign In"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1ZM6 4.5a2 2 0 1 1 4 0V6H6V4.5Z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-xs hidden sm:inline">Sign In</span>
+          </a>
+        )}
       </div>
 
-      <!-- Mobile menu button -->
-      <button
-        id="mobile-menu-btn"
-        class="sm:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-        aria-label="Toggle menu"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      <!-- Mobile: theme toggle + menu button -->
+      <div class="sm:hidden flex items-center gap-1">
+        <button
+          id="theme-toggle-mobile"
+          type="button"
+          aria-label="Toggle dark mode"
+          class="p-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+        >
+          <svg id="theme-icon-sun-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden">
+            <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.061 1.06l1.061 1.061zM5.404 6.464a.75.75 0 001.06-1.06L5.404 4.343a.75.75 0 10-1.06 1.06l1.06 1.061z" />
+          </svg>
+          <svg id="theme-icon-moon-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+            <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <button
+          id="mobile-menu-btn"
+          class="p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+          aria-label="Toggle menu"
+        >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Mobile menu -->
@@ -92,23 +153,71 @@ const placeholderAvatar = 'https://github.com/stevenfackley.png';
           {link.label}
         </a>
       ))}
-      <a href="/admin/login" class="block px-3 py-2 text-sm rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-        Sign In
-      </a>
+      {isLoggedIn && (
+        <p class="px-3 py-1.5 text-xs text-[var(--text-muted)]">{greeting}</p>
+      )}
+      {isLoggedIn ? (
+        <a href={accountHref} class="block px-3 py-2 text-sm rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
+          My Account
+        </a>
+      ) : (
+        <a href="/admin/login" class="block px-3 py-2 text-sm rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+          Sign In
+        </a>
+      )}
     </div>
   </div>
 </nav>
 
 <script>
-  // Mobile menu toggle
+  // ── Mobile menu toggle ──────────────────────────────────────────────────────
   const btn = document.getElementById('mobile-menu-btn');
   const menu = document.getElementById('mobile-menu');
   btn?.addEventListener('click', () => {
     menu?.classList.toggle('hidden');
   });
 
-  // Reveal nav name when the page's hero heading scrolls out of view.
-  // Works for both the home page (#hero-name) and the resume page (#resume-hero-name).
+  // ── Dark mode toggle ────────────────────────────────────────────────────────
+  function applyTheme(dark: boolean) {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    syncIcons(dark);
+  }
+
+  function syncIcons(dark: boolean) {
+    const sunD = document.getElementById('theme-icon-sun');
+    const moonD = document.getElementById('theme-icon-moon');
+    const sunM = document.getElementById('theme-icon-sun-mobile');
+    const moonM = document.getElementById('theme-icon-moon-mobile');
+    if (dark) {
+      sunD?.classList.remove('hidden');
+      moonD?.classList.add('hidden');
+      sunM?.classList.remove('hidden');
+      moonM?.classList.add('hidden');
+    } else {
+      sunD?.classList.add('hidden');
+      moonD?.classList.remove('hidden');
+      sunM?.classList.add('hidden');
+      moonM?.classList.remove('hidden');
+    }
+  }
+
+  // Sync icons on load
+  const isDark = document.documentElement.classList.contains('dark');
+  syncIcons(isDark);
+
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    applyTheme(!document.documentElement.classList.contains('dark'));
+  });
+  document.getElementById('theme-toggle-mobile')?.addEventListener('click', () => {
+    applyTheme(!document.documentElement.classList.contains('dark'));
+  });
+
+  // ── Reveal nav name on scroll ───────────────────────────────────────────────
   const heroName = document.getElementById('hero-name') ?? document.getElementById('resume-hero-name');
   const navName = document.getElementById('nav-name');
 
@@ -116,22 +225,15 @@ const placeholderAvatar = 'https://github.com/stevenfackley.png';
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) {
-          // Hero name scrolled past — reveal nav name
           navName.classList.remove('opacity-0', '-translate-y-1', 'pointer-events-none');
           navName.classList.add('opacity-100', 'translate-y-0');
         } else {
-          // Hero name visible — hide nav name
           navName.classList.add('opacity-0', '-translate-y-1', 'pointer-events-none');
           navName.classList.remove('opacity-100', 'translate-y-0');
         }
       },
-      {
-        // Trigger slightly before the element fully leaves the viewport
-        rootMargin: '-56px 0px 0px 0px', // account for nav height
-        threshold: 0,
-      }
+      { rootMargin: '-56px 0px 0px 0px', threshold: 0 }
     );
-
     observer.observe(heroName);
   }
 </script>

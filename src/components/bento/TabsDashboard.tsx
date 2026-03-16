@@ -794,15 +794,9 @@ function ProjectsPanel({ repos }: { repos: EnrichedRepo[] }) {
               )}
               {repo.badges.length > 0 ? (
                 <div className="mt-4 flex flex-wrap gap-1">
-                  {repo.badges.map((b) =>
-                    b.href ? (
-                      <a key={b.imageUrl} href={b.href} target="_blank" rel="noopener noreferrer">
-                        <img src={b.imageUrl} alt={b.label} className="h-5" />
-                      </a>
-                    ) : (
-                      <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
-                    )
-                  )}
+                  {repo.badges.map((b) => (
+                    <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
+                  ))}
                 </div>
               ) : repo.tech.length > 0 ? (
                 <div className="mt-4 flex flex-wrap gap-1.5">

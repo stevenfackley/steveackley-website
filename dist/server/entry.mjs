@@ -1,6 +1,6 @@
 import { renderers } from './renderers.mjs';
-import { c as createExports, s as serverEntrypointModule } from './chunks/_@astrojs-ssr-adapter_xgQi7GzJ.mjs';
-import { manifest } from './manifest_COz-FWqc.mjs';
+import { c as createExports, s as serverEntrypointModule } from './chunks/_@astrojs-ssr-adapter_ClNs76YN.mjs';
+import { manifest } from './manifest_B7Pv_lyi.mjs';
 
 const serverIslandMap = new Map();;
 
@@ -54,8 +54,8 @@ const _manifest = Object.assign(manifest, {
 });
 const _args = {
     "mode": "standalone",
-    "client": "file:///mnt/c/Users/steve/projects/steveackleyorg/dist/client/",
-    "server": "file:///mnt/c/Users/steve/projects/steveackleyorg/dist/server/",
+    "client": "file:///C:/Users/steve/projects/steveackleyorg/dist/client/",
+    "server": "file:///C:/Users/steve/projects/steveackleyorg/dist/server/",
     "host": "127.0.0.1",
     "port": 3000,
     "assets": "_astro",
