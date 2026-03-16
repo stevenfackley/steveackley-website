@@ -6,14 +6,26 @@ const navLinks = [
 ];
 
 const currentPath = Astro.url.pathname;
-const placeholderAvatar = 'https://avatars.githubusercontent.com/u/stevenfackley';
+const isHomePage = currentPath === '/';
+const isResumePage = currentPath === '/resume' || currentPath === '/resume/';
+const hideNameInitially = isHomePage || isResumePage;
+const placeholderAvatar = 'https://github.com/stevenfackley.png';
 ---
 
 <nav class="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-14 items-center justify-between gap-4">
       <!-- Logo / Name -->
-      <a href="/" class="flex items-center gap-2.5 group">
+      <a
+        href="/"
+        id="nav-name"
+        class:list={[
+          'flex items-center gap-2.5 group transition-all duration-300 ease-out',
+          hideNameInitially
+            ? 'opacity-0 -translate-y-1 pointer-events-none'
+            : 'opacity-100 translate-y-0',
+        ]}
+      >
         <img
           src={placeholderAvatar}
           alt="Steve Ackley"
@@ -88,9 +100,38 @@ const placeholderAvatar = 'https://avatars.githubusercontent.com/u/stevenfackley
 </nav>
 
 <script>
+  // Mobile menu toggle
   const btn = document.getElementById('mobile-menu-btn');
   const menu = document.getElementById('mobile-menu');
   btn?.addEventListener('click', () => {
     menu?.classList.toggle('hidden');
   });
+
+  // Reveal nav name when the page's hero heading scrolls out of view.
+  // Works for both the home page (#hero-name) and the resume page (#resume-hero-name).
+  const heroName = document.getElementById('hero-name') ?? document.getElementById('resume-hero-name');
+  const navName = document.getElementById('nav-name');
+
+  if (heroName && navName) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          // Hero name scrolled past — reveal nav name
+          navName.classList.remove('opacity-0', '-translate-y-1', 'pointer-events-none');
+          navName.classList.add('opacity-100', 'translate-y-0');
+        } else {
+          // Hero name visible — hide nav name
+          navName.classList.add('opacity-0', '-translate-y-1', 'pointer-events-none');
+          navName.classList.remove('opacity-100', 'translate-y-0');
+        }
+      },
+      {
+        // Trigger slightly before the element fully leaves the viewport
+        rootMargin: '-56px 0px 0px 0px', // account for nav height
+        threshold: 0,
+      }
+    );
+
+    observer.observe(heroName);
+  }
 </script>

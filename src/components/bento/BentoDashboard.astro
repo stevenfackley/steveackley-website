@@ -1,10 +1,5 @@
 ---
-import HeroCard from './HeroCard.astro';
-import SkillsCard from './SkillsCard.astro';
-import AboutCard from './AboutCard.astro';
-import ProjectsCard from './ProjectsCard.astro';
-import BlogPreviewCard from './BlogPreviewCard.astro';
-import CTACard from './CTACard.astro';
+import { TabsDashboard } from './TabsDashboard';
 
 interface Props {
   blogPosts: any[];
@@ -16,11 +11,10 @@ interface Props {
 const { blogPosts, githubRepos, avatarUrl, couplePhotoUrl } = Astro.props;
 ---
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-  <HeroCard class="lg:col-span-2" avatarUrl={avatarUrl} />
-  <SkillsCard />
-  <AboutCard couplePhotoUrl={couplePhotoUrl} />
-  <ProjectsCard class="lg:col-span-2" repos={githubRepos} />
-  <BlogPreviewCard class="lg:col-span-2" posts={blogPosts} />
-  <CTACard />
-</div>
+<TabsDashboard
+  client:only="react"
+  blogPosts={blogPosts}
+  githubRepos={githubRepos}
+  avatarUrl={avatarUrl}
+  couplePhotoUrl={couplePhotoUrl}
+/>

@@ -1,7 +1,6 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import { PostForm } from '@/components/admin/PostForm';
-import { actions } from 'astro:actions';
 import { db, posts as postsTable } from '@/db';
 import { eq } from 'drizzle-orm';
 
@@ -20,12 +19,6 @@ const [post] = await db
 if (!post) {
   return Astro.redirect('/admin/dashboard');
 }
-
-// Prepare action with ID
-const updateAction = async (formData: FormData) => {
-  formData.set('id', id);
-  return await actions.updatePost(formData);
-};
 ---
 
 <AdminLayout title="Edit Post">
@@ -37,15 +30,16 @@ const updateAction = async (formData: FormData) => {
       <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)] mt-4">Edit Post</h1>
     </div>
 
-    <PostForm 
-      client:load 
-      action={updateAction} 
+    <PostForm
+      client:load
+      mode="update"
+      postId={id}
       defaultValues={{
         title: post.title,
         content: post.content,
         excerpt: post.excerpt,
         coverImage: post.coverImage,
-        published: post.published
+        published: post.published,
       }}
     />
   </div>

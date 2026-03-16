@@ -7,7 +7,7 @@ interface Props {
   avatarUrl?: string;
 }
 
-const { class: className, avatarUrl = 'https://avatars.githubusercontent.com/u/stevenfackley' } = Astro.props;
+const { class: className, avatarUrl = 'https://github.com/stevenfackley.png' } = Astro.props;
 const heroTagline = 'Building enterprise-grade software with the Microsoft stack. Staff Engineer at Lockheed Martin, 12+ years shipping production systems in C#, .NET, Azure, Angular, and SQL Server.';
 ---
 
@@ -46,7 +46,7 @@ const heroTagline = 'Building enterprise-grade software with the Microsoft stack
 
       <!-- Name + title -->
       <div class="pt-1 min-w-0">
-        <h1 class="text-2xl font-extrabold leading-tight tracking-tight gradient-text">
+        <h1 id="hero-name" class="text-2xl font-extrabold leading-tight tracking-tight gradient-text">
           Steve Ackley
         </h1>
         <p class="text-sm font-medium text-[var(--text-secondary)] mt-0.5">

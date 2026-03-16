@@ -17,14 +17,13 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 interface TabsDashboardProps {
-  overview: React.ReactNode;
   blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
   githubRepos: EnrichedRepo[];
   avatarUrl: string;
   couplePhotoUrl: string;
 }
 
-export function TabsDashboard({ overview, blogPosts, githubRepos, avatarUrl, couplePhotoUrl }: TabsDashboardProps) {
+export function TabsDashboard({ blogPosts, githubRepos, avatarUrl, couplePhotoUrl }: TabsDashboardProps) {
   const [active, setActive] = useState<TabId>("overview");
 
   return (
@@ -50,12 +49,24 @@ export function TabsDashboard({ overview, blogPosts, githubRepos, avatarUrl, cou
       </div>
 
       {/* Tab panels */}
-      {active === "overview"  && overview}
+      {active === "overview"  && <OverviewPanel avatarUrl={avatarUrl} githubRepos={githubRepos} />}
       {active === "about"     && <AboutPanel avatarUrl={avatarUrl} couplePhotoUrl={couplePhotoUrl} />}
       {active === "skills"    && <SkillsPanel />}
       {active === "projects"  && <ProjectsPanel repos={githubRepos} />}
       {active === "blog"      && <BlogPanel posts={blogPosts} />}
       {active === "connect"   && <ConnectPanel />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+function CardShell({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("bg-[var(--surface)] border border-[var(--border)] rounded-2xl", className)}>
+      {children}
     </div>
   );
 }
@@ -88,10 +99,265 @@ function Section({ title, children, className }: { title: string; children: Reac
 }
 
 // ---------------------------------------------------------------------------
+// Overview Panel
+// ---------------------------------------------------------------------------
+
+const overviewSkills = [
+  { name: "C# / .NET",          level: 5 },
+  { name: "Azure Cloud",        level: 5 },
+  { name: "SQL Server",         level: 5 },
+  { name: "ASP.NET / Web API",  level: 5 },
+  { name: "Angular",            level: 4 },
+  { name: "Docker / DevOps",    level: 4 },
+];
+
+const overviewInterests = [
+  { icon: "🔧", label: "Tinkering & Tech",    mason: false },
+  { icon: "🌲", label: "Camping & Hiking",    mason: false },
+  { icon: "🎬", label: "Movies",              mason: false },
+  { icon: "👽", label: "Aliens & The Unknown",mason: false },
+  { icon: null,  label: "Freemasonry",         mason: true  },
+  { icon: "⌚",  label: "Fitness (WHOOP)",     mason: false },
+  { icon: "🚗",  label: "Cars",               mason: false },
+  { icon: "☕",  label: "Craft Coffee",        mason: false },
+  { icon: "🌿",  label: "Fragrances",          mason: false },
+];
+
+const OVERVIEW_FEATURED = ["OmniSift", "axon-main", "TrustLog", "steveackley-website", "SortCompare"];
+
+function HeroOverview({ avatarUrl }: { avatarUrl: string }) {
+  return (
+    <CardShell className="lg:col-span-2 relative overflow-hidden min-h-[220px] p-8">
+      {/* gradient bg */}
+      <div
+        className="absolute inset-0 pointer-events-none rounded-2xl"
+        style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(124,58,237,0.08) 60%, transparent 100%)" }}
+        aria-hidden
+      />
+      <div
+        className="absolute -top-10 -right-10 h-40 w-40 rounded-full blur-3xl opacity-20 pointer-events-none"
+        style={{ background: "radial-gradient(circle, #7c3aed, transparent)" }}
+        aria-hidden
+      />
+
+      <div className="relative z-10 flex flex-col h-full gap-5">
+        {/* Avatar + name */}
+        <div className="flex items-start gap-5">
+          <div className="relative shrink-0">
+            <div
+              className="absolute inset-0 rounded-full blur-sm opacity-60"
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)", transform: "scale(1.12)" }}
+              aria-hidden
+            />
+            <img
+              src={avatarUrl}
+              alt="Steve Ackley"
+              width={72}
+              height={72}
+              className="relative rounded-full ring-2 ring-white/20 object-cover"
+            />
+          </div>
+          <div className="pt-1">
+            <h1
+              className="text-2xl font-extrabold leading-tight tracking-tight"
+              style={{
+                background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Steve Ackley
+            </h1>
+            <p className="text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+              Software Engineer · .NET · Azure · Full-Stack
+            </p>
+          </div>
+        </div>
+
+        {/* Bio */}
+        <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-xl">
+          12+ years designing and shipping enterprise-grade software. Core stack is C# / .NET on Azure,
+          with deep experience across full-stack, cloud architecture, and technical leadership.
+        </p>
+
+        {/* Status badges */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+            Available for opportunities
+          </span>
+          <span className="inline-flex items-center gap-2 text-xs text-[var(--text-secondary)] bg-[var(--surface-hover)] border border-[var(--border)] rounded-full px-3 py-1.5">
+            📍 United States
+          </span>
+        </div>
+      </div>
+    </CardShell>
+  );
+}
+
+function SkillsOverview() {
+  return (
+    <CardShell className="p-6">
+      <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-4">
+        Skills &amp; Stack
+      </p>
+      <ul className="space-y-3">
+        {overviewSkills.map((skill) => (
+          <li key={skill.name}>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[var(--text-secondary)]">{skill.name}</span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 w-4 rounded-full"
+                    style={
+                      i < skill.level
+                        ? { background: "linear-gradient(90deg, #2563eb, #7c3aed)" }
+                        : { background: "var(--border)" }
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </CardShell>
+  );
+}
+
+function AboutOverview() {
+  return (
+    <CardShell className="p-6">
+      <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-3">About</p>
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+        Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem.
+        C#, .NET, Azure, Angular, and SQL Server.
+      </p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {overviewInterests.map((interest) => (
+          <div
+            key={interest.label}
+            className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 bg-[var(--surface-hover)] text-xs text-[var(--text-secondary)]"
+          >
+            {interest.mason ? (
+              <MasonIcon className="h-4 w-4 text-[var(--accent)] shrink-0" />
+            ) : (
+              <span>{interest.icon}</span>
+            )}
+            <span>{interest.label}</span>
+          </div>
+        ))}
+      </div>
+    </CardShell>
+  );
+}
+
+function ProjectsOverview({ repos }: { repos: EnrichedRepo[] }) {
+  const sorted = [...repos].sort((a, b) => {
+    const ai = OVERVIEW_FEATURED.indexOf(a.name);
+    const bi = OVERVIEW_FEATURED.indexOf(b.name);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+  });
+  const toShow = sorted.slice(0, 4);
+
+  return (
+    <CardShell className="lg:col-span-2 p-6">
+      <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-3">
+        Projects &amp; Portfolio
+      </p>
+      <div className="space-y-1.5">
+        {/* Private projects always first */}
+        {PRIVATE_PROJECTS.map((p) => (
+          <div
+            key={p.name}
+            className="rounded-xl px-3 py-2.5 border border-transparent hover:bg-[var(--surface-hover)] hover:border-[var(--border)] transition-all duration-150"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white"
+                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+                >
+                  P
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Private repository</p>
+                </div>
+              </div>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                Active
+              </span>
+            </div>
+            {p.badges.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2 ml-10">
+                {p.badges.map((b) => (
+                  <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Public GitHub repos */}
+        {toShow.map((repo) => {
+          const year = new Date(repo.created_at).getFullYear();
+          return (
+            <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer">
+              <div className="rounded-xl px-3 py-2.5 border border-transparent hover:bg-[var(--surface-hover)] hover:border-[var(--border)] transition-all duration-150 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 bg-[var(--surface-hover)] text-[var(--text-secondary)]">
+                      {repo.name[0].toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[var(--text-primary)] truncate">{repo.name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {repo.language ?? "Code"} &middot; {year}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)] shrink-0">
+                    GitHub
+                  </span>
+                </div>
+                {repo.badges.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2 ml-10">
+                    {repo.badges.map((b: any) => (
+                      <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </CardShell>
+  );
+}
+
+function OverviewPanel({ avatarUrl, githubRepos }: { avatarUrl: string; githubRepos: EnrichedRepo[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <HeroOverview avatarUrl={avatarUrl} />
+      <SkillsOverview />
+      <AboutOverview />
+      <ProjectsOverview repos={githubRepos} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // About Panel
 // ---------------------------------------------------------------------------
 
-// Interests: tinkering/tech first, Freemasonry lower
 const interests = [
   { icon: "🔧", label: "Tinkering & Tech",      detail: "Building and breaking things to figure out how they work." },
   { icon: "🌲", label: "Camping & Hiking",       detail: "Getting off the grid. Mountains, trails, and good company." },
@@ -104,7 +370,6 @@ const interests = [
   { icon: "🌿",  label: "Fragrances",             detail: "Curating a personal collection of signature scents." },
 ];
 
-// Career timeline uses real work history
 const timeline = [
   {
     period: "Dec 2020 - Present",
@@ -251,12 +516,16 @@ function AboutPanel({ avatarUrl, couplePhotoUrl }: { avatarUrl: string; couplePh
         <div className="mt-5 pt-5 border-t border-[var(--border)]">
           <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-3">Certifications</p>
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white"
-              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white"
+              style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
+            >
               🏗 Arcitura Certified SOA Architect
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white"
-              style={{ background: "linear-gradient(135deg, #0078d4, #005a9e)" }}>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white"
+              style={{ background: "linear-gradient(135deg, #0078d4, #005a9e)" }}
+            >
               🪟 Microsoft Technology Associate
             </span>
           </div>
@@ -302,6 +571,7 @@ const skillCategories = [
   {
     label: "Frontend",
     icon: "🖥️",
+    highlight: false,
     skills: [
       { name: "Angular",                  level: 5, note: "Primary professional frontend framework across multiple enterprise roles." },
       { name: "TypeScript",               level: 5, note: "Strict typing, generics, utility types across Angular and React." },
@@ -314,6 +584,7 @@ const skillCategories = [
   {
     label: "Data & BI",
     icon: "📊",
+    highlight: false,
     skills: [
       { name: "SQL / PostgreSQL",         level: 5, note: "Complex queries, schema design, performance tuning across databases." },
       { name: "Tableau",                  level: 4, note: "Dashboard design, calculated fields, data source management." },
@@ -324,6 +595,7 @@ const skillCategories = [
   {
     label: "Architecture & Leadership",
     icon: "🏗️",
+    highlight: false,
     skills: [
       { name: "Clean Architecture",       level: 5, note: "Domain-driven design, SOLID principles, dependency inversion." },
       { name: "SOA / Microservices",      level: 5, note: "Service composition, contracts, and governance. Arcitura certified." },
@@ -485,7 +757,6 @@ function ProjectsPanel({ repos }: { repos: EnrichedRepo[] }) {
             <div className="mt-4 flex flex-wrap gap-1">
               {p.badges.map((b) => (
                 <a key={b.imageUrl} href={b.href} target="_blank" rel="noopener noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={b.imageUrl} alt={b.label} className="h-5" />
                 </a>
               ))}
@@ -526,11 +797,9 @@ function ProjectsPanel({ repos }: { repos: EnrichedRepo[] }) {
                   {repo.badges.map((b) =>
                     b.href ? (
                       <a key={b.imageUrl} href={b.href} target="_blank" rel="noopener noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={b.imageUrl} alt={b.label} className="h-5" />
                       </a>
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
                     )
                   )}
@@ -610,8 +879,8 @@ function BlogPanel({ posts }: { posts: TabsDashboardProps["blogPosts"] }) {
 // ---------------------------------------------------------------------------
 
 function ConnectPanel() {
-  const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL ?? "https://www.linkedin.com/in/stevenackley";
-  const email    = process.env.NEXT_PUBLIC_EMAIL ?? "stevenfackley@gmail.com";
+  const linkedin = "https://www.linkedin.com/in/stevenackley";
+  const email    = "stevenfackley@gmail.com";
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">

@@ -12,7 +12,7 @@ export const SETTING_KEYS = {
 } as const;
 
 export const DEFAULTS = {
-  [SETTING_KEYS.AVATAR_URL]: "https://avatars.githubusercontent.com/u/2008105?v=4",
+  [SETTING_KEYS.AVATAR_URL]: "https://github.com/stevenfackley.png",
   [SETTING_KEYS.COUPLE_PHOTO_URL]: "",
   [SETTING_KEYS.BIO_TEXT]:
     "Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem. C#, .NET, Azure, Angular, and SQL Server.",

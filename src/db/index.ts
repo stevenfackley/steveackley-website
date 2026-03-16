@@ -1,6 +1,13 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { config } from "dotenv";
+
+// Load .env.local first (local dev override), then .env as fallback.
+// In production (Docker/EC2) these files won't exist and env vars come from
+// the container/host environment instead — so this is safe to run everywhere.
+config({ path: ".env.local" });
+config({ path: ".env" });
 
 const globalForDb = globalThis as unknown as {
   queryClient: ReturnType<typeof postgres> | undefined;
