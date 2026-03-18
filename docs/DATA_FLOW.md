@@ -1,10 +1,10 @@
 # Data Flow Document
 
 **Project:** steveackley.org  
-**Version:** 1.0.0  
-**Date:** 2026-02-26  
+**Version:** 2.0.0  
+**Date:** March 2026  
 **Author:** Steve Ackley  
-**Status:** Approved
+**Status:** Current
 
 ---
 
@@ -13,9 +13,11 @@
 This document details how data moves through the `steveackley.org` system, covering:
 
 1. Blog post creation, storage, and retrieval
-2. Image upload flow and volume persistence
+2. Image upload flow (Cloudflare R2)
 3. Blog post public rendering
-4. Authentication flow
+4. Authentication flow (Better-Auth)
+
+**Stack:** Astro 5 (SSR) · PostgreSQL 16 · Drizzle ORM · Better-Auth · Cloudflare R2
 
 ---
 
@@ -28,59 +30,60 @@ This document details how data moves through the `steveackley.org` system, cover
 │                    BLOG POST CREATION                         │
 └──────────────────────────────────────────────────────────────┘
 
-  [Admin Browser]                [Next.js Server]         [PostgreSQL]
-       │                               │                       │
-       │  1. GET /admin/posts/new      │                       │
-       │──────────────────────────────►│                       │
-       │                               │ (middleware checks JWT)│
-       │  2. Returns PostEditor page   │                       │
-       │◄──────────────────────────────│                       │
-       │                               │                       │
-       │  3. Admin writes content      │                       │
-       │     in Tiptap editor          │                       │
-       │                               │                       │
-       │  4. Admin clicks "Save"       │                       │
-       │──────────────────────────────►│                       │
-       │     (Server Action:           │                       │
-       │      createPost)              │                       │
-       │                               │ 5. INSERT into posts  │
-       │                               │──────────────────────►│
-       │                               │                       │
-       │                               │ 6. Returns new post   │
-       │                               │◄──────────────────────│
-       │                               │                       │
-       │                               │ 7. revalidatePath(    │
-       │                               │    '/blog',           │
-       │                               │    '/admin/dashboard')│
-       │                               │                       │
-       │  8. Redirect to dashboard     │                       │
-       │◄──────────────────────────────│                       │
+  [Admin Browser]              [Astro Server]            [PostgreSQL]
+       │                             │                        │
+       │  1. GET /admin/posts/new    │                        │
+       │────────────────────────────►│                        │
+       │   (middleware checks        │                        │
+       │    Better-Auth session)     │                        │
+       │                             │                        │
+       │  2. Returns PostEditor page │                        │
+       │◄────────────────────────────│                        │
+       │                             │                        │
+       │  3. Admin writes content    │                        │
+       │     in Tiptap editor        │                        │
+       │                             │                        │
+       │  4. Admin clicks "Save"     │                        │
+       │  POST Astro Action:         │                        │
+       │  actions/index.ts#createPost│                        │
+       │────────────────────────────►│                        │
+       │                             │ 5. INSERT INTO posts   │
+       │                             │   (via Drizzle ORM)    │
+       │                             │───────────────────────►│
+       │                             │                        │
+       │                             │ 6. Returns new post    │
+       │                             │◄───────────────────────│
+       │                             │                        │
+       │  7. Redirect to dashboard   │                        │
+       │◄────────────────────────────│                        │
 ```
 
-### 2.2 Server Action: `createPost`
+### 2.2 Astro Action: `createPost`
 
-**Input (form data):**
+**Location:** `src/actions/index.ts`
+
+**Input:**
 ```typescript
 {
-  title: string;           // Post title
-  content: string;         // Tiptap HTML output
-  excerpt?: string;        // Optional manual excerpt
-  coverImage?: string;     // Path to uploaded cover image
-  published: boolean;      // Draft or published
+  title: string;       // Post title
+  content: string;     // Tiptap HTML output
+  excerpt?: string;    // Optional manual excerpt
+  coverImage?: string; // R2 public CDN URL
+  published: boolean;  // Draft or published
 }
 ```
 
 **Processing:**
-1. Verify session (defense in depth)
-2. Sanitize and validate inputs
+1. Verify Better-Auth session (defense in depth beyond middleware)
+2. Validate and sanitize inputs via Zod schema
 3. Auto-generate slug from title (e.g., `"Hello World"` → `"hello-world"`)
-4. Ensure slug uniqueness (append `-2`, `-3` if collision)
-5. Auto-generate excerpt from content if not provided (strip HTML, take first 160 chars)
-6. Insert into PostgreSQL via Prisma
+4. Ensure slug uniqueness (append `-2`, `-3` on collision)
+5. Auto-generate excerpt from content if not provided (strip HTML, first 160 chars)
+6. Insert into PostgreSQL via Drizzle ORM
 
 **Output:**
 - On success: Redirect to `/admin/dashboard`
-- On failure: Return error message to form
+- On failure: Return `ActionError` to the form
 
 ---
 
@@ -93,68 +96,72 @@ This document details how data moves through the `steveackley.org` system, cover
 │                    IMAGE UPLOAD FLOW                          │
 └──────────────────────────────────────────────────────────────┘
 
-  [Admin Browser]           [Next.js Server]        [Filesystem/Volume]
-       │                          │                        │
-       │  1. Admin clicks         │                        │
-       │     "Insert Image"       │                        │
-       │     in Tiptap toolbar    │                        │
-       │                          │                        │
-       │  2. File picker opens,   │                        │
-       │     admin selects file   │                        │
-       │                          │                        │
-       │  3. POST /api/upload     │                        │
-       │     Content-Type:        │                        │
-       │     multipart/form-data  │                        │
-       │─────────────────────────►│                        │
-       │                          │                        │
-       │                          │ 4. Validate session    │
-       │                          │    (auth check)        │
-       │                          │                        │
-       │                          │ 5. Validate file:      │
-       │                          │    - MIME type         │
-       │                          │    - Size ≤ 5MB        │
-       │                          │    - Extension check   │
-       │                          │                        │
-       │                          │ 6. Generate filename:  │
-       │                          │    {uuid}-{safe-name}  │
-       │                          │                        │
-       │                          │ 7. Write to            │
-       │                          │    /app/uploads/       │──────────►│
-       │                          │    {filename}          │  (volume) │
-       │                          │                        │           │
-       │                          │ 8. Return JSON:        │           │
-       │                          │    { url: "/uploads/   │           │
-       │                          │       {filename}" }    │           │
-       │◄─────────────────────────│                        │           │
-       │                          │                        │           │
-       │  9. Tiptap inserts       │                        │           │
-       │     <img src="/uploads/  │                        │           │
-       │     {filename}"> into    │                        │           │
-       │     editor content       │                        │           │
+  [Admin Browser]         [Astro Server]         [Cloudflare R2]
+       │                        │                       │
+       │  1. Admin clicks       │                       │
+       │     "Insert Image"     │                       │
+       │     in Tiptap toolbar  │                       │
+       │                        │                       │
+       │  2. File picker opens, │                       │
+       │     admin selects file │                       │
+       │                        │                       │
+       │  3. POST /api/upload   │                       │
+       │     multipart/form-data│                       │
+       │───────────────────────►│                       │
+       │                        │                       │
+       │                        │ 4. Validate session   │
+       │                        │    (ADMIN role)       │
+       │                        │                       │
+       │                        │ 5. Validate file:     │
+       │                        │    - MIME allowlist   │
+       │                        │    - Size ≤ 5 MB      │
+       │                        │                       │
+       │                        │ 6. Generate key:      │
+       │                        │    uploads/{uuid}-    │
+       │                        │    {safe-name}        │
+       │                        │                       │
+       │                        │ 7. PutObjectCommand   │
+       │                        │───────────────────────►
+       │                        │                       │
+       │                        │ 8. R2 stores file,    │
+       │                        │    returns success    │
+       │                        │◄───────────────────────
+       │                        │                       │
+       │                        │ 9. Construct public   │
+       │                        │    CDN URL:           │
+       │                        │    {R2_PUBLIC_URL}/   │
+       │                        │    uploads/{key}      │
+       │                        │                       │
+       │  10. Return { url }    │                       │
+       │◄───────────────────────│                       │
+       │                        │                       │
+       │  11. Tiptap inserts    │                       │
+       │      <img src="{url}"> │                       │
+       │      into editor       │                       │
 ```
 
 ### 3.2 Upload API Route: `POST /api/upload`
 
-**Location:** `src/app/api/upload/route.ts`
+**Location:** `src/pages/api/upload.ts`
 
 **Processing Pipeline:**
 ```
 Request received
       │
       ▼
-Check session (NextAuth) ──── Unauthorized ──► 401 Response
+Check Better-Auth session (ADMIN role) ── Unauthorized ──► 401
       │
       ▼
 Parse multipart/form-data
       │
       ▼
-Validate MIME type ─────────── Invalid ──────► 400 Response
+Validate MIME type ───────────────────── Invalid ────────► 400
 (image/jpeg, image/png,
  image/webp, image/gif)
       │
       ▼
-Validate file size ─────────── Too large ────► 413 Response
-(≤ 5 MB)
+Validate file size ───────────────────── Too large ──────► 413
+(≤ MAX_UPLOAD_SIZE_MB)
       │
       ▼
 Sanitize original filename
@@ -162,69 +169,24 @@ Sanitize original filename
  normalize to alphanum + dots)
       │
       ▼
-Generate UUID prefix
-(e.g., "a1b2c3d4-e5f6-...")
+Generate UUID-prefixed key:
+"uploads/{uuid}-{sanitized-name}"
       │
       ▼
-Construct final filename:
-"{uuid}-{sanitized-name}.{ext}"
+PutObjectCommand to R2 ───────────────── Error ──────────► 500
       │
       ▼
-Ensure /app/uploads/ exists
-(create if missing)
-      │
-      ▼
-Write file to disk ──────────── Write error ──► 500 Response
-      │
-      ▼
-Return { url: "/uploads/{filename}" }
+Return { url: "{R2_PUBLIC_URL}/uploads/{key}" }
 ```
 
-### 3.3 Docker Volume Mapping
+### 3.3 Storage Architecture
 
-The `/app/uploads/` directory inside the container is mounted to a named Docker volume:
+Images are stored in Cloudflare R2 (S3-compatible object storage) under the `uploads/` prefix.
 
-```yaml
-# docker-compose.yml
-services:
-  web:
-    volumes:
-      - uploads:/app/uploads
-
-volumes:
-  uploads:
-    driver: local
-```
-
-**What this means:**
-- Files written to `/app/uploads/` inside the container are persisted on the host
-- If the container is stopped, restarted, or rebuilt, **images are not lost**
-- The volume lives at a Docker-managed path on the host (e.g., `/var/lib/docker/volumes/steveackleyorg_uploads/_data/` on Linux)
-- For AWS deployment, this volume should be replaced with an EFS (Elastic File System) mount or S3 bucket
-
-### 3.4 Image Serving
-
-Uploaded images are served as static files from the `/uploads/` URL path:
-
-```typescript
-// next.config.ts
-// Images in /app/uploads are NOT in the Next.js public/ directory.
-// They are served via a custom static file route:
-
-// Option A: next.config.ts rewrites
-async rewrites() {
-  return [
-    {
-      source: '/uploads/:path*',
-      destination: '/api/uploads/:path*',
-    },
-  ];
-}
-
-// Option B (simpler): next/static-files via custom route handler
-// src/app/api/uploads/[...path]/route.ts
-// Reads file from UPLOAD_DIR and streams it as response
-```
+- **No local disk storage** — no Docker volumes for uploads
+- **Public CDN delivery** — R2 public bucket URL serves images globally
+- **Durable** — R2 provides 11 9s durability; no backup volume management needed
+- **Key format:** `uploads/{uuid}-{sanitized-filename}.{ext}`
 
 ---
 
@@ -233,121 +195,161 @@ async rewrites() {
 ### 4.1 Blog Listing Page (`/blog`)
 
 ```
-[Browser]              [Next.js Server]           [PostgreSQL]
-    │                        │                          │
-    │  GET /blog             │                          │
-    │───────────────────────►│                          │
-    │                        │  SELECT posts WHERE      │
-    │                        │  published=true          │
-    │                        │  ORDER BY createdAt DESC │
-    │                        │  LIMIT 10 OFFSET (page-1)│
-    │                        │─────────────────────────►│
-    │                        │                          │
-    │                        │  Returns post list       │
-    │                        │◄─────────────────────────│
-    │                        │                          │
-    │                        │  Render Server Component │
-    │                        │  with post cards         │
-    │  Returns HTML          │                          │
-    │◄───────────────────────│                          │
+[Browser]               [Astro Server]              [PostgreSQL]
+    │                        │                           │
+    │  GET /blog             │                           │
+    │───────────────────────►│                           │
+    │                        │  SELECT id, title, slug,  │
+    │                        │  excerpt, createdAt FROM  │
+    │                        │  posts WHERE              │
+    │                        │  published = true         │
+    │                        │  ORDER BY createdAt DESC  │
+    │                        │  LIMIT 10 OFFSET n        │
+    │                        │  (Drizzle ORM)            │
+    │                        │──────────────────────────►│
+    │                        │                           │
+    │                        │  Returns post list        │
+    │                        │◄──────────────────────────│
+    │                        │                           │
+    │                        │  Server-renders HTML      │
+    │  Returns HTML          │                           │
+    │◄───────────────────────│                           │
 ```
 
 ### 4.2 Individual Post Page (`/blog/[slug]`)
 
 ```
-[Browser]              [Next.js Server]           [PostgreSQL]
-    │                        │                          │
-    │  GET /blog/my-post     │                          │
-    │───────────────────────►│                          │
-    │                        │  SELECT * FROM posts     │
-    │                        │  WHERE slug='my-post'    │
-    │                        │  AND published=true      │
-    │                        │─────────────────────────►│
-    │                        │                          │
-    │                        │  Returns post data       │
-    │                        │◄─────────────────────────│
-    │                        │                          │
-    │                        │  Render HTML content     │
-    │                        │  (via prose typography)  │
-    │  Returns HTML          │                          │
-    │◄───────────────────────│                          │
-    │                        │                          │
-    │  (If post has          │                          │
-    │   coverImage)          │                          │
-    │  GET /uploads/file.jpg │                          │
-    │───────────────────────►│                          │
-    │                        │  Stream from volume      │
-    │  Returns image bytes   │                          │
-    │◄───────────────────────│                          │
+[Browser]               [Astro Server]              [PostgreSQL]
+    │                        │                           │
+    │  GET /blog/my-post     │                           │
+    │───────────────────────►│                           │
+    │                        │  SELECT * FROM posts      │
+    │                        │  WHERE slug = 'my-post'   │
+    │                        │  AND published = true     │
+    │                        │──────────────────────────►│
+    │                        │                           │
+    │                        │  Returns post data        │
+    │                        │◄──────────────────────────│
+    │                        │                           │
+    │                        │  Server-renders HTML      │
+    │                        │  (prose typography)       │
+    │  Returns HTML          │                           │
+    │◄───────────────────────│                           │
+    │                        │                           │
+    │  (cover image / inline │                           │
+    │   images served from   │                           │
+    │   Cloudflare R2 CDN)   │                           │
+    │  GET {R2_PUBLIC_URL}/… │                           │
+    │───────────────────────►│ (Cloudflare CDN, not Astro)
 ```
 
-### 4.3 Cache Strategy
+### 4.3 Home Page Blog Preview (`/`)
 
-| Route | Rendering | Cache | Revalidation |
-|---|---|---|---|
-| `/blog` | SSR (dynamic) | No cache | On demand (revalidatePath) |
-| `/blog/[slug]` | ISR | 60 seconds | After post update |
-| `/` (home) | SSR | 60 seconds | On demand |
-| `/uploads/*` | Static file | Browser cache (1 year) | — |
+The home page fetches the 3 most recent published posts at request time and renders them in the Overview tab of the bento dashboard:
+
+```typescript
+// src/pages/index.astro
+const blogPosts = await db
+  .select()
+  .from(postsTable)
+  .where(eq(postsTable.published, true))
+  .orderBy(desc(postsTable.createdAt))
+  .limit(3);
+```
+
+### 4.4 Cache Strategy
+
+| Route | Rendering | Notes |
+|---|---|---|
+| `/` | SSR (per-request) | Fresh blog preview on every request |
+| `/blog` | SSR (per-request) | Always shows latest posts |
+| `/blog/[slug]` | SSR (per-request) | Always shows current content |
+| `/resume` | SSR | Dynamic content from Drizzle settings |
+| Images | R2 / Cloudflare CDN | Cached at edge; long TTL |
 
 ---
 
 ## 5. Authentication Data Flow
 
-### 5.1 Login Flow
+### 5.1 Login Flow (Better-Auth)
 
 ```
-[Admin Browser]        [Next.js Middleware]    [NextAuth]        [PostgreSQL]
-      │                        │                   │                  │
-      │  GET /admin/dashboard  │                   │                  │
-      │───────────────────────►│                   │                  │
-      │                        │  Check JWT cookie │                  │
-      │                        │  (no cookie found)│                  │
-      │  302 → /admin/login    │                   │                  │
-      │◄───────────────────────│                   │                  │
-      │                        │                   │                  │
-      │  POST /api/auth/signin  │                   │                  │
-      │  { email, password }   │                   │                  │
-      │────────────────────────────────────────────►                  │
-      │                        │                   │                  │
-      │                        │                   │ SELECT user      │
-      │                        │                   │ WHERE email=?    │
-      │                        │                   │─────────────────►│
-      │                        │                   │                  │
-      │                        │                   │ Returns user row │
-      │                        │                   │◄─────────────────│
-      │                        │                   │                  │
-      │                        │                   │ bcrypt.compare() │
-      │                        │                   │ (password,hash)  │
-      │                        │                   │                  │
-      │  Set-Cookie: JWT token │                   │                  │
+[Admin Browser]       [Astro Middleware]     [Better-Auth]      [PostgreSQL]
+      │                      │                    │                  │
+      │  GET /admin/dashboard│                    │                  │
+      │─────────────────────►│                    │                  │
+      │                      │ getSession()        │                  │
+      │                      │ (reads session cookie)               │
+      │                      │───────────────────►│                  │
+      │                      │ No session          │                  │
+      │  302 → /admin/login  │                    │                  │
+      │◄─────────────────────│                    │                  │
+      │                      │                    │                  │
+      │  POST /api/auth/sign-in/email              │                  │
+      │  { email, password }  │                    │                  │
+      │───────────────────────────────────────────►│                  │
+      │                      │                    │ SELECT user       │
+      │                      │                    │ WHERE email=?     │
+      │                      │                    │─────────────────►│
+      │                      │                    │ Returns user row  │
+      │                      │                    │◄─────────────────│
+      │                      │                    │ bcrypt.compare()  │
+      │                      │                    │ Verify role=ADMIN │
+      │  Set-Cookie: session  │                    │                  │
       │◄───────────────────────────────────────────│                  │
-      │  302 → /admin/dashboard│                   │                  │
+      │  302 → /admin/dashboard                    │                  │
 ```
 
 ### 5.2 Session Verification on Protected Routes
 
 ```
-Every request to /admin/*:
+Every request to /admin/* or /client/*:
 
-[Request] → middleware.ts → auth() → Decode JWT cookie
-                                          │
-                            Valid JWT ────► Allow request through
-                                          │
-                            No JWT   ────► Redirect to /admin/login
-                            Expired JWT──► Redirect to /admin/login
+[Request] → middleware.ts → auth.api.getSession(headers)
+                                      │
+                          Valid session ───► Set context.locals.user
+                                      │      Allow request through
+                          No session  ───► Redirect to /admin/login
+                                           (or /client/login)
+```
+
+**Location:** `src/middleware.ts`
+
+```typescript
+export const onRequest = defineMiddleware(async (context, next) => {
+  const session = await auth.api.getSession({
+    headers: context.request.headers,
+  });
+  context.locals.user = session?.user ?? null;
+  context.locals.session = session?.session ?? null;
+
+  const { pathname } = new URL(context.request.url);
+
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    if (!session || session.user.role !== "ADMIN") {
+      return context.redirect("/admin/login");
+    }
+  }
+
+  if (pathname.startsWith("/client") && pathname !== "/client/login") {
+    if (!session) return context.redirect("/client/login");
+  }
+
+  return next();
+});
 ```
 
 ---
 
 ## 6. Data Persistence Summary
 
-| Data Type | Storage | Persistence Mechanism | Backup Strategy |
+| Data Type | Storage | Durability | Backup Strategy |
 |---|---|---|---|
-| Blog posts | PostgreSQL | Named Docker volume `pgdata` | pg_dump; AWS RDS snapshots in production |
-| Uploaded images | Local filesystem | Named Docker volume `uploads` | Rsync backup; AWS EFS/S3 in production |
-| User credentials | PostgreSQL | Named Docker volume `pgdata` | Same as blog posts |
-| Session tokens | JWT (stateless) | Client cookie only | N/A — stateless |
+| Blog posts | PostgreSQL (Docker container) | Named volume `postgres_data` | `pg_dump`; consider managed DB (RDS/Neon) for HA |
+| Uploaded images | Cloudflare R2 | 11 9s (R2 SLA) | Redundant by default; optional R2 bucket replication |
+| User credentials | PostgreSQL | Same as blog posts | Same as blog posts |
+| Sessions | Better-Auth (DB-backed or cookie JWT) | — | Stateless — no backup needed |
+| Site settings | PostgreSQL (key-value store) | Named volume `postgres_data` | Same as blog posts |
 | Resume PDF | `public/` directory | Git repository | Version controlled |
 
 ---
@@ -356,10 +358,11 @@ Every request to /admin/*:
 
 | Scenario | Handling |
 |---|---|
-| DB connection fails | Server returns 500; Next.js error boundary shown |
+| DB connection fails | Astro returns 500; error boundary shown |
 | Post slug collision | Auto-append numeric suffix (`-2`, `-3`) |
-| Image upload MIME violation | Return 400 with descriptive error message |
+| Image upload MIME violation | Return 400 with descriptive error |
 | Image upload size violation | Return 413 with size limit info |
-| Disk write failure | Return 500; log error server-side |
+| R2 write failure | Return 500; log error server-side |
 | Unauthenticated upload attempt | Return 401 |
-| Post not found (`/blog/[slug]`) | Next.js `notFound()` — renders 404 page |
+| Post not found (`/blog/[slug]`) | Astro `return Astro.redirect('/404')` |
+| GitHub API rate limit (home page) | Catch error; render empty repos section |

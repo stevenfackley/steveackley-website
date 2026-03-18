@@ -1,15 +1,15 @@
 # Routes
 
-> Last updated: pre-rewrite snapshot. Update after Phase 3.
+> Last updated: March 2026 — reflects current Astro 5 implementation.
 
 ## Public
 
 | Route | Description |
 |---|---|
-| `/` | Homepage (bento grid) |
-| `/blog` | Blog post listing |
+| `/` | Homepage (tabbed bento dashboard) |
+| `/blog` | Blog post listing with pagination |
 | `/blog/[slug]` | Individual blog post |
-| `/resume` | Resume page |
+| `/resume` | Interactive resume page |
 | `/resume/print` | Print-optimized resume |
 
 ## Admin (ADMIN role required)
@@ -17,27 +17,28 @@
 | Route | Description |
 |---|---|
 | `/admin/login` | Login page |
-| `/admin/dashboard` | Admin dashboard |
+| `/admin/dashboard` | Admin dashboard (post management) |
 | `/admin/posts/new` | Create new blog post |
 | `/admin/posts/[id]/edit` | Edit existing post |
 | `/admin/apps` | Manage client apps |
 | `/admin/messages` | Message inbox |
 | `/admin/settings` | Site settings (key-value CMS) |
 | `/admin/account` | Admin account settings |
+| `/admin/users` | User management |
 
 ## Client (any authenticated user)
 
 | Route | Description |
 |---|---|
+| `/client/login` | Client login page |
 | `/client/dashboard` | Client dashboard |
 | `/client/messages` | Message inbox |
 | `/client/account` | Account settings |
 
 ## API
 
-| Route | Description |
-|---|---|
-| `/api/auth/[...nextauth]` | Auth handler (NextAuth → better-auth post-rewrite) |
-| `/api/upload` | File upload endpoint (→ R2 post-rewrite) |
-| `/api/uploads/[...path]` | Serve uploaded files from Docker volume (removed post-rewrite) |
-| `/api/fetch-metadata` | Fetch URL metadata for ClientApp |
+| Route | Method | Auth | Description |
+|---|---|---|---|
+| `/api/auth/[...all]` | GET/POST | — | Better-Auth handler (login, logout, session) |
+| `/api/upload` | POST | ✅ ADMIN | Upload image to Cloudflare R2; returns `{ url }` |
+| `/api/fetch-metadata` | GET | ✅ Any | Fetch Open Graph metadata for a URL |

@@ -30,10 +30,10 @@ done
 if [ -n "$DATABASE_URL" ]; then
   # Print sanitized URL for debugging (hide password)
   echo "  DATABASE_URL host: $(echo "$DATABASE_URL" | sed 's|://[^@]*@|://***@|')"
-  echo "==> Pushing database schema (Drizzle)..."
-  # Use drizzle-kit to push schema directly from the container
+  echo "==> Migrating database schema (Drizzle)..."
+  # Use drizzle-kit to migrate schema directly from the container
   # We assume drizzle-kit is in the node_modules
-  npx drizzle-kit push --force || echo "⚠ Drizzle db push failed"
+  npx drizzle-kit migrate || echo "⚠ Drizzle db migrate failed"
 else
   echo "⚠ DATABASE_URL not set, skipping schema push"
 fi

@@ -1,16 +1,19 @@
 # Security Document
 
 **Project:** steveackley.org  
-**Version:** 1.0.0  
-**Date:** 2026-02-26  
+**Version:** 2.0.0  
+**Date:** March 2026  
 **Author:** Steve Ackley  
-**Status:** Approved
+**Status:** Current
 
 ---
 
 ## 1. Overview
 
-This document outlines the security measures, threat model, and implementation guidelines for `steveackley.org`. Because the site includes an admin panel with file upload capabilities and a PostgreSQL backend, security must be considered holistically across authentication, data access, and file handling.
+This document outlines the security measures, threat model, and implementation guidelines for `steveackley.org`. The site includes an admin panel with file upload capabilities, a client portal, and a PostgreSQL backend — security must be considered holistically across authentication, data access, file handling, and infrastructure.
+
+**Auth stack:** Better-Auth (replaces NextAuth/Auth.js)  
+**Storage stack:** Cloudflare R2 (replaces local Docker volume uploads)
 
 ---
 
@@ -22,9 +25,9 @@ This document outlines the security measures, threat model, and implementation g
 |---|---|---|
 | Admin credentials | High | Account takeover |
 | Database content | Medium | Data manipulation, defacement |
-| Uploaded images | Low–Medium | Path traversal, malicious file execution |
+| Uploaded images (R2) | Low–Medium | Malicious file upload |
 | Admin session tokens | High | Session hijacking → account takeover |
-| Environment variables | High | Credential exposure |
+| Environment variables / secrets | High | Credential exposure |
 
 ### 2.2 Threat Actors
 
@@ -36,7 +39,7 @@ This document outlines the security measures, threat model, and implementation g
 
 ### 2.3 Out of Scope
 
-- DDoS mitigation (handled at infrastructure/CDN layer, e.g., CloudFront)
+- DDoS mitigation (handled at Cloudflare edge)
 - Zero-day framework vulnerabilities (mitigated by keeping dependencies updated)
 - Physical access to host machines
 
@@ -46,129 +49,145 @@ This document outlines the security measures, threat model, and implementation g
 
 ### 3.1 Admin Login
 
-**Implementation:** NextAuth.js v5 (Auth.js) with Credentials provider
+**Implementation:** Better-Auth with Email + Password provider
 
 **Security Controls:**
 
 | Control | Implementation |
 |---|---|
-| Password hashing | bcrypt with cost factor 12 (≥ 10 recommended; 12 is ideal) |
-| Session strategy | JWT (stateless, no DB session table) |
+| Password hashing | bcrypt (managed by Better-Auth) |
+| Session strategy | Database-backed sessions (session table in PostgreSQL) |
 | Cookie security | `HttpOnly`, `SameSite=Lax`, `Secure` (production) |
-| Session expiry | 24 hours (configurable via `maxAge`) |
+| Session expiry | Configurable via Better-Auth `expiresIn` |
 | Login page protection | Not publicly indexed (`<meta name="robots" content="noindex">`) |
 
 **Password Setup:**
 
-The admin password is never stored in plaintext. At initial setup, generate a bcrypt hash:
+The admin password is never stored in plaintext. Generate a bcrypt hash at initial setup:
 
 ```bash
-# Using the provided setup script:
-npm run setup:admin
-
-# Or manually:
-node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('your-password', 12).then(console.log)"
+node scripts/hash-password.js your-password
 ```
 
-Store the resulting hash in the `ADMIN_PASSWORD_HASH` environment variable. The plaintext password is never committed or stored.
+Store the resulting hash in the `ADMIN_PASSWORD_HASH` environment variable. The container entrypoint (`docker/entrypoint.sh`) seeds the admin user on first boot using this hash.
 
 **Brute Force Considerations:**
 
-NextAuth.js does not include built-in rate limiting. For production, configure rate limiting at the infrastructure level (e.g., AWS WAF, nginx rate limiting). The bcrypt cost factor of 12 also significantly slows automated password attempts.
+Better-Auth does not include built-in rate limiting out of the box. For production, configure rate limiting at the Cloudflare WAF or Caddy layer. bcrypt's inherent slowness provides a significant deterrent against automated password attacks.
 
 ### 3.2 Route Protection
 
 All `/admin/*` routes are protected by `src/middleware.ts`:
 
 ```typescript
-// src/middleware.ts
-export { auth as middleware } from "@/lib/auth";
+export const onRequest = defineMiddleware(async (context, next) => {
+  const session = await auth.api.getSession({
+    headers: context.request.headers,
+  });
+  context.locals.user = session?.user ?? null;
+  context.locals.session = session?.session ?? null;
 
-export const config = {
-  matcher: ["/admin/:path*"],
-};
+  const { pathname } = new URL(context.request.url);
+
+  // Admin routes: require ADMIN role
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    if (!session || session.user.role !== "ADMIN") {
+      return context.redirect("/admin/login");
+    }
+  }
+
+  // Client routes: require any authenticated session
+  if (pathname.startsWith("/client") && pathname !== "/client/login") {
+    if (!session) {
+      return context.redirect("/client/login");
+    }
+  }
+
+  return next();
+});
 ```
 
-The middleware runs on the Edge and checks for a valid JWT session cookie before the request reaches any route handler. Unauthenticated requests are redirected to `/admin/login`.
+The middleware runs on every request and checks for a valid Better-Auth session before the request reaches any route handler.
 
-### 3.3 Defense in Depth: Server Action Auth Checks
+### 3.3 Defense in Depth: Action Auth Checks
 
-In addition to middleware, every Server Action that mutates data performs its own session check:
+In addition to middleware, every Astro Action that mutates data performs its own session check:
 
 ```typescript
-// Example pattern in every admin Server Action:
+// src/actions/index.ts — pattern used in every mutating action
 import { auth } from "@/lib/auth";
+import { ActionError } from "astro:actions";
 
-export async function createPost(formData: FormData) {
-  const session = await auth();
-  if (!session) {
-    throw new Error("Unauthorized");
-  }
-  // ... proceed with DB operation
-}
+export const server = {
+  createPost: defineAction({
+    handler: async (input, context) => {
+      const session = await auth.api.getSession({
+        headers: context.request.headers,
+      });
+      if (!session || session.user.role !== "ADMIN") {
+        throw new ActionError({ code: "UNAUTHORIZED" });
+      }
+      // ... proceed with DB operation
+    },
+  }),
+};
 ```
-
-This ensures that even if the middleware were bypassed (e.g., a misconfiguration), database mutations cannot be performed without a valid session.
 
 ### 3.4 API Route Auth Checks
 
 The `/api/upload` route independently verifies the session:
 
 ```typescript
-// src/app/api/upload/route.ts
-export async function POST(request: Request) {
-  const session = await auth();
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+// src/pages/api/upload.ts
+export const POST: APIRoute = async ({ request }) => {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session || session.user.role !== "ADMIN") {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
-  // ... proceed with upload
-}
+  // ... proceed with R2 upload
+};
 ```
 
 ---
 
 ## 4. SQL Injection Prevention
 
-### 4.1 Prisma ORM
+### 4.1 Drizzle ORM
 
-All database operations use Prisma, which generates parameterized queries internally. **No raw SQL strings are constructed from user input.**
+All database operations use Drizzle ORM, which generates parameterized queries internally. **No raw SQL strings are constructed from user input.**
 
 ```typescript
-// ✅ SAFE — Prisma parameterizes this automatically
-const post = await prisma.post.findUnique({
-  where: { slug: userProvidedSlug },
-});
+// ✅ SAFE — Drizzle parameterizes this automatically
+const post = await db
+  .select()
+  .from(posts)
+  .where(eq(posts.slug, userProvidedSlug))
+  .limit(1);
 
-// ✅ SAFE — Prisma parameterizes all values
-const newPost = await prisma.post.create({
-  data: {
-    title: formData.title,
-    slug: generatedSlug,
-    content: sanitizedContent,
-    // ...
-  },
+// ✅ SAFE — Drizzle parameterizes all values
+await db.insert(posts).values({
+  title: validatedTitle,
+  slug: generatedSlug,
+  content: sanitizedContent,
 });
 ```
 
 ### 4.2 Raw Query Policy
 
-**Raw SQL queries are prohibited** in this codebase. If a raw query is ever necessary (e.g., for a complex migration), it must:
-
-1. Use Prisma's `$queryRaw` with tagged template literals (which are parameterized)
-2. Never use `$queryRawUnsafe` with user-provided values
-3. Be reviewed and documented
+**Raw SQL queries are avoided** in this codebase. If a raw query is ever necessary, it must use Drizzle's `sql` tagged template literal (which is parameterized) and never concatenate user input as a string.
 
 ```typescript
-// ✅ SAFE — Tagged template literal, parameterized
-const result = await prisma.$queryRaw`SELECT * FROM posts WHERE id = ${id}`;
+// ✅ SAFE — Tagged template, parameterized
+import { sql } from "drizzle-orm";
+const result = await db.execute(sql`SELECT * FROM posts WHERE id = ${id}`);
 
 // ❌ NEVER DO THIS — SQL injection vulnerability
-const result = await prisma.$queryRawUnsafe(`SELECT * FROM posts WHERE id = '${id}'`);
+const result = await db.execute(`SELECT * FROM posts WHERE id = '${id}'`);
 ```
 
 ### 4.3 Input Validation
 
-All user inputs (blog title, content, etc.) are validated on the server before reaching the database:
+All user inputs are validated via Zod schemas in Astro Actions before reaching the database:
 
 - **Title**: Non-empty string, max 255 characters
 - **Slug**: Auto-generated from title, validated against `/^[a-z0-9-]+$/`
@@ -184,7 +203,6 @@ All user inputs (blog title, content, etc.) are validated on the server before r
 | Threat | Description |
 |---|---|
 | MIME type spoofing | Attacker uploads `.php` file renamed as `.jpg` |
-| Path traversal | Filename contains `../../../etc/passwd` |
 | Oversized files | DoS via storage exhaustion |
 | Malicious SVG | SVG with embedded JavaScript (XSS via `<script>`) |
 | Executable upload | Attacker uploads `.js`, `.php`, `.sh` etc. |
@@ -200,66 +218,35 @@ const ALLOWED_MIME_TYPES = [
   "image/webp",
   "image/gif",
 ] as const;
-
-// Check the actual Content-Type from the browser
-if (!ALLOWED_MIME_TYPES.includes(file.type as any)) {
-  return Response.json({ error: "File type not allowed" }, { status: 400 });
-}
 ```
 
-Note: SVG is **intentionally excluded** from the allowlist due to its XSS risk.
+SVG is **intentionally excluded** from the allowlist due to its XSS risk.
 
 **File Size Limit:**
 
 ```typescript
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-
-if (file.size > MAX_SIZE_BYTES) {
-  return Response.json({ error: "File too large (max 5MB)" }, { status: 413 });
-}
+const maxBytes = (parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? "5")) * 1024 * 1024;
 ```
 
 **Filename Sanitization:**
 
-```typescript
-import { randomUUID } from "crypto";
-import path from "path";
+Filenames are sanitized and prefixed with a UUID before being used as an R2 object key:
 
-function sanitizeFilename(originalName: string): string {
-  // Extract just the base filename (no directory components)
-  const basename = path.basename(originalName);
-  
-  // Remove any characters that aren't alphanumeric, dots, hyphens, or underscores
-  const safe = basename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  
-  // Prefix with UUID to prevent collisions and predictability
+```typescript
+function sanitizeFilename(name: string): string {
+  const safe = path.basename(name).replace(/[^a-zA-Z0-9._-]/g, "_");
   return `${randomUUID()}-${safe}`;
 }
+// R2 key: uploads/{uuid}-{sanitized-name}
 ```
 
-**Upload Directory:**
+**No Local Disk Execution Risk:**
 
-- Uploads are stored in `/app/uploads/` — **outside the Next.js `public/` directory**
-- Files are served via a custom route handler that streams them, not via static file serving
-- This means the web server cannot execute uploaded files as server-side scripts (no PHP, no Node.js execution)
-- The upload directory should not have execute permissions: `chmod 644` for files, `chmod 755` for directory
+Files are stored in Cloudflare R2, not on the application server. There is no local filesystem path where uploaded files could be executed. R2 serves them as opaque blobs via CDN.
 
 **Content-Type Header for Served Files:**
 
-When serving uploaded images via the custom route handler, always set the `Content-Type` header explicitly based on the known MIME type (stored at upload time or derived from extension), never trust client-provided values:
-
-```typescript
-// When streaming file response
-return new Response(fileBuffer, {
-  headers: {
-    "Content-Type": "image/jpeg", // Set explicitly, never from user input
-    "Cache-Control": "public, max-age=31536000, immutable",
-    "Content-Disposition": "inline",
-    // Prevent execution of content:
-    "X-Content-Type-Options": "nosniff",
-  },
-});
-```
+R2 stores and serves the `Content-Type` set at upload time (derived from the validated MIME allowlist). Never trust client-provided content type values.
 
 ---
 
@@ -267,11 +254,7 @@ return new Response(fileBuffer, {
 
 ### 6.1 Tiptap HTML Output
 
-Tiptap generates HTML that is stored in PostgreSQL. When rendered on the public blog, this HTML is inserted via `dangerouslySetInnerHTML`. To prevent stored XSS:
-
-**Server-side HTML sanitization before storage:**
-
-Use `isomorphic-dompurify` or `sanitize-html` to sanitize Tiptap output before it is saved to the database:
+Tiptap generates HTML stored in PostgreSQL. When rendered on the public blog via `set:html` (Astro equivalent of `dangerouslySetInnerHTML`), this HTML should be sanitized before storage:
 
 ```typescript
 import DOMPurify from "isomorphic-dompurify";
@@ -282,73 +265,43 @@ const sanitizedContent = DOMPurify.sanitize(rawHtmlFromTiptap, {
     "h5", "h6", "ul", "ol", "li", "blockquote", "code", "pre",
     "a", "img", "hr", "table", "thead", "tbody", "tr", "th", "td",
   ],
-  ALLOWED_ATTR: [
-    "href", "src", "alt", "title", "class", "target", "rel",
-    "width", "height",
-  ],
-  // Force safe link targets
+  ALLOWED_ATTR: ["href", "src", "alt", "title", "class", "target", "rel", "width", "height"],
   FORCE_BODY: true,
 });
 ```
 
-### 6.2 React's Built-in XSS Protection
+### 6.2 Astro's Built-in Escaping
 
-All text content rendered via React's JSX is automatically escaped. Only the blog post `content` field uses `dangerouslySetInnerHTML`, and it is always sanitized before storage (see above).
+All text content rendered via Astro's `{}` interpolation is automatically HTML-escaped. Only the blog post `content` field uses `set:html`, and it must always be sanitized before storage.
 
 ### 6.3 Content Security Policy
 
-Set a `Content-Security-Policy` header in `next.config.ts`:
+The Caddy reverse proxy (`server/Caddyfile`) or Astro middleware should set a `Content-Security-Policy` header:
 
-```typescript
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob:;
-  font-src 'self';
-  connect-src 'self';
-  frame-ancestors 'none';
-`.replace(/\s{2,}/g, " ").trim();
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: blob: https://*.r2.dev https://github.com;
+font-src 'self';
+connect-src 'self';
+frame-ancestors 'none';
 ```
 
 ---
 
 ## 7. Security Headers
 
-Set the following HTTP security headers in `next.config.ts`:
+The following HTTP security headers should be set at the Caddy layer:
 
-```typescript
-const securityHeaders = [
-  {
-    key: "X-DNS-Prefetch-Control",
-    value: "on",
-  },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "SAMEORIGIN",
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
-    key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
-  },
-  {
-    key: "Content-Security-Policy",
-    value: cspHeader,
-  },
-];
-```
+| Header | Value |
+|---|---|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+| `X-DNS-Prefetch-Control` | `on` |
 
 ---
 
@@ -356,67 +309,83 @@ const securityHeaders = [
 
 ### 8.1 Rules
 
-1. **Never commit `.env` files** — `.env` and `.env.local` are in `.gitignore`
-2. **Use `.env.example`** — Template with placeholder values is committed to document required variables
-3. **Rotate secrets on suspected exposure** — Especially `NEXTAUTH_SECRET` and `DATABASE_URL`
-4. **Use Docker secrets in production** — For AWS deployment, use AWS Secrets Manager or ECS task definition secrets instead of environment variable files
+1. **Never commit `.env` or `web.env` files** — both are in `.gitignore`
+2. **Use `.env.example`** — template with placeholder values is committed to document required variables
+3. **Rotate secrets on suspected exposure** — especially `BETTER_AUTH_SECRET` and `DATABASE_URL`
+4. **Secrets injected at deploy time** — GitHub Actions secrets are written to `web.env` on the EC2 host during CI/CD; the file is `chmod 600` before writing
 
-### 8.2 Minimum Secret Entropy
+### 8.2 Secret Entropy
 
-- `NEXTAUTH_SECRET`: Minimum 32 random bytes (256 bits). Generate with:
+- `BETTER_AUTH_SECRET`: Minimum 32 random bytes (256 bits). Generate with:
   ```bash
   openssl rand -base64 32
   ```
-
-- Database passwords: Minimum 24 random characters, alphanumeric + special chars
+- Database passwords: Minimum 24 random characters, mixed types
 
 ### 8.3 Access Control
 
 In production:
-- Database port (5432) should NOT be exposed publicly — only accessible within the Docker network
-- Admin email/password should never appear in logs
-- The `ADMIN_PASSWORD_HASH` environment variable is a bcrypt hash — safe to store, but still treat as sensitive
+- Database port (5432) is **not exposed** publicly — only accessible within the internal Docker network
+- Admin credentials never appear in logs
+- `ADMIN_PASSWORD_HASH` is a bcrypt hash — safe to store, but treat as sensitive
 
 ---
 
-## 9. Dependency Security
+## 9. Infrastructure Security
 
-### 9.1 Policy
+### 9.1 Cloudflare Tunnel
 
-- Run `npm audit` regularly and before each release
+The EC2 instance does **not** have ports 80 or 443 exposed to the internet. All traffic flows through a Cloudflare Tunnel (`cloudflared`), which provides:
+
+- Zero-trust network access
+- DDoS mitigation at the Cloudflare edge
+- Automatic TLS termination
+
+### 9.2 Docker Network Isolation
+
+The PostgreSQL container is on the `internal` bridge network only. The web container is on both `web` (for Caddy access) and `internal` (for DB access). The database is never reachable from outside the Docker host.
+
+---
+
+## 10. Dependency Security
+
+### 10.1 Policy
+
+- Run `npm audit` regularly and before releases
 - Address `high` and `critical` severity findings promptly
-- Keep Next.js, Prisma, and NextAuth updated to latest stable versions
+- Keep Astro, Better-Auth, and Drizzle updated to latest stable versions
 - Use `npm audit fix` for non-breaking fixes
 
-### 9.2 Automated Scanning
+### 10.2 Automated Scanning
 
-Consider enabling GitHub Dependabot or Snyk for automated dependency vulnerability scanning.
+Dependabot or Snyk can be enabled on the GitHub repository for automated dependency vulnerability alerts.
 
 ---
 
-## 10. Incident Response
+## 11. Incident Response
 
 In the event of a suspected compromise:
 
-1. **Immediately rotate** `NEXTAUTH_SECRET` — this invalidates all existing sessions
+1. **Immediately rotate** `BETTER_AUTH_SECRET` — this invalidates all existing sessions
 2. **Rotate** the database password and update `DATABASE_URL`
 3. **Review** server logs for unusual access patterns to `/admin/*` and `/api/upload`
-4. **Audit** uploaded files in the `uploads` volume for unexpected file types
+4. **Audit** R2 bucket for unexpected objects
 5. **Review** blog post content for injected scripts or defacement
-6. **Force re-deploy** the container with fresh secrets
+6. **Force re-deploy** the container with fresh secrets via CI/CD
 
 ---
 
-## 11. Security Checklist (Pre-Deployment)
+## 12. Security Checklist (Pre-Deployment)
 
-- [ ] `NEXTAUTH_SECRET` is a random 32+ byte value
+- [ ] `BETTER_AUTH_SECRET` is a random 32+ byte value
 - [ ] Database password is strong (24+ chars, mixed chars)
-- [ ] `.env` is not committed to the repository
-- [ ] Admin password is hashed with bcrypt cost 12+
-- [ ] Database port 5432 is not exposed in `docker-compose.yml` (no `ports:` mapping for db service)
-- [ ] Security headers are configured in `next.config.ts`
-- [ ] Upload directory is writable but not executable
+- [ ] `.env` and `web.env` are not committed to the repository
+- [ ] Admin password is hashed with bcrypt (via Better-Auth seeder)
+- [ ] Database port 5432 is not exposed in `docker-compose.yml` (no `ports:` mapping on db service)
+- [ ] Security headers are set at the Caddy or middleware layer
 - [ ] MIME type allowlist is enforced on uploads
 - [ ] HTML content is sanitized with DOMPurify before storage
 - [ ] `npm audit` shows no high/critical vulnerabilities
 - [ ] Admin login page has `noindex` meta tag
+- [ ] Cloudflare Tunnel is running; EC2 ports 80/443 are not open in Security Group
+- [ ] R2 bucket policy does not allow unintended public writes

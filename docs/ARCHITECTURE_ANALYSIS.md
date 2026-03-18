@@ -5,7 +5,7 @@
 **Current State:** The application has been rewritten using **Astro 5** and **React Islands**, deployed on AWS EC2 via **Docker** and **Cloudflare Tunnel**.
 
 **Key Changes:**
-- Migrated from Next.js 16 to **Astro 5** for superior performance and static-first architecture.
+- Migrated from Next.js 15 to **Astro 5** for superior performance and static-first architecture.
 - Replaced NextAuth with **Better-Auth** for modern, role-based authentication.
 - Replaced local Docker volumes for uploads with **Cloudflare R2** object storage.
 - Replaced Prisma with **Drizzle ORM** for lightweight, type-safe database interactions.
