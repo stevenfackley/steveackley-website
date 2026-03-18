@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HybridPlatform.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a3a3de8c1963d4f6ea7cdb65280b41f1d3673ee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d6e0695b433f7121d0a3cbd4eb54e95b17da77e5")]
 [assembly: System.Reflection.AssemblyProductAttribute("HybridPlatform.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HybridPlatform.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
