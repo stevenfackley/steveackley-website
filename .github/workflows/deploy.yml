@@ -139,8 +139,8 @@ jobs:
         with:
           context: .
           push: true
-          build-args: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+          cache-from: type=registry,ref=ghcr.io/stevenfackley/steveackley-web:buildcache
+          cache-to: type=registry,ref=ghcr.io/stevenfackley/steveackley-web:buildcache,mode=max
           tags: |
             ghcr.io/stevenfackley/steveackley-web:latest
             ghcr.io/stevenfackley/steveackley-web:sha-${{ github.sha }}
@@ -162,18 +162,37 @@ jobs:
             cd ${{ secrets.EC2_APP_DIR }}
             git pull origin main
             
-            # Construct web.env from secrets
-            printf 'DATABASE_URL=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=%s\nR2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
+            # Construct web.env from secrets (chmod 600 before writing to protect contents)
+            touch web.env && chmod 600 web.env
+            printf 'DATABASE_URL=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\nR2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
               "${{ secrets.DATABASE_URL }}" \
               "${{ secrets.BETTER_AUTH_SECRET }}" \
-              "https://aws.steveackley.org" \
+              "https://steveackley.org" \
+              "stevenfackley@gmail.com" \
+              "${{ secrets.ADMIN_PASSWORD_HASH }}" \
+              "${{ secrets.GH_API_TOKEN }}" \
               "${{ secrets.R2_ACCOUNT_ID }}" \
               "${{ secrets.R2_ACCESS_KEY_ID }}" \
               "${{ secrets.R2_SECRET_ACCESS_KEY }}" \
               "${{ secrets.R2_BUCKET }}" \
               "${{ secrets.R2_PUBLIC_URL }}" > web.env
-            chmod 600 web.env
 
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose up -d --remove-orphans
             docker image prune -f
+
+            # Wait for the web container to pass its health checks (up to 60s)
+            echo "Waiting for steveackley-web to become healthy..."
+            for i in $(seq 1 30); do
+              STATUS=$(docker inspect --format='{{.State.Status}}' steveackley-web 2>/dev/null || echo "missing")
+              HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:3000/ 2>/dev/null || echo "000")
+              echo "  attempt $i/30: container=$STATUS http=$HTTP"
+              if [ "$HTTP" = "200" ] || [ "$HTTP" = "301" ] || [ "$HTTP" = "302" ]; then
+                echo "✓ Deployment healthy"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "✗ Deployment did not become healthy in time"
+            docker logs steveackley-web --tail 50
+            exit 1
