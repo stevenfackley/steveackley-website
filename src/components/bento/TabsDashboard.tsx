@@ -49,7 +49,7 @@ export function TabsDashboard({ blogPosts, githubRepos, avatarUrl, couplePhotoUr
       </div>
 
       {/* Tab panels */}
-      {active === "overview"  && <OverviewPanel avatarUrl={avatarUrl} githubRepos={githubRepos} />}
+      {active === "overview"  && <OverviewPanel avatarUrl={avatarUrl} githubRepos={githubRepos} blogPosts={blogPosts} />}
       {active === "about"     && <AboutPanel avatarUrl={avatarUrl} couplePhotoUrl={couplePhotoUrl} />}
       {active === "skills"    && <SkillsPanel />}
       {active === "projects"  && <ProjectsPanel repos={githubRepos} />}
@@ -343,13 +343,49 @@ function ProjectsOverview({ repos }: { repos: EnrichedRepo[] }) {
   );
 }
 
-function OverviewPanel({ avatarUrl, githubRepos }: { avatarUrl: string; githubRepos: EnrichedRepo[] }) {
+function BlogPreviewOverview({ posts }: { posts: TabsDashboardProps["blogPosts"] }) {
+  if (posts.length === 0) return null;
+  const recent = posts.slice(0, 3);
+  return (
+    <CardShell className="p-6">
+      <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-4">
+        Recent Posts
+      </p>
+      <ul className="space-y-3">
+        {recent.map((post) => (
+          <li key={post.id}>
+            <a
+              href={`/blog/${post.slug}`}
+              className="flex items-start justify-between gap-3 rounded-xl p-2.5 -mx-2.5 hover:bg-[var(--surface-hover)] transition-colors duration-150 group"
+            >
+              <span className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug line-clamp-2">
+                {post.title}
+              </span>
+              <span className="text-xs text-[var(--text-muted)] shrink-0 mt-0.5">
+                {formatDateShort(post.createdAt)}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a
+        href="/blog"
+        className="mt-4 inline-block text-xs text-[var(--accent)] hover:underline underline-offset-2"
+      >
+        View all posts →
+      </a>
+    </CardShell>
+  );
+}
+
+function OverviewPanel({ avatarUrl, githubRepos, blogPosts }: { avatarUrl: string; githubRepos: EnrichedRepo[]; blogPosts: TabsDashboardProps["blogPosts"] }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <HeroOverview avatarUrl={avatarUrl} />
       <SkillsOverview />
       <AboutOverview />
       <ProjectsOverview repos={githubRepos} />
+      <BlogPreviewOverview posts={blogPosts} />
     </div>
   );
 }
