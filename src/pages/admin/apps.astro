@@ -1,0 +1,386 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { db, clientApps, userApps, users } from '@/db';
+import { eq, desc, and } from 'drizzle-orm';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/admin/login');
+
+let successMessage = '';
+let errorMessage = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = String(form.get('_action') ?? '');
+
+  try {
+    if (action === 'create') {
+      const name = String(form.get('name') ?? '').trim();
+      const url = String(form.get('url') ?? '').trim();
+      const environment = String(form.get('environment') ?? 'PRODUCTION') as 'PRODUCTION' | 'TEST' | 'DEVELOPMENT';
+      const description = String(form.get('description') ?? '').trim();
+      const companyName = String(form.get('companyName') ?? '').trim();
+      const productName = String(form.get('productName') ?? '').trim();
+
+      if (!name || !url) throw new Error('Name and URL are required.');
+
+      await db.insert(clientApps).values({
+        name,
+        url,
+        environment,
+        description: description || null,
+        companyName: companyName || null,
+        productName: productName || null,
+        isLive: true,
+      });
+      successMessage = `App "${name}" created successfully.`;
+
+    } else if (action === 'update') {
+      const appId = String(form.get('appId') ?? '');
+      const name = String(form.get('name') ?? '').trim();
+      const url = String(form.get('url') ?? '').trim();
+      const environment = String(form.get('environment') ?? 'PRODUCTION') as 'PRODUCTION' | 'TEST' | 'DEVELOPMENT';
+      const description = String(form.get('description') ?? '').trim();
+      const companyName = String(form.get('companyName') ?? '').trim();
+      const productName = String(form.get('productName') ?? '').trim();
+      const isLive = form.get('isLive') === 'true';
+
+      if (!appId || !name || !url) throw new Error('App ID, name, and URL are required.');
+
+      await db.update(clientApps).set({
+        name, url, environment,
+        description: description || null,
+        companyName: companyName || null,
+        productName: productName || null,
+        isLive,
+      }).where(eq(clientApps.id, appId));
+      successMessage = 'App updated successfully.';
+
+    } else if (action === 'delete') {
+      const appId = String(form.get('appId') ?? '');
+      if (!appId) throw new Error('App ID is required.');
+      await db.delete(clientApps).where(eq(clientApps.id, appId));
+      successMessage = 'App deleted.';
+
+    } else if (action === 'assign') {
+      const appId = String(form.get('appId') ?? '');
+      const userId = String(form.get('userId') ?? '');
+      if (!appId || !userId) throw new Error('App ID and User ID are required.');
+      // Upsert assignment
+      await db.insert(userApps).values({ userId, appId }).onConflictDoNothing();
+      successMessage = 'User assigned to app.';
+
+    } else if (action === 'unassign') {
+      const appId = String(form.get('appId') ?? '');
+      const userId = String(form.get('userId') ?? '');
+      if (!appId || !userId) throw new Error('App ID and User ID are required.');
+      await db.delete(userApps).where(and(eq(userApps.userId, userId), eq(userApps.appId, appId)));
+      successMessage = 'User removed from app.';
+    }
+  } catch (e) {
+    errorMessage = e instanceof Error ? e.message : 'An error occurred.';
+  }
+}
+
+// Fetch all client apps ordered by creation date
+const apps = await db.select().from(clientApps).orderBy(desc(clientApps.createdAt));
+
+// Fetch all user-app assignments
+const assignments = await db
+  .select({
+    appId: userApps.appId,
+    userId: userApps.userId,
+    userName: users.name,
+    userEmail: users.email,
+  })
+  .from(userApps)
+  .innerJoin(users, eq(userApps.userId, users.id));
+
+// All client users (for assignment dropdown)
+const allClients = await db
+  .select({ id: users.id, name: users.name, email: users.email })
+  .from(users)
+  .where(eq(users.role, 'CLIENT'));
+
+// Group assignments by appId
+const assignmentsByApp: Record<string, typeof assignments> = {};
+for (const a of assignments) {
+  if (!assignmentsByApp[a.appId]) assignmentsByApp[a.appId] = [];
+  assignmentsByApp[a.appId].push(a);
+}
+
+const envColors: Record<string, string> = {
+  PRODUCTION: 'bg-emerald-100 text-emerald-700',
+  TEST: 'bg-amber-100 text-amber-700',
+  DEVELOPMENT: 'bg-blue-100 text-blue-700',
+};
+
+const editAppId = Astro.url.searchParams.get('edit');
+const editApp = editAppId ? apps.find(a => a.id === editAppId) : null;
+---
+
+<AdminLayout title="Client Apps">
+  <div class="space-y-6">
+
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Client Apps</h1>
+        <p class="text-[var(--text-secondary)] mt-1.5">
+          {apps.length === 0 ? 'No apps registered yet' : `${apps.length} app${apps.length === 1 ? '' : 's'} registered`}
+        </p>
+      </div>
+      <a
+        href="?create=1"
+        class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        New App
+      </a>
+    </div>
+
+    {successMessage && (
+      <div class="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>
+        {successMessage}
+      </div>
+    )}
+    {errorMessage && (
+      <div class="flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+        {errorMessage}
+      </div>
+    )}
+
+    <!-- Create / Edit Form -->
+    {(Astro.url.searchParams.has('create') || editApp) && (
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+        <h2 class="text-lg font-bold text-[var(--text-primary)] mb-5">
+          {editApp ? `Edit App: ${editApp.productName || editApp.name}` : 'Register New App'}
+        </h2>
+        <form method="POST" class="space-y-4">
+          <input type="hidden" name="_action" value={editApp ? 'update' : 'create'} />
+          {editApp && <input type="hidden" name="appId" value={editApp.id} />}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">App Name <span class="text-red-500">*</span></label>
+              <input
+                type="text"
+                name="name"
+                required
+                value={editApp?.name ?? ''}
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                placeholder="my-app"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Product Name</label>
+              <input
+                type="text"
+                name="productName"
+                value={editApp?.productName ?? ''}
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                placeholder="My Awesome App"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">URL <span class="text-red-500">*</span></label>
+              <input
+                type="url"
+                name="url"
+                required
+                value={editApp?.url ?? ''}
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                placeholder="https://app.example.com"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Company Name</label>
+              <input
+                type="text"
+                name="companyName"
+                value={editApp?.companyName ?? ''}
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                placeholder="Acme Corp"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Environment</label>
+              <select
+                name="environment"
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+              >
+                <option value="PRODUCTION" selected={!editApp || editApp.environment === 'PRODUCTION'}>Production</option>
+                <option value="TEST" selected={editApp?.environment === 'TEST'}>Test</option>
+                <option value="DEVELOPMENT" selected={editApp?.environment === 'DEVELOPMENT'}>Development</option>
+              </select>
+            </div>
+            {editApp && (
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Status</label>
+                <select
+                  name="isLive"
+                  class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+                >
+                  <option value="true" selected={editApp.isLive}>Live</option>
+                  <option value="false" selected={!editApp.isLive}>Offline</option>
+                </select>
+              </div>
+            )}
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">Description</label>
+              <textarea
+                name="description"
+                rows={2}
+                class="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors resize-y"
+                placeholder="Brief description of this app"
+              >{editApp?.description ?? ''}</textarea>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors">
+              {editApp ? 'Save Changes' : 'Register App'}
+            </button>
+            <a href="/admin/apps" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">Cancel</a>
+          </div>
+        </form>
+      </div>
+    )}
+
+    <!-- Apps Grid -->
+    {apps.length === 0 ? (
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 flex flex-col items-center text-center gap-3">
+        <div class="h-12 w-12 rounded-full bg-[var(--surface-hover)] flex items-center justify-center">
+          <svg class="h-6 w-6 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+          </svg>
+        </div>
+        <p class="text-sm font-medium text-[var(--text-primary)]">No apps yet</p>
+        <p class="text-xs text-[var(--text-muted)]">Click "New App" to register the first client app.</p>
+      </div>
+    ) : (
+      <div class="grid gap-4 sm:grid-cols-2">
+        {apps.map((app) => {
+          const appUsers = assignmentsByApp[app.id] ?? [];
+          const appEnvClass = envColors[app.environment] ?? envColors['PRODUCTION'];
+          const assignedIds = new Set(appUsers.map(u => u.userId));
+          const unassignedClients = allClients.filter(c => !assignedIds.has(c.id));
+
+          return (
+            <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 flex flex-col gap-4">
+              <!-- Header -->
+              <div class="flex items-start gap-3">
+                {app.favicon || app.icon ? (
+                  <img src={app.favicon || app.icon || ''} alt={app.name} class="h-10 w-10 rounded-xl object-contain bg-[var(--surface-hover)] p-1 shrink-0" />
+                ) : (
+                  <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    {app.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-sm font-bold text-[var(--text-primary)] truncate">{app.productName || app.name}</h2>
+                    <span class={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${appEnvClass}`}>
+                      {app.environment}
+                    </span>
+                    {!app.isLive && (
+                      <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">Offline</span>
+                    )}
+                  </div>
+                  {app.companyName && <p class="text-xs text-[var(--text-muted)] mt-0.5">{app.companyName}</p>}
+                </div>
+                <!-- Edit/Delete actions -->
+                <div class="flex items-center gap-1 shrink-0">
+                  <a
+                    href={`/admin/apps?edit=${app.id}`}
+                    class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors"
+                    title="Edit app"
+                  >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                    </svg>
+                  </a>
+                  <form method="POST" onsubmit="return confirm('Delete this app? This cannot be undone.')">
+                    <input type="hidden" name="_action" value="delete" />
+                    <input type="hidden" name="appId" value={app.id} />
+                    <button type="submit" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 transition-colors" title="Delete app">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- URL -->
+              <a href={app.url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs text-[var(--accent)] hover:underline truncate">
+                <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z" clip-rule="evenodd" />
+                </svg>
+                {app.url}
+              </a>
+
+              {app.description && <p class="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-2">{app.description}</p>}
+
+              <!-- Assigned users -->
+              <div class="pt-3 border-t border-[var(--border)]">
+                <p class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">
+                  Assigned Users ({appUsers.length})
+                </p>
+                {appUsers.length > 0 && (
+                  <div class="flex flex-wrap gap-1.5 mb-2">
+                    {appUsers.map((u) => (
+                      <span class="inline-flex items-center gap-1 rounded-full bg-[var(--surface-hover)] px-2 py-1 text-xs text-[var(--text-secondary)]">
+                        {u.userName || u.userEmail}
+                        <form method="POST" class="inline">
+                          <input type="hidden" name="_action" value="unassign" />
+                          <input type="hidden" name="appId" value={app.id} />
+                          <input type="hidden" name="userId" value={u.userId} />
+                          <button type="submit" class="ml-0.5 text-[var(--text-muted)] hover:text-red-500 transition-colors" title="Remove">
+                            <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                          </button>
+                        </form>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {unassignedClients.length > 0 && (
+                  <form method="POST" class="flex items-center gap-2">
+                    <input type="hidden" name="_action" value="assign" />
+                    <input type="hidden" name="appId" value={app.id} />
+                    <select
+                      name="userId"
+                      class="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                    >
+                      <option value="">Assign a user…</option>
+                      {unassignedClients.map((c) => (
+                        <option value={c.id}>{c.name || c.email}</option>
+                      ))}
+                    </select>
+                    <button type="submit" class="shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-hover)] transition-colors">
+                      Assign
+                    </button>
+                  </form>
+                )}
+                {unassignedClients.length === 0 && appUsers.length === 0 && (
+                  <p class="text-xs text-[var(--text-muted)] italic">No clients available to assign.</p>
+                )}
+              </div>
+
+              <p class="text-[10px] text-[var(--text-muted)]">
+                Added {app.createdAt.toLocaleDateString()}
+                {app.metadataFetchedAt && ` · Metadata ${app.metadataFetchedAt.toLocaleDateString()}`}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</AdminLayout>

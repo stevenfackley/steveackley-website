@@ -22,6 +22,8 @@ services:
       MAX_UPLOAD_SIZE_MB: "5"
       # GitHub API token for fetching public repos on the home page
       GH_API_TOKEN: "${GH_API_TOKEN}"
+    volumes:
+      - ./docker/entrypoint.sh:/app/docker/entrypoint.sh
     depends_on:
       db:
         condition: service_healthy
