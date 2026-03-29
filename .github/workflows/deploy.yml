@@ -160,6 +160,9 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.EC2_APP_DIR }}
+            
+            # Stash any local changes to avoid merge conflicts
+            git stash --include-untracked || true
             git pull origin main
             
             # Construct web.env from secrets (chmod 600 before writing to protect contents)

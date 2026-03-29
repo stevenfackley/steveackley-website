@@ -4,6 +4,7 @@ import BentoDashboard from '@/components/bento/BentoDashboard.astro';
 import { db, posts as postsTable } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { getPublicRepos, enrichRepos } from '@/lib/github';
+import { getSiteSettings, SETTING_KEYS } from '@/lib/settings';
 
 // Fetch live blog posts for the preview
 const blogPosts = await db
@@ -22,8 +23,14 @@ try {
   console.error("Failed to fetch GitHub repos:", e);
 }
 
-const avatarUrl = 'https://github.com/stevenfackley.png';
-const couplePhotoUrl = ''; // Add your R2 URL here if available
+// Load settings from database
+const settings = await getSiteSettings([
+  SETTING_KEYS.AVATAR_URL,
+  SETTING_KEYS.COUPLE_PHOTO_URL,
+]);
+
+const avatarUrl = settings[SETTING_KEYS.AVATAR_URL];
+const couplePhotoUrl = settings[SETTING_KEYS.COUPLE_PHOTO_URL];
 ---
 
 <PublicLayout title="Steve Ackley" description="Staff Software Engineer - .NET, Azure, Full-Stack">
