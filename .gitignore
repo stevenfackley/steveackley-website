@@ -64,3 +64,12 @@ secrets/
 
 # Migration Backups
 src/_backup/
+
+# Astro cache/generated
+/.astro/
+
+# Build output
+/dist/
+
+# .NET build artifacts
+**/obj/
