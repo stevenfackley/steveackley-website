@@ -9,7 +9,8 @@
       "Bash(docker exec:*)",
       "Bash(docker compose build web)",
       "Bash(docker compose build --no-cache web)",
-      "Bash(docker compose up -d --force-recreate web)"
+      "Bash(docker compose up -d --force-recreate web)",
+      "Bash(npx drizzle-kit:*)"
     ]
   }
 }

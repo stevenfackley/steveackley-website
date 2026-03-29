@@ -143,6 +143,22 @@ const appsById = Object.fromEntries(allApps.map(a => [a.id, a]));
 const editClientId = Astro.url.searchParams.get('edit');
 const editClient = editClientId ? allClients.find(c => c.id === editClientId) : null;
 
+const searchQ = (Astro.url.searchParams.get('q') ?? '').toLowerCase();
+const filteredClients = searchQ
+  ? allClients.filter(c =>
+      (c.email ?? '').toLowerCase().includes(searchQ) ||
+      (c.name ?? '').toLowerCase().includes(searchQ) ||
+      (c.companyName ?? '').toLowerCase().includes(searchQ) ||
+      (c.contactFirstName ?? '').toLowerCase().includes(searchQ) ||
+      (c.contactLastName ?? '').toLowerCase().includes(searchQ)
+    )
+  : allClients;
+
+const PAGE_SIZE = 20;
+const currentPage = Math.max(0, parseInt(Astro.url.searchParams.get('page') ?? '0'));
+const totalPages = Math.ceil(filteredClients.length / PAGE_SIZE);
+const pagedClients = filteredClients.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+
 const envColors: Record<string, string> = {
   PRODUCTION: 'bg-emerald-100 text-emerald-700',
   TEST: 'bg-amber-100 text-amber-700',
@@ -150,7 +166,7 @@ const envColors: Record<string, string> = {
 };
 
 // Pre-compute per-client display data to avoid block-body arrow functions in template
-const clientRows = allClients.map((client) => {
+const clientRows = pagedClients.map((client) => {
   const assignedAppIds = appsByClient[client.id] ?? new Set<string>();
   const assignedApps = [...assignedAppIds].map(id => appsById[id]).filter(Boolean);
   const unassignedApps = allApps.filter(a => !assignedAppIds.has(a.id));
@@ -168,7 +184,7 @@ const clientRows = allClients.map((client) => {
       <div>
         <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Clients</h1>
         <p class="text-[var(--text-secondary)] mt-1.5">
-          {allClients.length} client{allClients.length !== 1 ? 's' : ''}
+          {filteredClients.length} of {allClients.length} client{allClients.length !== 1 ? 's' : ''}
         </p>
       </div>
       <a
@@ -319,6 +335,19 @@ const clientRows = allClients.map((client) => {
       </div>
     )}
 
+    <!-- Search -->
+    <form method="GET" class="flex items-center gap-2">
+      <input
+        type="search"
+        name="q"
+        value={searchQ}
+        placeholder="Search clients…"
+        class="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+      />
+      <button type="submit" class="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Search</button>
+      {searchQ && <a href="/admin/clients" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">Clear</a>}
+    </form>
+
     <!-- Clients list -->
     {allClients.length === 0 ? (
       <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 flex flex-col items-center text-center gap-3">
@@ -457,6 +486,25 @@ const clientRows = allClients.map((client) => {
               </div>
             </div>
         ))}
+      </div>
+    )}
+
+    {totalPages > 1 && (
+      <div class="flex items-center justify-between text-sm text-[var(--text-muted)]">
+        <span>{filteredClients.length} result{filteredClients.length !== 1 ? 's' : ''}</span>
+        <div class="flex items-center gap-2">
+          {currentPage > 0 ? (
+            <a href={`/admin/clients?q=${searchQ}&page=${currentPage - 1}`} class="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">← Prev</a>
+          ) : (
+            <span class="px-3 py-1.5 rounded-lg border border-[var(--border)] opacity-40">← Prev</span>
+          )}
+          <span>{currentPage + 1} / {totalPages}</span>
+          {currentPage < totalPages - 1 ? (
+            <a href={`/admin/clients?q=${searchQ}&page=${currentPage + 1}`} class="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">Next →</a>
+          ) : (
+            <span class="px-3 py-1.5 rounded-lg border border-[var(--border)] opacity-40">Next →</span>
+          )}
+        </div>
       </div>
     )}
 

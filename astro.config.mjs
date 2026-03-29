@@ -26,6 +26,22 @@ export default defineConfig({
     },
     ssr: {
       noExternal: ['@tiptap/*']
-    }
+    },
+    server: {
+      headers: {
+        // Allow 'unsafe-eval' in dev mode — Vite 7's module transform pipeline
+        // uses eval-based source maps for HMR; the TipTap/ProseMirror editor
+        // also uses new Function() for schema accessors.
+        'Content-Security-Policy': [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data: blob: https:",
+          "connect-src 'self' ws: wss: https:",
+          "worker-src 'self' blob:",
+        ].join('; '),
+      },
+    },
   }
 });

@@ -113,11 +113,20 @@ export const posts = pgTable("Post", {
   excerpt: text("excerpt"),
   coverImage: text("coverImage"),
   published: boolean("published").notNull().default(false),
+  scheduledAt: timestamp("scheduledAt", { mode: "date" }),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => ({
   publishedCreatedIdx: index("Post_published_createdAt_idx").on(table.published, table.createdAt.desc()),
 }));
+
+// Password reset tokens
+export const passwordResetTokens = pgTable("PasswordResetToken", {
+  token: text("token").primaryKey(),
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+});
 
 // SiteSetting table
 export const siteSettings = pgTable("SiteSetting", {
@@ -196,3 +205,5 @@ export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type NewSiteSetting = typeof siteSettings.$inferInsert;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;

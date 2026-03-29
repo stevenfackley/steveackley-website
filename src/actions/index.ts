@@ -41,6 +41,7 @@ export const server = {
       excerpt: z.string().optional(),
       coverImage: z.string().optional(),
       published: z.string().transform((v) => v === 'true'),
+      scheduledAt: z.string().optional(),
     }),
     handler: async (input, context) => {
       if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
@@ -60,6 +61,7 @@ export const server = {
         excerpt: input.excerpt,
         coverImage: input.coverImage,
         published: input.published,
+        scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       });
 
       return { success: true };
@@ -74,6 +76,7 @@ export const server = {
       excerpt: z.string().optional(),
       coverImage: z.string().optional(),
       published: z.string().transform((v) => v === 'true'),
+      scheduledAt: z.string().optional(),
     }),
     handler: async (input, context) => {
       if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
@@ -94,6 +97,7 @@ export const server = {
           excerpt: input.excerpt,
           coverImage: input.coverImage,
           published: input.published,
+          scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
           updatedAt: new Date(),
         })
         .where(eq(posts.id, input.id));

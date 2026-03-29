@@ -1,4 +1,5 @@
 {
     "prisma.pinToPrisma6": true,
-    "chat.extensionUnification.enabled": false
+    "chat.extensionUnification.enabled": false,
+    "npm.packageManager": "npm"
 }

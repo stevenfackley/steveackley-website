@@ -16,6 +16,7 @@ interface Props {
     excerpt?: string | null;
     coverImage?: string | null;
     published?: boolean;
+    scheduledAt?: Date | null;
   };
 }
 
@@ -25,6 +26,11 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
   const [excerpt, setExcerpt]     = useState(defaultValues.excerpt     ?? "");
   const [coverImage, setCoverImage] = useState(defaultValues.coverImage ?? "");
   const [published, setPublished] = useState(defaultValues.published   ?? false);
+  const [scheduledAt, setScheduledAt] = useState(
+    defaultValues.scheduledAt 
+      ? new Date(defaultValues.scheduledAt).toISOString().slice(0, 16)
+      : ""
+  );
   const [error, setError]         = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isMounted, setIsMounted] = useState(false);
@@ -42,6 +48,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       fd.set("excerpt",     excerpt);
       fd.set("coverImage",  coverImage);
       fd.set("published",   String(published));
+      fd.set("scheduledAt", scheduledAt);
 
       let result;
       if (mode === "update" && postId) {
@@ -111,6 +118,21 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               </div>
               <span className="text-sm text-[var(--text-secondary)]">{published ? "Published" : "Draft"}</span>
             </label>
+
+            <div>
+              <label className={lbl}>Schedule Publish</label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className={inp}
+              />
+              {scheduledAt && (
+                <p className="text-xs text-[var(--text-muted)] mt-1.5">
+                  Will auto-publish on {new Date(scheduledAt).toLocaleString()}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 space-y-3">

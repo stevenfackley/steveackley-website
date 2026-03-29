@@ -4,6 +4,7 @@ import { db, siteSettings } from '@/db';
 import { SETTING_KEYS, DEFAULTS } from '@/lib/setting-keys';
 import { getSiteSettings } from '@/lib/settings';
 import { SettingsUploadField } from '@/components/admin/SettingsUploadField';
+import { SettingsPreview } from '@/components/admin/SettingsPreview';
 
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/admin/login');
@@ -40,12 +41,15 @@ const currentTheme = settings[SETTING_KEYS.SITE_THEME] || 'light';
 ---
 
 <AdminLayout title="Settings">
-  <div class="max-w-2xl space-y-8">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Left column: Settings form -->
+    <div class="space-y-8">
 
-    <div>
-      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Site Settings</h1>
-      <p class="text-[var(--text-secondary)] mt-1.5">Manage public-facing content, media, and appearance</p>
-    </div>
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Site Settings</h1>
+        <p class="text-[var(--text-secondary)] mt-1.5">Manage public-facing content, media, and appearance</p>
+      </div>
 
     {successMessage && (
       <div class="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -183,6 +187,19 @@ const currentTheme = settings[SETTING_KEYS.SITE_THEME] || 'light';
         </div>
 
       </form>
+    </div>
+
+    </div>
+    
+    <!-- Right column: Preview -->
+    <div class="space-y-8">
+      <div class="lg:sticky lg:top-8">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold tracking-tight text-[var(--text-primary)]">Preview</h2>
+          <p class="text-[var(--text-secondary)] text-sm mt-1">Live preview of your settings</p>
+        </div>
+        <SettingsPreview client:load settings={settings} />
+      </div>
     </div>
 
   </div>

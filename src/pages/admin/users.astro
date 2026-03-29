@@ -106,6 +106,20 @@ const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
 
 const editUserId = Astro.url.searchParams.get('edit');
 const editUser = editUserId ? allUsers.find(u => u.id === editUserId) : null;
+
+const searchQ = (Astro.url.searchParams.get('q') ?? '').toLowerCase();
+const filteredUsers = searchQ
+  ? allUsers.filter(u =>
+      (u.email ?? '').toLowerCase().includes(searchQ) ||
+      (u.name ?? '').toLowerCase().includes(searchQ) ||
+      (u.companyName ?? '').toLowerCase().includes(searchQ)
+    )
+  : allUsers;
+
+const PAGE_SIZE = 20;
+const currentPage = Math.max(0, parseInt(Astro.url.searchParams.get('page') ?? '0'));
+const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+const pagedUsers = filteredUsers.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 ---
 
 <AdminLayout title="Users">
@@ -114,7 +128,7 @@ const editUser = editUserId ? allUsers.find(u => u.id === editUserId) : null;
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div>
         <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">Users</h1>
-        <p class="text-[var(--text-secondary)] mt-1.5">{allUsers.length} user{allUsers.length !== 1 ? 's' : ''} total</p>
+        <p class="text-[var(--text-secondary)] mt-1.5">{filteredUsers.length} of {allUsers.length} user{allUsers.length !== 1 ? 's' : ''}</p>
       </div>
       <a
         href="?create=1"
@@ -254,6 +268,20 @@ const editUser = editUserId ? allUsers.find(u => u.id === editUserId) : null;
       </div>
     )}
 
+    <!-- Search -->
+    <form method="GET" class="flex items-center gap-2">
+      {editUserId && <input type="hidden" name="edit" value={editUserId} />}
+      <input
+        type="search"
+        name="q"
+        value={searchQ}
+        placeholder="Search users…"
+        class="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+      />
+      <button type="submit" class="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">Search</button>
+      {searchQ && <a href="/admin/users" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">Clear</a>}
+    </form>
+
     <!-- Users Table -->
     <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
       {allUsers.length === 0 ? (
@@ -278,7 +306,7 @@ const editUser = editUserId ? allUsers.find(u => u.id === editUserId) : null;
               </tr>
             </thead>
             <tbody class="divide-y divide-[var(--border)]">
-              {allUsers.map((u) => (
+              {pagedUsers.map((u) => (
                 <tr class="hover:bg-[var(--surface-hover)] transition-colors">
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
@@ -336,6 +364,25 @@ const editUser = editUserId ? allUsers.find(u => u.id === editUserId) : null;
         </div>
       )}
     </div>
+
+    {totalPages > 1 && (
+      <div class="flex items-center justify-between text-sm text-[var(--text-muted)]">
+        <span>{filteredUsers.length} result{filteredUsers.length !== 1 ? 's' : ''}</span>
+        <div class="flex items-center gap-2">
+          {currentPage > 0 ? (
+            <a href={`/admin/users?q=${searchQ}&page=${currentPage - 1}`} class="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">← Prev</a>
+          ) : (
+            <span class="px-3 py-1.5 rounded-lg border border-[var(--border)] opacity-40">← Prev</span>
+          )}
+          <span>{currentPage + 1} / {totalPages}</span>
+          {currentPage < totalPages - 1 ? (
+            <a href={`/admin/users?q=${searchQ}&page=${currentPage + 1}`} class="px-3 py-1.5 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">Next →</a>
+          ) : (
+            <span class="px-3 py-1.5 rounded-lg border border-[var(--border)] opacity-40">Next →</span>
+          )}
+        </div>
+      </div>
+    )}
 
   </div>
 </AdminLayout>
