@@ -1,5 +1,6 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface Props {
   name: string;
@@ -10,26 +11,19 @@ interface Props {
 
 export function SettingsUploadField({ name, defaultValue = '', placeholder, label }: Props) {
   const [url, setUrl] = useState(defaultValue);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { clearError, error, uploadFile, uploading } = useFileUpload();
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(null);
-    setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setUrl(data.url);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      clearError();
+      const uploadedUrl = await uploadFile(file);
+      if (uploadedUrl) {
+        setUrl(uploadedUrl);
+      }
     } finally {
-      setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   };
@@ -91,7 +85,7 @@ export function SettingsUploadField({ name, defaultValue = '', placeholder, labe
             src={url}
             alt="Preview"
             className="h-10 w-10 rounded-lg object-cover ring-1 ring-[var(--border)] shrink-0"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
           <span className="text-xs text-[var(--text-muted)] truncate">{url}</span>
         </div>

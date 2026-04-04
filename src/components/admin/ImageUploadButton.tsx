@@ -1,27 +1,21 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { useFileUpload } from "@/hooks/useFileUpload";
 interface Props { onUpload: (url: string) => void; }
 export function ImageUploadButton({ onUpload }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { clearError, error, uploadFile, uploading } = useFileUpload();
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(null);
-    setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      onUpload(data.url);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      clearError();
+      const url = await uploadFile(file);
+      if (url) {
+        onUpload(url);
+      }
     } finally {
-      setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   };

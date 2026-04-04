@@ -329,7 +329,7 @@ function ProjectsOverview({ repos }: { repos: EnrichedRepo[] }) {
                 </div>
                 {repo.badges.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2 ml-10">
-                    {repo.badges.map((b: any) => (
+                    {repo.badges.map((b) => (
                       <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
                     ))}
                   </div>

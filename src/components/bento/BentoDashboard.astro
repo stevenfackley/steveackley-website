@@ -1,9 +1,11 @@
 ---
 import { TabsDashboard } from './TabsDashboard';
+import type { PostSummary } from '@/types';
+import type { EnrichedRepo } from '@/lib/github';
 
 interface Props {
-  blogPosts: any[];
-  githubRepos: any[];
+  blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
+  githubRepos: EnrichedRepo[];
   avatarUrl: string;
   couplePhotoUrl: string;
 }
