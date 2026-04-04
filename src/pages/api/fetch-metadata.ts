@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { logger } from "@/lib/logger";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth - only admins should fetch metadata for client apps
@@ -6,14 +7,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
+  let targetUrl = "";
   try {
     const { url } = await request.json();
+    targetUrl = url;
 
-    if (!url) {
+    if (!targetUrl) {
       return new Response(JSON.stringify({ error: "URL is required" }), { status: 400 });
     }
 
-    const response = await fetch(url);
+    const response = await fetch(targetUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch URL: ${response.statusText}`);
     }
@@ -32,7 +35,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   html.match(/<link rel="icon" href="(.*?)"/i)?.[1] || "";
     
     if (favicon && !favicon.startsWith("http")) {
-      const urlObj = new URL(url);
+      const urlObj = new URL(targetUrl);
       favicon = new URL(favicon, urlObj.origin).toString();
     }
 
@@ -44,7 +47,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }), { status: 200 });
 
   } catch (error) {
-    console.error("Fetch metadata error:", error);
+    logger.error(
+      "Failed to fetch metadata",
+      error instanceof Error ? error : new Error(String(error)),
+      { url: targetUrl }
+    );
     return new Response(JSON.stringify({ error: "Failed to fetch metadata" }), { status: 500 });
   }
 };

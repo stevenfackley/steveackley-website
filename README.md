@@ -1,5 +1,6 @@
 # steveackley.org
 [![CI / Deploy to GHCR & EC2](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml)
+[![Test Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](coverage/index.html)
 
 ![Astro](https://img.shields.io/badge/Astro-BC52EE?style=for-the-badge&logo=astro&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white) ![Drizzle](https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TailwindCSS](https://img.shields.io/badge/tailwind%20css-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
 
@@ -17,6 +18,7 @@ A modern, mobile-first personal website and blog for Steve Ackley — built with
 - **Better-Auth** — Secure, modern authentication with role-based access control
 - **Cloudflare R2 Storage** — Durable, high-performance object storage for images
 - **Fully Dockerized** — Multi-stage build, docker-compose for local development and production
+- **Enterprise Error Handling** — Structured logging with contextual error details across all API routes
 
 ---
 

@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { logger } from "./logger";
 
 // Cloudflare R2 Config from Env (wrapped in functions to allow test overrides)
 const getR2Config = () => ({
@@ -81,21 +82,47 @@ export async function saveUploadedFile(
   contentType: string
 ): Promise<string> {
   const config = getR2Config();
-  if (!config.BUCKET) throw new Error("R2_BUCKET not configured");
+  if (!config.BUCKET) {
+    const err = new Error("R2_BUCKET not configured");
+    logger.error("Upload failed: R2_BUCKET not configured", err, {
+      filename,
+      contentType,
+      bufferSize: buffer.length,
+    });
+    throw err;
+  }
 
-  const s3 = createS3Client();
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: config.BUCKET,
-      Key: filename,
-      Body: buffer,
-      ContentType: contentType,
-    })
-  );
+  logger.info("Uploading file to R2", {
+    filename,
+    contentType,
+    bufferSize: buffer.length,
+    bucket: config.BUCKET,
+  });
+
+  try {
+    const s3 = createS3Client();
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: config.BUCKET,
+        Key: filename,
+        Body: buffer,
+        ContentType: contentType,
+      })
+    );
+  } catch (err) {
+    logger.error("R2 PutObjectCommand failed", err instanceof Error ? err : new Error(String(err)), {
+      filename,
+      bucket: config.BUCKET,
+    });
+    throw err;
+  }
 
   // Ensure R2_PUBLIC_URL doesn't end with a slash for clean concatenation
   const baseUrl = config.PUBLIC_URL?.replace(/\/$/, "") || "";
-  return `${baseUrl}/${filename}`;
+  const url = `${baseUrl}/${filename}`;
+  
+  logger.info("File uploaded successfully", { filename, url });
+  return url;
 }
 
 /**

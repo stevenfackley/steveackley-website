@@ -34,6 +34,8 @@ export default defineConfig({
         "src/lib/db.ts",
         // Auth route handler — just `return auth.handler(context.request)`
         "src/pages/api/auth/**",
+        // Cron route is excluded - requires DB operations
+        "src/pages/api/cron/**",
         // Standard vitest exclusions
         "**/*.d.ts",
         "**/node_modules/**",

@@ -362,6 +362,50 @@ Dependabot or Snyk can be enabled on the GitHub repository for automated depende
 
 ---
 
+## 13. Error Handling & Logging
+
+### 13.1 Structured Logging
+
+The application uses a centralized logging utility (`src/lib/logger.ts`) that provides structured logging with:
+
+- **Timestamp**: ISO 8601 format
+- **Log Level**: DEBUG, INFO, WARN, ERROR
+- **Context**: Additional metadata (user info, operation details)
+- **Error Details**: Error message and stack trace when applicable
+
+### 13.2 Log Format
+
+```
+[2026-03-30T17:30:20.850Z] [ERROR] Upload failed | Error: R2_BUCKET not configured | {"filename":"test.jpg","contentType":"image/jpeg","bufferSize":4}
+```
+
+### 13.3 Error Handling Pattern
+
+All API routes use structured error handling:
+
+```typescript
+import { logger } from "@/lib/logger";
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    // Business logic
+  } catch (error) {
+    logger.error(
+      "Operation failed",
+      error instanceof Error ? error : new Error(String(error)),
+      { /* context */ }
+    );
+    return new Response(JSON.stringify({ error: "User-friendly message" }), { status: 500 });
+  }
+};
+```
+
+### 13.4 Debug Logging in Production
+
+Debug logs are automatically suppressed in production (`NODE_ENV=production`) to reduce log volume while preserving error tracking.
+
+---
+
 ## 11. Incident Response
 
 In the event of a suspected compromise:

@@ -366,3 +366,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
 | Unauthenticated upload attempt | Return 401 |
 | Post not found (`/blog/[slug]`) | Astro `return Astro.redirect('/404')` |
 | GitHub API rate limit (home page) | Catch error; render empty repos section |
+
+### 7.1 Structured Logging
+
+All API routes use the centralized `logger` utility (`src/lib/logger.ts`) for consistent error tracking:
+
+```
+[2026-03-30T17:30:20.850Z] [ERROR] Upload failed | Error: R2_BUCKET not configured | {"filename":"test.jpg","contentType":"image/jpeg"}
+```
+
+This provides:
+- ISO 8601 timestamps for log correlation
+- Log levels (DEBUG, INFO, WARN, ERROR)
+- Contextual metadata for debugging
+- Error details including stack traces when available
+
+Debug logs are suppressed in production to reduce noise while maintaining error visibility.
