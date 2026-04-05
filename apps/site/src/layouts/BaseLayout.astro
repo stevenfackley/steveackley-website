@@ -35,8 +35,8 @@ try {
     <!-- Theme init: runs before paint to prevent flash -->
     <script is:inline define:vars={{ siteTheme }}>
       (function () {
-        var stored = localStorage.getItem('theme');
-        var theme = stored || siteTheme || 'light';
+        const stored = localStorage.getItem('theme');
+        const theme = stored || siteTheme || 'light';
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {

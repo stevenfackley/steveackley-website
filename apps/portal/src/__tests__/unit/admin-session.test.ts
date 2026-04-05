@@ -60,12 +60,12 @@ describe("requireAdminSession", () => {
     expect(mockRedirect).toHaveBeenCalledWith("/login");
   });
 
-  it("redirects to /login for non-ADMIN role", async () => {
+  it("redirects clients away from admin routes", async () => {
     mockHeaders.mockResolvedValue(new Headers());
     mockGetSession.mockResolvedValue(clientSession);
     mockRedirect.mockImplementation(() => { throw new Error("NEXT_REDIRECT"); });
 
     await expect(requireAdminSession()).rejects.toThrow("NEXT_REDIRECT");
-    expect(mockRedirect).toHaveBeenCalledWith("/login");
+    expect(mockRedirect).toHaveBeenCalledWith("/client/dashboard");
   });
 });

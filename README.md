@@ -107,7 +107,7 @@ Shared environment values still live at the repo root today, but the runtime bou
 | `/admin/*` | `apps/portal` |
 | `/client/*` | `apps/portal` |
 
-The Astro site middleware now redirects `/admin/*` and `/client/*` to `PORTAL_BASE_URL`.
+When `PORTAL_BASE_URL` is configured, the Astro site middleware redirects `/admin/*` and `/client/*` to the portal deployment. Without that variable, the legacy Astro private routes remain available so the current single-container release path still works.
 
 ## Documentation
 
@@ -134,4 +134,4 @@ The structural split is implemented:
 - public resume and homepage copy migrated into Astro collections
 - docs rewritten around the split stack
 
-The next delivery pass should port the remaining interactive admin/client behaviors from legacy Astro pages into full Next.js forms and server actions.
+The split architecture is in place, but the portal is still being brought up to feature parity. The current release path remains the single-container Astro deployment until `apps/portal` is provisioned as its own production host.

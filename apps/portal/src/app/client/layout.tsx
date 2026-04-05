@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { PortalFrame } from "@/components/portal-frame";
+import { requireClientSession } from "@/lib/admin-session";
 
-export default function ClientLayout({ children }: { children: ReactNode }) {
+export default async function ClientLayout({ children }: { children: ReactNode }) {
+  await requireClientSession();
+
   return (
     <PortalFrame
       title="Client Portal"

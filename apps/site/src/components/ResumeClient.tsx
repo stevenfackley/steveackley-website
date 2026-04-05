@@ -510,20 +510,7 @@ export function ResumeClient({
         <FadeSection delay={0}>
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-7 card-glow">
             <h2 className="text-xs font-semibold tracking-widest uppercase text-[var(--text-muted)] mb-4">Professional Summary</h2>
-            <p className="text-[var(--text-secondary)] leading-relaxed text-base">
-              Staff Software Engineer at{" "}
-              <strong className="text-[var(--text-primary)]">Lockheed Martin</strong> with{" "}
-              <strong className="text-[var(--text-primary)]">12+ years of enterprise experience</strong> specializing in
-              the Microsoft technology stack. I have built production systems across the full Microsoft ecosystem:
-              C# / .NET back-ends, ASP.NET Core REST APIs, SQL Server databases, Azure cloud services, WPF desktop
-              applications, Angular front-ends, and SSIS / SSAS data pipelines. Most of my professional career has been
-              in Angular and ASP.NET shops, serving as a lead engineer and architect on complex defense and enterprise
-              systems. I hold an{" "}
-              <strong className="text-[var(--text-primary)]">Arcitura Certified SOA Architect</strong> certification
-              and a{" "}
-              <strong className="text-[var(--text-primary)]">Microsoft Technology Associate</strong> credential.
-              Clean architecture, well-structured data, and systems built to last are what I care about most.
-            </p>
+            <p className="text-[var(--text-secondary)] leading-relaxed text-base">{summary}</p>
           </div>
         </FadeSection>
 

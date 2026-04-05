@@ -14,7 +14,6 @@ import { chromium } from '@playwright/test';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');

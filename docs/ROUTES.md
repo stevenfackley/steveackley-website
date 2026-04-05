@@ -21,4 +21,4 @@ flowchart LR
 
 ## Migration Note
 
-Legacy Astro admin/client pages still exist in the repo for reference, but runtime ownership now belongs to the portal via site-level redirect.
+Legacy Astro admin/client pages still exist in the repo and remain the default runtime fallback until `PORTAL_BASE_URL` is configured. Once that environment variable points at the deployed portal, runtime ownership moves to `apps/portal` via site-level redirect.

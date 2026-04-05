@@ -14,7 +14,7 @@
 
 import "dotenv/config";
 import postgres from "postgres";
-import { randomBytes, scrypt } from "crypto";
+import { randomBytes, randomUUID, scrypt } from "crypto";
 import { promisify } from "util";
 import * as readline from "readline";
 
@@ -74,7 +74,7 @@ async function main() {
       `;
       console.log(`✓  Updated existing credential Account row`);
     } else {
-      const newId = crypto.randomUUID();
+      const newId = randomUUID();
       await sql`
         INSERT INTO "Account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
         VALUES (${newId}, ${user.id}, ${email}, 'credential', ${hashedPw}, NOW(), NOW())

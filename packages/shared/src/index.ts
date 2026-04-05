@@ -5,4 +5,5 @@ export * from "./lib/logger";
 export * from "./lib/setting-keys";
 export * from "./lib/settings";
 export * from "./lib/upload";
+export * from "./lib/upload-client";
 export * from "./types/index";
