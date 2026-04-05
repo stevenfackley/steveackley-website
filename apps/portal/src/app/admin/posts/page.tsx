@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPostsSnapshot } from "@/lib/dashboard";
 import { PortalNav } from "@/components/portal-nav";
 import { adminLinks } from "@/lib/navigation";
@@ -23,7 +24,9 @@ export default async function AdminPostsPage() {
           <tbody>
             {posts.map((post) => (
               <tr key={post.id}>
-                <td>{post.title}</td>
+                <td>
+                  <Link href={`/admin/posts/${post.id}`}>{post.title}</Link>
+                </td>
                 <td className="portal-muted">{post.slug}</td>
                 <td>{post.published ? "Yes" : "No"}</td>
                 <td>{post.updatedAt?.toLocaleString() ?? "Unknown"}</td>
