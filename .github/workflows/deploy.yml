@@ -18,8 +18,10 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm install --no-audit --no-fund --legacy-peer-deps
-      - name: Run unit tests
-        run: npm run test:unit
+      - name: Run unit tests (site)
+        run: npm run test:unit -w apps/site
+      - name: Run unit tests (portal)
+        run: npm run test:unit -w apps/portal
 
   integration-tests:
     name: "🔗 Integration Tests"
@@ -33,8 +35,10 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm install --no-audit --no-fund --legacy-peer-deps
-      - name: Run integration tests
-        run: npm run test:integration
+      - name: Run integration tests (site)
+        run: npm run test:integration -w apps/site
+      - name: Run integration tests (portal)
+        run: npm run test:integration -w apps/portal
 
   e2e-tests:
     name: "🌐 E2E Tests"
@@ -72,15 +76,15 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund --legacy-peer-deps
       - name: Apply database schema
-        run: npx drizzle-kit push --force
+        run: cd apps/site && npx drizzle-kit push --force
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install-deps chromium && npx playwright install chromium
       - name: Build Astro app
-        run: npm run build
+        run: npm run build:site
         env:
           NODE_ENV: production
       - name: Start Astro production server
-        run: node ./dist/server/entry.mjs > /tmp/astro-server.log 2>&1 &
+        run: node ./apps/site/dist/server/entry.mjs > /tmp/astro-server.log 2>&1 &
         env:
           NODE_ENV: production
           PORT: 3000
@@ -102,7 +106,7 @@ jobs:
           cat /tmp/astro-server.log
           exit 1
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: npm run test:e2e -w apps/site
         env:
           BASE_URL: "http://127.0.0.1:3000"
       - name: Show server logs on failure
@@ -166,10 +170,15 @@ jobs:
             git pull origin main
             
             # Construct web.env from secrets (chmod 600 before writing to protect contents)
+            AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET || secrets.AUTH_SECRET }}"
+            if [ -z "$AUTH_SECRET" ]; then
+              echo "ERROR: BETTER_AUTH_SECRET is not set in GitHub Secrets — deployment aborted to prevent auth failure"
+              exit 1
+            fi
             touch web.env && chmod 600 web.env
             printf 'DATABASE_URL=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\nR2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
               "${{ secrets.DATABASE_URL }}" \
-              "${{ secrets.BETTER_AUTH_SECRET || secrets.AUTH_SECRET }}" \
+              "$AUTH_SECRET" \
               "https://steveackley.org" \
               "stevenfackley@gmail.com" \
               "${{ secrets.ADMIN_PASSWORD_HASH }}" \

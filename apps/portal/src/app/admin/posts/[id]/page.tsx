@@ -9,6 +9,7 @@ import {
   PostEditorForm,
   type PostEditorFormState,
 } from "./post-editor-form";
+import { slugifyTitle } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,6 @@ type PageProps = {
     id: string;
   }>;
 };
-
-function slugifyTitle(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
 
 export default async function AdminPostEditorPage({ params }: PageProps) {
   await requireAdminSession();
