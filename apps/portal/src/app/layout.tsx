@@ -9,7 +9,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <div className="portal-background" aria-hidden="true">
+          <div className="portal-background-orb portal-background-orb-a" />
+          <div className="portal-background-orb portal-background-orb-b" />
+          <div className="portal-background-grid" />
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

@@ -7,11 +7,28 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPostsPage() {
   const posts = await getPostsSnapshot();
+  const publishedCount = posts.filter((post) => post.published).length;
 
   return (
     <>
       <PortalNav links={adminLinks} current="/admin/posts" />
-      <section className="portal-card">
+      <section className="portal-card portal-grid-spaced">
+        <div className="portal-listing-header">
+          <div>
+            <p className="portal-kicker">Content Library</p>
+            <h2 className="portal-section-title">Posts</h2>
+          </div>
+          <div className="portal-inline-metrics">
+            <div className="portal-inline-metric">
+              <strong>{posts.length}</strong>
+              <span>total</span>
+            </div>
+            <div className="portal-inline-metric">
+              <strong>{publishedCount}</strong>
+              <span>published</span>
+            </div>
+          </div>
+        </div>
         <table className="portal-table">
           <thead>
             <tr>
@@ -25,10 +42,16 @@ export default async function AdminPostsPage() {
             {posts.map((post) => (
               <tr key={post.id}>
                 <td>
-                  <Link href={`/admin/posts/${post.id}`}>{post.title}</Link>
+                  <Link className="portal-table-link" href={`/admin/posts/${post.id}`}>
+                    {post.title}
+                  </Link>
                 </td>
                 <td className="portal-muted">{post.slug}</td>
-                <td>{post.published ? "Yes" : "No"}</td>
+                <td>
+                  <span className={`portal-status-pill${post.published ? " is-positive" : ""}`}>
+                    {post.published ? "Published" : "Draft"}
+                  </span>
+                </td>
                 <td>{post.updatedAt?.toLocaleString() ?? "Unknown"}</td>
               </tr>
             ))}
