@@ -1,0 +1,133 @@
+:root {
+  color-scheme: dark;
+  --background: #0b1020;
+  --surface: #131a2d;
+  --surface-alt: #1b2440;
+  --border: rgba(148, 163, 184, 0.18);
+  --text: #e5ecff;
+  --muted: #94a3b8;
+  --accent: #7dd3fc;
+  --accent-strong: #38bdf8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 28%),
+    linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main {
+  min-height: 100vh;
+}
+
+.portal-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.portal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.portal-nav a,
+.portal-nav span {
+  border: 1px solid var(--border);
+  background: rgba(19, 26, 45, 0.78);
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.portal-card {
+  border: 1px solid var(--border);
+  background: rgba(19, 26, 45, 0.88);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 1.25rem;
+}
+
+.portal-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.portal-grid.cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.portal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.portal-table th,
+.portal-table td {
+  text-align: left;
+  padding: 0.8rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.portal-table th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.portal-kicker {
+  color: var(--accent);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.portal-muted {
+  color: var(--muted);
+}
+
+.portal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.portal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.portal-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: white;
+  font-weight: 600;
+}

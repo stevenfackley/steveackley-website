@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -16,6 +17,7 @@
 # next.js
 /.next/
 /out/
+**/.next/
 
 # production
 /build
@@ -67,9 +69,11 @@ src/_backup/
 
 # Astro cache/generated
 /.astro/
+**/.astro/
 
 # Build output
 /dist/
+apps/*/dist/
 
 # .NET build artifacts
 **/obj/

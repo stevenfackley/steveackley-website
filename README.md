@@ -1,124 +1,137 @@
-# steveackley.org
-[![CI / Deploy to GHCR & EC2](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/stevenfackley/steveackley-website/actions/workflows/deploy.yml)
-[![Test Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](coverage/index.html)
+# steveackley.org Monorepo
 
-![Astro](https://img.shields.io/badge/Astro-BC52EE?style=for-the-badge&logo=astro&logoColor=white) ![Docker](https://img.shields.io/badge/docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white) ![Drizzle](https://img.shields.io/badge/Drizzle-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TailwindCSS](https://img.shields.io/badge/tailwind%20css-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+`steveackley.org` is now split into a content-first Astro site and a separate Next.js portal for authenticated admin/client workflows.
 
+## Canonical Stack Diagram
 
-A modern, mobile-first personal website and blog for Steve Ackley — built with Astro 5, React, Tailwind CSS, and PostgreSQL.
+```mermaid
+flowchart LR
+    U["Browser Users"] --> S["apps/site<br/>Astro 5 + MDX + content collections"]
+    U --> P["apps/portal<br/>Next.js App Router"]
+    S --> C["File-authored content<br/>src/content/*"]
+    S --> D["Shared Postgres / Drizzle schema"]
+    P --> D
+    P --> R["Shared auth / uploads / settings<br/>packages/shared"]
+    P --> O["Admin-authored content<br/>blog posts, settings, media"]
+    O --> D
+    D --> S
+```
 
----
+## Repo Layout
 
-## ✨ Features
-
-- **Bento-box dashboard** — Visually engaging home page that showcases skills, projects, and contact links
-- **Astro 5 Islands** — Static speed with React interactive components where needed
-- **Dark & Light mode** — Automatically respects system `prefers-color-scheme`, WCAG AA compliant
-- **Blog** — Full-featured blog backed by PostgreSQL with rich-text editing (Tiptap)
-- **Better-Auth** — Secure, modern authentication with role-based access control
-- **Cloudflare R2 Storage** — Durable, high-performance object storage for images
-- **Fully Dockerized** — Multi-stage build, docker-compose for local development and production
-- **Enterprise Error Handling** — Structured logging with contextual error details across all API routes
-
----
-
-## 🖥️ Tech Stack
-
-| Layer | Technology |
+| Path | Responsibility |
 |---|---|
-| Framework | Astro 5 (Server Mode) |
-| Frontend | React 19 (Islands) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4 |
-| Database | PostgreSQL 16 |
-| ORM | Drizzle ORM |
-| Auth | Better-Auth |
+| `apps/site` | Public website, resume, blog rendering, project pages, MDX and content collections |
+| `apps/portal` | Admin and client portal route ownership, authenticated application surfaces |
+| `packages/shared` | Shared DB schema, Better Auth config, settings helpers, uploads, common types |
+| `docs` | Architecture, data flow, security, route ownership, content model, ADRs |
+
+## Stack
+
+| Area | Technology |
+|---|---|
+| Public site | Astro 5, React islands, MDX, Astro content collections |
+| Portal | Next.js 15 App Router, React 19 |
+| Shared backend | PostgreSQL 16, Drizzle ORM, Better Auth |
 | Storage | Cloudflare R2 |
-| Rich Text | Tiptap 2 |
-| Containerization | Docker + Docker Compose |
+| Styling | CSS/Tailwind-compatible tokens and app-local styling |
+| Language | TypeScript |
 
----
+## Local Development
 
-## 🚀 Quick Start (Local Development)
-
-### 1. Clone the repository
+### Bootstrap
 
 ```bash
-git clone https://github.com/stevenfackley/steveackley-website.git
-cd steveackleyorg
-```
-
-### 2. Install dependencies
-
-```bash
-npm install --legacy-peer-deps
-```
-
-### 3. Configure environment variables
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` — see [Environment Variables](#-environment-variables) for details.
-
-### 4. Start PostgreSQL with Docker
-
-```bash
+npm install
 docker compose -f docker-compose.dev.yml up -d db
 ```
 
-### 5. Run database migrations
+### Run apps
 
 ```bash
-npm run db:push
+npm run dev:site
+npm run dev:portal
 ```
 
-### 6. Start the development server
+Default local URLs:
+
+- Site: [http://localhost:3000](http://localhost:3000)
+- Portal: [http://localhost:3001](http://localhost:3001)
+
+### Workspace scripts
 
 ```bash
-npm run dev
+npm run typecheck
+npm run lint
+npm run test
+npm run build
 ```
 
----
-
-## 🐳 Docker (Full Stack)
-
-### Start everything with Docker Compose
+Per-app:
 
 ```bash
-docker compose up --build
+npm run typecheck:site
+npm run typecheck:portal
+npm run build:site
+npm run build:portal
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000).
+## Environment Model
 
----
+Shared environment values still live at the repo root today, but the runtime boundary is now per app.
 
-## 🔑 Environment Variables
+| Variable | Used By | Purpose |
+|---|---|---|
+| `DATABASE_URL` | `apps/site`, `apps/portal`, `packages/shared` | Shared PostgreSQL connection |
+| `BETTER_AUTH_SECRET` | `apps/portal`, shared auth handler | Session/auth secret |
+| `BETTER_AUTH_URL` | `apps/portal`, shared auth handler | Better Auth base URL |
+| `PORTAL_BASE_URL` | `apps/site` | Redirect target for `/admin/*` and `/client/*` |
+| `R2_*` | `apps/portal`, shared upload helpers | Cloudflare R2 media storage |
+| `GH_API_TOKEN` | `apps/site` | Public GitHub repo enrichment on homepage |
 
-| Variable | Description |
+## Content Ownership
+
+| Content Type | Source of Truth | Managed In |
+|---|---|---|
+| Resume timeline and skill data | Astro content collection | `apps/site/src/content/resume/*` |
+| Homepage copy and public narrative content | Astro content collection | `apps/site/src/content/pages/*` |
+| Public project writeups | Astro content collection / MDX | `apps/site/src/content/projects/*` |
+| Blog posts | Database-backed authored content | Portal admin workflows + shared DB |
+| Site settings | Database-backed authored content | Portal admin workflows + shared DB |
+
+## Route Ownership
+
+| Surface | Owner |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | Secret for Better-Auth |
-| `BETTER_AUTH_URL` | Base URL for auth callbacks |
-| `R2_ACCOUNT_ID` | Cloudflare Account ID |
-| `R2_ACCESS_KEY_ID` | R2 API Access Key |
-| `R2_SECRET_ACCESS_KEY` | R2 API Secret Key |
-| `R2_BUCKET` | R2 Bucket name |
-| `R2_PUBLIC_URL` | Public URL for R2 objects |
+| `/`, `/blog/*`, `/resume`, public project pages | `apps/site` |
+| `/admin/*` | `apps/portal` |
+| `/client/*` | `apps/portal` |
 
----
+The Astro site middleware now redirects `/admin/*` and `/client/*` to `PORTAL_BASE_URL`.
 
-## 📖 Documentation
+## Documentation
 
-| Document | Description |
+| Doc | Focus |
 |---|---|
-| [docs/DATABASE.md](./docs/DATABASE.md) | Database architecture and schema |
-| [docs/SECURITY.md](./docs/SECURITY.md) | Security guidelines |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | CI/CD and production setup |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Top-level architecture overview |
+| [docs/STACK_ARCHITECTURE.md](./docs/STACK_ARCHITECTURE.md) | Stack breakdown by app/package |
+| [docs/CONTENT_ARCHITECTURE.md](./docs/CONTENT_ARCHITECTURE.md) | Collections, MDX, and authored content boundaries |
+| [docs/DATA_FLOW.md](./docs/DATA_FLOW.md) | Public render, portal authoring, auth, and upload flows |
+| [docs/DEPLOYMENT_ARCHITECTURE.md](./docs/DEPLOYMENT_ARCHITECTURE.md) | Deployment, domains, and environment partitioning |
+| [docs/SECURITY.md](./docs/SECURITY.md) | Security model across site, portal, shared services |
+| [docs/ADR-001-astro-site-next-portal.md](./docs/ADR-001-astro-site-next-portal.md) | Decision log for the split architecture |
+| [docs/ROUTES.md](./docs/ROUTES.md) | Route ownership and migration map |
+| [docs/DATABASE.md](./docs/DATABASE.md) | Shared schema and persistence boundaries |
+| [docs/ARCHITECTURE_ANALYSIS.md](./docs/ARCHITECTURE_ANALYSIS.md) | Documentation inventory and migration status |
 
----
+## Status
 
-## 📜 License
+The structural split is implemented:
 
-Copyright (c) 2025-2026 Steve Ackley. See [LICENSE](./LICENSE) for full terms.
+- Astro app moved to `apps/site`
+- Next portal scaffolded under `apps/portal`
+- shared auth/DB/settings/uploads moved into `packages/shared`
+- public resume and homepage copy migrated into Astro collections
+- docs rewritten around the split stack
+
+The next delivery pass should port the remaining interactive admin/client behaviors from legacy Astro pages into full Next.js forms and server actions.

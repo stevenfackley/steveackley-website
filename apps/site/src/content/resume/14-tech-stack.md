@@ -1,0 +1,50 @@
+---
+type: tech-stack
+order: 14
+items:
+  - C#
+  - .NET 10
+  - ASP.NET Core
+  - Azure
+  - Azure DevOps
+  - SQL Server
+  - Entity Framework Core
+  - Angular
+  - TypeScript
+  - React
+  - Next.js
+  - WPF
+  - XAML
+  - SSIS
+  - SSAS
+  - SSRS
+  - Tableau
+  - ML.NET
+  - Docker
+  - Kubernetes
+  - Jenkins
+  - GitLab
+  - GitHub Actions
+  - Microservices
+  - SOA
+  - REST APIs
+  - SignalR
+  - Service Bus
+  - Key Vault
+  - Bootstrap
+  - Tailwind CSS
+  - SCSS
+  - xUnit
+  - NUnit
+  - Playwright
+  - PostgreSQL
+  - SQLite
+  - Prisma
+  - Node.js
+  - AWS
+  - C++
+  - WCF
+  - SymmetricDS
+  - Clean Architecture
+  - DDD
+---

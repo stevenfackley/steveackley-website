@@ -1,0 +1,52 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+import BentoDashboard from '@/components/bento/BentoDashboard.astro';
+import { db, posts as postsTable } from '@/db';
+import { eq, desc } from 'drizzle-orm';
+import { getPublicRepos, enrichRepos, type EnrichedRepo } from '@/lib/github';
+import { getSiteSettings, SETTING_KEYS } from '@/lib/settings';
+import { getHomeContent, getFeaturedProjects } from '@/lib/content';
+
+// Fetch live blog posts for the preview
+const blogPosts = await db
+  .select()
+  .from(postsTable)
+  .where(eq(postsTable.published, true))
+  .orderBy(desc(postsTable.createdAt))
+  .limit(3);
+
+// Fetch live GitHub repos
+let githubRepos: EnrichedRepo[] = [];
+try {
+  const rawRepos = await getPublicRepos();
+  githubRepos = await enrichRepos(rawRepos);
+} catch (e) {
+  console.error("Failed to fetch GitHub repos:", e);
+}
+
+// Load settings from database
+const [settings, homeContent, featuredProjects] = await Promise.all([
+  getSiteSettings([
+    SETTING_KEYS.AVATAR_URL,
+    SETTING_KEYS.COUPLE_PHOTO_URL,
+  ] as const),
+  getHomeContent(),
+  getFeaturedProjects(),
+]);
+
+const avatarUrl = settings[SETTING_KEYS.AVATAR_URL];
+const couplePhotoUrl = settings[SETTING_KEYS.COUPLE_PHOTO_URL];
+---
+
+<PublicLayout title={homeContent.title} description={homeContent.description}>
+  <div class="py-8">
+    <BentoDashboard 
+      blogPosts={blogPosts} 
+      githubRepos={githubRepos} 
+      avatarUrl={avatarUrl}
+      couplePhotoUrl={couplePhotoUrl}
+      homeContent={homeContent}
+      featuredProjects={featuredProjects}
+    />
+  </div>
+</PublicLayout>

@@ -1,0 +1,18 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "target": "ES2023",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": ["src", "astro.config.mjs", "**/*.astro", "**/*.ts", "**/*.tsx", "**/*.mts"],
+  "exclude": ["node_modules", "src/__tests__/**", "e2e/**", "scripts/**"]
+}

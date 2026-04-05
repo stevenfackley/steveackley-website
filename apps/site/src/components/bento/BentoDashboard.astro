@@ -1,0 +1,27 @@
+---
+import { TabsDashboard } from './TabsDashboard';
+import type { PostSummary } from '@/types';
+import type { EnrichedRepo } from '@/lib/github';
+import type { FeaturedProjectContent, HomeContent } from '@/content/types';
+
+interface Props {
+  blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
+  githubRepos: EnrichedRepo[];
+  avatarUrl: string;
+  couplePhotoUrl: string;
+  homeContent: HomeContent;
+  featuredProjects: FeaturedProjectContent[];
+}
+
+const { blogPosts, githubRepos, avatarUrl, couplePhotoUrl, homeContent, featuredProjects } = Astro.props;
+---
+
+<TabsDashboard
+  client:only="react"
+  blogPosts={blogPosts}
+  githubRepos={githubRepos}
+  avatarUrl={avatarUrl}
+  couplePhotoUrl={couplePhotoUrl}
+  homeContent={homeContent}
+  featuredProjects={featuredProjects}
+/>

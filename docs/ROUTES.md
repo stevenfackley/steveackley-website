@@ -1,44 +1,24 @@
-# Routes
+# Route Ownership
 
-> Last updated: March 2026 — reflects current Astro 5 implementation.
+## Diagram
 
-## Public
+```mermaid
+flowchart LR
+    public["Public routes"] --> site["apps/site"]
+    private["/admin/* and /client/*"] --> portal["apps/portal"]
+```
 
-| Route | Description |
-|---|---|
-| `/` | Homepage (tabbed bento dashboard) |
-| `/blog` | Blog post listing with pagination |
-| `/blog/[slug]` | Individual blog post |
-| `/resume` | Interactive resume page |
-| `/resume/print` | Print-optimized resume |
+## Route Map
 
-## Admin (ADMIN role required)
+| Route family | Owner | Notes |
+|---|---|---|
+| `/` | Site | Homepage and public dashboard |
+| `/blog/*` | Site | Public blog rendering |
+| `/resume` | Site | Collection-backed resume |
+| `/admin/*` | Portal | Redirected away from Astro |
+| `/client/*` | Portal | Redirected away from Astro |
+| `/api/auth/*` | Portal | Auth callback/handler entry |
 
-| Route | Description |
-|---|---|
-| `/admin/login` | Login page |
-| `/admin/dashboard` | Admin dashboard (post management) |
-| `/admin/posts/new` | Create new blog post |
-| `/admin/posts/[id]/edit` | Edit existing post |
-| `/admin/apps` | Manage client apps |
-| `/admin/messages` | Message inbox |
-| `/admin/settings` | Site settings (key-value CMS) |
-| `/admin/account` | Admin account settings |
-| `/admin/users` | User management |
+## Migration Note
 
-## Client (any authenticated user)
-
-| Route | Description |
-|---|---|
-| `/client/login` | Client login page |
-| `/client/dashboard` | Client dashboard |
-| `/client/messages` | Message inbox |
-| `/client/account` | Account settings |
-
-## API
-
-| Route | Method | Auth | Description |
-|---|---|---|---|
-| `/api/auth/[...all]` | GET/POST | — | Better-Auth handler (login, logout, session) |
-| `/api/upload` | POST | ✅ ADMIN | Upload image to Cloudflare R2; returns `{ url }` |
-| `/api/fetch-metadata` | GET | ✅ Any | Fetch Open Graph metadata for a URL |
+Legacy Astro admin/client pages still exist in the repo for reference, but runtime ownership now belongs to the portal via site-level redirect.
