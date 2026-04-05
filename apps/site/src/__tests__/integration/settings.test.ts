@@ -13,8 +13,8 @@ const mockState = vi.hoisted(() => ({
   throws: false,
 }));
 
-// ── Mock @/db before importing anything that uses it ─────────────────────────
-vi.mock("@/db", () => {
+// ── Mock the shared db module (what @shared/lib/settings actually imports) ───
+vi.mock("@shared/db/index", () => {
   function buildQuery() {
     if (mockState.throws) {
       const p = Promise.reject(new Error("DB error"));

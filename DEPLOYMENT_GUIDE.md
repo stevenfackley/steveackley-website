@@ -103,9 +103,15 @@ Set in: **GitHub repo → Settings → Secrets and variables → Actions**
 | `EC2_SSH_PRIVATE_KEY` | Full contents of `.pem` file | AWS key pair created at instance launch |
 | `EC2_APP_DIR` | Absolute path to project on EC2 | `/home/ec2-user/steveackleyorg` |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://steveackley:<password>@db:5432/steveackleydb` |
-| `AUTH_SECRET` | JWT signing secret (32+ bytes) | `openssl rand -base64 32` |
+| `BETTER_AUTH_SECRET` | JWT signing secret (32+ bytes) | `openssl rand -base64 32` |
 | `ADMIN_PASSWORD_HASH` | bcrypt hash of admin password | `npm run setup:admin` |
 | `POSTGRES_PASSWORD` | Database password | Strong random password |
+| `GH_API_TOKEN` | GitHub API Token | Personal Access Token (classic) |
+| `R2_ACCOUNT_ID` | Cloudflare R2 Account ID | Cloudflare Dashboard → R2 |
+| `R2_ACCESS_KEY_ID` | Cloudflare R2 Access Key ID | Cloudflare Dashboard → R2 → Manage API Tokens |
+| `R2_SECRET_ACCESS_KEY`| Cloudflare R2 Secret Access Key | Cloudflare Dashboard → R2 → Manage API Tokens |
+| `R2_BUCKET` | Cloudflare R2 Bucket Name | Name of your R2 bucket |
+| `R2_PUBLIC_URL` | Cloudflare R2 Public URL | `https://pub-<hash>.r2.dev` |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare zone for steveackley.org | Cloudflare dashboard → domain overview → Zone ID |
 | `CLOUDFLARE_API_TOKEN` | API token with Cache Purge permission | Cloudflare → Profile → API Tokens |
 

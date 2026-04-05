@@ -10,7 +10,19 @@ export default async function AdminClientsPage() {
   return (
     <>
       <PortalNav links={adminLinks} current="/admin/clients" />
-      <section className="portal-card">
+      <section className="portal-card portal-grid-spaced">
+        <div className="portal-listing-header">
+          <div>
+            <p className="portal-kicker">Customer Index</p>
+            <h2 className="portal-section-title">Clients</h2>
+          </div>
+          <div className="portal-inline-metrics">
+            <div className="portal-inline-metric">
+              <strong>{clients.length}</strong>
+              <span>active records</span>
+            </div>
+          </div>
+        </div>
         <table className="portal-table">
           <thead>
             <tr>

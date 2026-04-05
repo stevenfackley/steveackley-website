@@ -6,11 +6,28 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
   const users = await getUsersSnapshot();
+  const clientCount = users.filter((user) => user.role === "CLIENT").length;
 
   return (
     <>
       <PortalNav links={adminLinks} current="/admin/users" />
-      <section className="portal-card">
+      <section className="portal-card portal-grid-spaced">
+        <div className="portal-listing-header">
+          <div>
+            <p className="portal-kicker">Identity Layer</p>
+            <h2 className="portal-section-title">Users</h2>
+          </div>
+          <div className="portal-inline-metrics">
+            <div className="portal-inline-metric">
+              <strong>{users.length}</strong>
+              <span>accounts</span>
+            </div>
+            <div className="portal-inline-metric">
+              <strong>{clientCount}</strong>
+              <span>clients</span>
+            </div>
+          </div>
+        </div>
         <table className="portal-table">
           <thead>
             <tr>
@@ -25,7 +42,11 @@ export default async function AdminUsersPage() {
               <tr key={user.id}>
                 <td>{user.name ?? "Unnamed user"}</td>
                 <td>{user.email}</td>
-                <td>{user.role}</td>
+                <td>
+                  <span className={`portal-status-pill${user.role === "CLIENT" ? " is-positive" : ""}`}>
+                    {user.role}
+                  </span>
+                </td>
                 <td>{user.companyName ?? "N/A"}</td>
               </tr>
             ))}

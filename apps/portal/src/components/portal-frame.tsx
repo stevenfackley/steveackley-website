@@ -3,25 +3,32 @@ import type { ReactNode } from "react";
 export function PortalFrame({
   title,
   eyebrow,
+  description,
   children,
   nav,
+  aside,
 }: {
   title: string;
   eyebrow: string;
+  description?: string;
   children: ReactNode;
   nav?: ReactNode;
+  aside?: ReactNode;
 }) {
   return (
     <main>
       <div className="portal-shell">
-        <div style={{ marginBottom: "1.5rem" }}>
-          <p className="portal-kicker">{eyebrow}</p>
-          <h1 style={{ fontSize: "2.2rem", margin: "0.3rem 0 0.7rem" }}>{title}</h1>
-          <p className="portal-muted" style={{ maxWidth: 720, lineHeight: 1.7 }}>
-            The authenticated admin and client experience now lives in the Next.js portal app. The public Astro site
-            remains focused on content publishing and presentation.
-          </p>
-        </div>
+        <section className="portal-hero">
+          <div className="portal-hero-copy">
+            <p className="portal-kicker">{eyebrow}</p>
+            <h1 className="portal-hero-title">{title}</h1>
+            <p className="portal-hero-description">
+              {description ??
+                "The authenticated experience now lives in the dedicated portal app, leaving the public site focused on publishing and presentation."}
+            </p>
+          </div>
+          {aside ? <div className="portal-hero-aside">{aside}</div> : null}
+        </section>
         {nav}
         {children}
       </div>

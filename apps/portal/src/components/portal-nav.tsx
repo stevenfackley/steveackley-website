@@ -11,12 +11,12 @@ export function PortalNav({
     <nav className="portal-nav" aria-label="Portal navigation">
       {links.map((link) =>
         link.href === current ? (
-          <span key={link.href} style={{ color: "var(--text)", borderColor: "rgba(125, 211, 252, 0.35)" }}>
-            {link.label}
+          <span key={link.href} className="portal-nav-item is-active">
+            <span className="portal-nav-item-label">{link.label}</span>
           </span>
         ) : (
-          <Link key={link.href} href={link.href}>
-            {link.label}
+          <Link key={link.href} href={link.href} className="portal-nav-item">
+            <span className="portal-nav-item-label">{link.label}</span>
           </Link>
         ),
       )}

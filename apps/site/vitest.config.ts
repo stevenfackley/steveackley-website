@@ -5,8 +5,8 @@ import { resolve } from "path";
 export default defineConfig({
   resolve: {
     alias: {
-      // Match the @/* path alias from tsconfig.json
       "@": resolve(__dirname, "./src"),
+      "@shared": resolve(__dirname, "../../packages/shared/src"),
     },
   },
   plugins: [react()],

@@ -3,32 +3,68 @@ import { PortalFrame } from "@/components/portal-frame";
 
 export default function PortalHomePage() {
   return (
-    <PortalFrame title="Portal" eyebrow="Next.js App Router">
-      <div className="portal-grid cols-2">
-        <section className="portal-card">
-          <p className="portal-badge">Admin Surface</p>
-          <h2>Operational ownership moved here</h2>
+    <PortalFrame
+      title="Control Surfaces"
+      eyebrow="Next.js App Router"
+      description="The portal now cleanly splits internal operations from client-facing visibility. Choose the surface that matches the session context and move directly into work."
+      aside={
+        <div className="portal-hero-metrics">
+          <div className="portal-mini-stat">
+            <span className="portal-mini-stat-label">Apps</span>
+            <strong>2 surfaces</strong>
+          </div>
+          <div className="portal-mini-stat">
+            <span className="portal-mini-stat-label">Stack</span>
+            <strong>Next.js 15</strong>
+          </div>
+          <div className="portal-mini-stat">
+            <span className="portal-mini-stat-label">Boundary</span>
+            <strong>Authenticated</strong>
+          </div>
+        </div>
+      }
+    >
+      <section className="portal-showcase-grid">
+        <article className="portal-card portal-surface-card">
+          <div className="portal-card-topline">
+            <p className="portal-badge">Admin Surface</p>
+            <span className="portal-chip">Publishing + Ops</span>
+          </div>
+          <h2>Run content, settings, delivery, and client operations from one place.</h2>
           <p className="portal-muted">
-            Post management, settings, uploads, messages, users, clients, and future app workflows belong in the
-            portal app instead of Astro.
+            Editorial workflows, settings snapshots, client records, application inventory, and message review all stay
+            inside a focused operator shell instead of spilling into the public site.
           </p>
-          <div className="portal-actions" style={{ marginTop: "1rem" }}>
+          <ul className="portal-feature-list">
+            <li>Dashboard-level operational overview</li>
+            <li>Connected post editing and settings visibility</li>
+            <li>Dedicated management routes for users, clients, apps, and messages</li>
+          </ul>
+          <div className="portal-actions">
             <Link href="/admin/dashboard">Open admin dashboard</Link>
           </div>
-        </section>
+        </article>
 
-        <section className="portal-card">
-          <p className="portal-badge">Client Surface</p>
-          <h2>Authenticated client area</h2>
+        <article className="portal-card portal-surface-card">
+          <div className="portal-card-topline">
+            <p className="portal-badge">Client Surface</p>
+            <span className="portal-chip">Account + Messages</span>
+          </div>
+          <h2>Present a simpler, quieter experience for client access.</h2>
           <p className="portal-muted">
-            Client dashboards and account management now have a dedicated application boundary and can grow without
-            pushing Astro into SPA territory.
+            Client-facing routes now have their own boundary and can grow into authenticated dashboards, message views,
+            and account management without dragging Astro into app-level complexity.
           </p>
-          <div className="portal-actions" style={{ marginTop: "1rem" }}>
+          <ul className="portal-feature-list">
+            <li>Focused dashboard for status and deliverables</li>
+            <li>Dedicated account and contact routes</li>
+            <li>Ready for authenticated inbox and project visibility</li>
+          </ul>
+          <div className="portal-actions">
             <Link href="/client/dashboard">Open client dashboard</Link>
           </div>
-        </section>
-      </div>
+        </article>
+      </section>
     </PortalFrame>
   );
 }
