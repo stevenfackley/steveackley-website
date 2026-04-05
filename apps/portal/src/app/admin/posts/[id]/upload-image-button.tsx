@@ -1,6 +1,10 @@
 "use client";
 
 import { useId, useRef, useState, type ChangeEvent } from "react";
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  uploadImageFile,
+} from "@shared/lib/upload-client";
 
 type UploadImageButtonProps = {
   onUpload: (url: string) => void;
@@ -23,21 +27,7 @@ export function UploadImageButton({ onUpload }: UploadImageButtonProps) {
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.set("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const payload = (await response.json()) as { error?: string; url?: string };
-
-      if (!response.ok || !payload.url) {
-        throw new Error(payload.error ?? "Upload failed");
-      }
-
-      onUpload(payload.url);
+      onUpload(await uploadImageFile(file));
     } catch (uploadError) {
       setError(
         uploadError instanceof Error ? uploadError.message : "Upload failed",
@@ -53,7 +43,7 @@ export function UploadImageButton({ onUpload }: UploadImageButtonProps) {
   return (
     <div className="portal-upload-field">
       <input
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
         className="portal-hidden-input"
         id={inputId}
         onChange={handleChange}

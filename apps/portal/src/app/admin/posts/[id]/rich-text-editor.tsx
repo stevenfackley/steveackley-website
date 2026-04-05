@@ -6,29 +6,15 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  uploadImageFile,
+} from "@shared/lib/upload-client";
 
 type RichTextEditorProps = {
   value: string;
   onChange: (value: string) => void;
 };
-
-async function uploadImage(file: File): Promise<string> {
-  const formData = new FormData();
-  formData.set("file", file);
-
-  const response = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  const payload = (await response.json()) as { error?: string; url?: string };
-
-  if (!response.ok || !payload.url) {
-    throw new Error(payload.error ?? "Upload failed");
-  }
-
-  return payload.url;
-}
 
 function ToolbarButton({
   active = false,
@@ -97,7 +83,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     setUploading(true);
 
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImageFile(file);
       editor?.chain().focus().setImage({ src: url }).run();
     } catch (error) {
       setUploadError(
@@ -179,7 +165,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
           Link
         </ToolbarButton>
         <input
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
           className="portal-hidden-input"
           id={inputId}
           onChange={handleImageChange}
