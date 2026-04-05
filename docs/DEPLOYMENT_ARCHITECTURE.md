@@ -31,6 +31,6 @@ flowchart TB
 
 ## Operational Notes
 
-- The Astro site should not be deployed as the authenticated portal host.
-- The portal deployment should own auth callbacks and interactive admin/client features.
+- The target state is a dedicated portal deployment that owns auth callbacks and interactive admin/client features.
+- Until `PORTAL_BASE_URL` is set in production, the Astro site continues to serve the legacy private routes so the current single-container deployment remains functional.
 - Shared infrastructure should be versioned and documented independently of either frontend.

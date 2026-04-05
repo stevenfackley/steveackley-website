@@ -19,9 +19,9 @@ const CSP = [
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
-  const portalBaseUrl = (process.env.PORTAL_BASE_URL ?? "http://localhost:3001").replace(/\/$/, "");
+  const portalBaseUrl = process.env.PORTAL_BASE_URL?.replace(/\/$/, "");
 
-  if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/client")) {
+  if (portalBaseUrl && (url.pathname.startsWith("/admin") || url.pathname.startsWith("/client"))) {
     return context.redirect(`${portalBaseUrl}${url.pathname}${url.search}`);
   }
 

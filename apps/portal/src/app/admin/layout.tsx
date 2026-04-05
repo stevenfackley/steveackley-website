@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { PortalFrame } from "@/components/portal-frame";
+import { requireAdminSession } from "@/lib/admin-session";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+  await requireAdminSession();
+
   return (
     <PortalFrame
       title="Admin Portal"

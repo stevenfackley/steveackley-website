@@ -8,6 +8,24 @@ export default [
   ...tseslint.configs.recommended,
   ...astro.configs["flat/recommended"],
   {
+    files: ["scripts/**/*.{js,mjs}", "*.config.{js,mjs,ts}"],
+    languageOptions: {
+      globals: {
+        Buffer: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        process: "readonly",
+        setTimeout: "readonly",
+      },
+    },
+  },
+  {
+    files: ["src/__tests__/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
     files: ["**/*.astro"],
     languageOptions: {
       parser: astroParser,
