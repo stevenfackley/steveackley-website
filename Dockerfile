@@ -7,6 +7,8 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
+COPY apps/site/package.json ./apps/site/package.json
+COPY apps/portal/package.json ./apps/portal/package.json
 RUN npm ci --include=dev --legacy-peer-deps
 
 # Stage 2: Builder
@@ -16,7 +18,7 @@ RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_ENV=production
-RUN npm run build
+RUN npm run build:site
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
@@ -29,15 +31,15 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 astrojs
 
 # Copy build output
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/apps/site/dist ./dist
+COPY --from=builder /app/apps/site/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
 # Copy Drizzle config and database files for runtime setup
-COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder /app/src/db ./src/db
-COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/apps/site/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/apps/site/src/db ./src/db
+COPY --from=builder /app/apps/site/drizzle ./drizzle
+COPY --from=builder /app/apps/site/scripts ./scripts
 
 # Copy entrypoint and seed scripts
 COPY --chown=astrojs:nodejs docker/entrypoint.sh /app/docker/entrypoint.sh

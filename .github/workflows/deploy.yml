@@ -49,6 +49,7 @@ jobs:
       DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
       BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
       BETTER_AUTH_URL: "http://localhost:3000"
+      PORTAL_BASE_URL: "http://127.0.0.1:3001"
       GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
       NODE_ENV: "test"
       CI: "true"

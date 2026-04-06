@@ -10,7 +10,17 @@
       "Bash(docker compose build web)",
       "Bash(docker compose build --no-cache web)",
       "Bash(docker compose up -d --force-recreate web)",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "Bash(gh run:*)",
+      "Bash(openssl rand:*)",
+      "Bash(ls *.md)",
+      "Bash(ls TODO* BACKLOG*)",
+      "Bash(gh issue:*)",
+      "Bash(npm run:*)",
+      "Skill(commit-commands:commit-push-pr)",
+      "Bash(gh pr:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   }
 }

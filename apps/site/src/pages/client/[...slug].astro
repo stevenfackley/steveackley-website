@@ -1,0 +1,24 @@
+---
+const portalBaseUrl = process.env.PORTAL_BASE_URL?.replace(/\/$/, "");
+
+if (portalBaseUrl) {
+  return Astro.redirect(`${portalBaseUrl}${Astro.url.pathname}${Astro.url.search}`, 307);
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Portal Unavailable</title>
+  </head>
+  <body>
+    <main>
+      <h1>Client Portal Unavailable</h1>
+      <p>
+        The client portal is served by a separate application. Set
+        <code>PORTAL_BASE_URL</code> to enable automatic redirects.
+      </p>
+    </main>
+  </body>
+</html>
