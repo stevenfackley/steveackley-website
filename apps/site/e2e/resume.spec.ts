@@ -22,7 +22,7 @@ test.describe("Resume", () => {
       await page.goto("/resume");
       // ResumeClient is client:load — wait for hydration
       // The hero shows "Steve Ackley" from content
-      await expect(page.getByText("Steve Ackley")).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible({ timeout: 10_000 });
     });
   });
 

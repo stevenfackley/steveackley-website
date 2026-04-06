@@ -76,7 +76,7 @@ test.describe("Homepage / BentoDashboard", () => {
 
     test("shows skills overview section", async ({ page }) => {
       await expect(page.getByText(/Skills & Stack/)).toBeVisible();
-      await expect(page.getByText("C# / .NET")).toBeVisible();
+      await expect(page.getByText("C# / .NET", { exact: true })).toBeVisible();
     });
 
     test("shows about section with interests", async ({ page }) => {
