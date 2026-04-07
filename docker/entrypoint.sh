@@ -33,8 +33,7 @@ if [ -n "$DATABASE_URL" ]; then
   echo "==> Migrating database schema (Drizzle)..."
   # Use drizzle-kit to push schema directly from the container
   # --force helps if there are non-conflicting schema drifts
-  # --yes prevents interactive prompts
-  npx drizzle-kit push --force --yes || echo "⚠ Drizzle db push failed"
+  npx drizzle-kit push --force || echo "⚠ Drizzle db push failed"
 else
   echo "⚠ DATABASE_URL not set, skipping schema push"
 fi
