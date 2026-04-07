@@ -32,8 +32,8 @@ if [ -n "$DATABASE_URL" ]; then
   echo "  DATABASE_URL host: $(echo "$DATABASE_URL" | sed 's|://[^@]*@|://***@|')"
   echo "==> Migrating database schema (Drizzle)..."
   # Use drizzle-kit to push schema directly from the container
-  # --force helps if there are non-conflicting schema drifts
-  npx drizzle-kit push --force || echo "⚠ Drizzle db push failed"
+  # We pipe 'No' to the prompt about truncating tables during unique constraint addition
+  printf "No\n" | npx drizzle-kit push --force || echo "⚠ Drizzle db push failed"
 else
   echo "⚠ DATABASE_URL not set, skipping schema push"
 fi
