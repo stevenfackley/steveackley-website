@@ -172,17 +172,22 @@ jobs:
             chmod +x docker/entrypoint.sh
             chmod +x docker/seed-admin.cjs
             
-            # Construct web.env from secrets (chmod 600 before writing to protect contents)
+            # Construct .env from secrets (chmod 600 before writing to protect contents)
             AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
             if [ -z "$AUTH_SECRET" ]; then
               echo "ERROR: AUTH_SECRET is not set in GitHub Secrets — deployment aborted to prevent auth failure"
               exit 1
             fi
+
+            # URL-encode the plus sign in DATABASE_URL if present (it breaks Node URL parser)
+            ENCODED_DB_URL=$(echo "${{ secrets.DATABASE_URL }}" | sed 's/\+/%2B/g')
+
             touch .env && chmod 600 .env
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nBETTER_AUTH_SECRET=%s\n' \
-              "${{ secrets.DATABASE_URL }}" \
+              "$ENCODED_DB_URL" \
               "$AUTH_SECRET" \
               "$AUTH_SECRET" >> .env
+
             printf 'BETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\n' \
               "https://steveackley.org" \
               "stevenfackley@gmail.com" \
