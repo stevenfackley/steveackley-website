@@ -54,7 +54,8 @@ A comprehensive overview of the 11 active projects in my ecosystem, categorized 
 *   **The Tech Breakdown:** **Astro 5** (for the public site) and **Next.js 16** (for the private portal). It's hosted on a dedicated **AWS instance** using **Cloudflare Tunnels** for high security.
 *   **Role:** Staff Engineer. I’m currently migrating this to a dedicated server to isolate it from my test environments.
 
-### 11. **p1-opshub** (The Operational Nerve Center)
-*   **In Plain English:** The private dashboard I use to manage all my *other* projects. It’s my internal "mission control" for monitoring the health of my AWS servers and tracking every deployment I make.
-*   **The Tech Breakdown:** **Docker Compose** orchestration on AWS, managing a mix of **PostgreSQL** databases and **Nginx** gateways.
-*   **Role:** DevOps/SRE. I maintain the "release gates" and health checks that keep my production apps running 24/7.
+### 11. **p1-opshub** (Perimeter One Solutions Operational Hub)
+*   **In Plain English:** The internal operational platform for **Perimeter One Solutions, LLC**. It’s a specialized tool that security professionals use to build high-end physical security assessment reports. It handles everything from drag-and-drop report building to 3D scanning of buildings to find security holes.
+*   **The Tech Breakdown:** A massive **.NET 10** and **Next.js 16** system. It uses **Supabase** for its database and auth, and even has a **Flutter-based mobile app** (P1 Scanner) that uses LiDAR to map out buildings in 3D.
+*   **Role:** Lead Developer & Architect. I built the entire report-generation engine that automatically produces branded PDFs and PowerPoints for clients.
+
