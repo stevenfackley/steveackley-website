@@ -16,13 +16,19 @@ services:
       AUTH_TRUST_HOST: "true"
       AUTH_SECRET: "${AUTH_SECRET}"
       BETTER_AUTH_SECRET: "${AUTH_SECRET}"
-      ADMIN_EMAIL: "stevenfackley@gmail.com"
+      BETTER_AUTH_URL: "${BETTER_AUTH_URL}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL}"
+      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH}"
       PUBLIC_LINKEDIN_URL: "https://linkedin.com/in/stevenfackley"
       PUBLIC_EMAIL: "stevenfackley@gmail.com"
       PUBLIC_P1_OPS_HUB_URL: "https://test.steveackley.org"
       MAX_UPLOAD_SIZE_MB: "5"
-      # GitHub API token for fetching public repos on the home page
       GH_API_TOKEN: "${GH_API_TOKEN}"
+      R2_ACCOUNT_ID: "${R2_ACCOUNT_ID}"
+      R2_ACCESS_KEY_ID: "${R2_ACCESS_KEY_ID}"
+      R2_SECRET_ACCESS_KEY: "${R2_SECRET_ACCESS_KEY}"
+      R2_BUCKET: "${R2_BUCKET}"
+      R2_PUBLIC_URL: "${R2_PUBLIC_URL}"
     volumes:
       - ./docker/entrypoint.sh:/app/docker/entrypoint.sh
       - ./docker/seed-admin.cjs:/app/docker/seed-admin.cjs
