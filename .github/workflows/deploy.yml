@@ -178,22 +178,22 @@ jobs:
               echo "ERROR: AUTH_SECRET is not set in GitHub Secrets — deployment aborted to prevent auth failure"
               exit 1
             fi
-            touch web.env && chmod 600 web.env
+            touch .env && chmod 600 .env
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nBETTER_AUTH_SECRET=%s\n' \
               "${{ secrets.DATABASE_URL }}" \
               "$AUTH_SECRET" \
-              "$AUTH_SECRET" >> web.env
+              "$AUTH_SECRET" >> .env
             printf 'BETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\n' \
               "https://steveackley.org" \
               "stevenfackley@gmail.com" \
               "${{ secrets.ADMIN_PASSWORD_HASH }}" \
-              "${{ secrets.GH_API_TOKEN }}" >> web.env
+              "${{ secrets.GH_API_TOKEN }}" >> .env
             printf 'R2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
               "${{ secrets.R2_ACCOUNT_ID }}" \
               "${{ secrets.R2_ACCESS_KEY_ID }}" \
               "${{ secrets.R2_SECRET_ACCESS_KEY }}" \
               "${{ secrets.R2_BUCKET }}" \
-              "${{ secrets.R2_PUBLIC_URL }}" >> web.env
+              "${{ secrets.R2_PUBLIC_URL }}" >> .env
 
 
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web
