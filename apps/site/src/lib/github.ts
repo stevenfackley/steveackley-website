@@ -17,7 +17,7 @@ export interface TechBadge {
 }
 
 // Repos to skip from the public listing
-const SKIP_REPOS = new Set(["public", "public-website"]);
+const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
 
 // Manually defined private repo (P1 Ops Hub)
 export const PRIVATE_PROJECTS = [
@@ -182,21 +182,28 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
       Accept: "application/vnd.github.v3+json",
     };
 
-    if (import.meta.env.GH_API_TOKEN) {
+    const hasToken = !!import.meta.env.GH_API_TOKEN;
+    if (hasToken) {
       headers["Authorization"] = `token ${import.meta.env.GH_API_TOKEN}`;
     }
 
-    const res = await fetch(
-      "https://api.github.com/users/stevenfackley/repos?sort=updated&direction=desc&per_page=50",
-      {
-        signal: controller.signal,
-        headers,
-      }
-    );
+    // If we have a token, use /user/repos to get both public and private repos we own.
+    // Otherwise, use /users/stevenfackley/repos for public only.
+    const url = hasToken
+      ? "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100"
+      : "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers,
+    });
     if (!res.ok) return [];
-    const repos: GitHubRepo[] = await res.json();
-    return repos.filter((r) => !r.fork && !SKIP_REPOS.has(r.name));
-  } catch {
+    const repos: (GitHubRepo & { archived: boolean })[] = await res.json();
+    
+    // Filter out forks, archived projects, and explicitly skipped repos.
+    return repos.filter((r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name));
+  } catch (e) {
+    console.error("Error fetching GitHub repos:", e);
     return [];
   } finally {
     clearTimeout(timeout);

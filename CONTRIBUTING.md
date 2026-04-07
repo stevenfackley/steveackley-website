@@ -318,9 +318,9 @@ Copy `.env.example` to `.env.local` for local development. **Never commit `.env.
 | `AUTH_URL` | ✅ | App base URL |
 | `ADMIN_EMAIL` | ✅ | Admin login email |
 | `ADMIN_PASSWORD_HASH` | ✅ | bcrypt hash of admin password |
-| `NEXT_PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL |
-| `NEXT_PUBLIC_EMAIL` | ✅ | Contact email address |
-| `NEXT_PUBLIC_P1_OPS_HUB_URL` | ✅ | P1 Ops Hub project URL |
+| `PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL |
+| `PUBLIC_EMAIL` | ✅ | Contact email address |
+| `PUBLIC_P1_OPS_HUB_URL` | ✅ | P1 Ops Hub project URL |
 | `UPLOAD_DIR` | ✅ | Filesystem path for image uploads |
 | `MAX_UPLOAD_SIZE_MB` | ✅ | Max upload size (default: 5) |
 

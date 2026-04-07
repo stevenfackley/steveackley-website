@@ -15,9 +15,9 @@ services:
       NODE_ENV: production
       AUTH_TRUST_HOST: "true"
       ADMIN_EMAIL: "stevenfackley@gmail.com"
-      NEXT_PUBLIC_LINKEDIN_URL: "https://linkedin.com/in/stevenfackley"
-      NEXT_PUBLIC_EMAIL: "stevenfackley@gmail.com"
-      NEXT_PUBLIC_P1_OPS_HUB_URL: "https://test.steveackley.org"
+      PUBLIC_LINKEDIN_URL: "https://linkedin.com/in/stevenfackley"
+      PUBLIC_EMAIL: "stevenfackley@gmail.com"
+      PUBLIC_P1_OPS_HUB_URL: "https://test.steveackley.org"
       MAX_UPLOAD_SIZE_MB: "5"
       # GitHub API token for fetching public repos on the home page
       GH_API_TOKEN: "${GH_API_TOKEN}"

@@ -276,30 +276,30 @@ function ProjectsOverview({
                   className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white"
                   style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
                 >
-                  P
+                  {p.name[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
-                  <p className="text-xs text-[var(--text-muted)]">Private repository</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
+                    <span className="text-[10px] px-1 py-0 rounded bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)] uppercase font-semibold">
+                      Private
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)] truncate">{p.description}</p>
                 </div>
               </div>
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
                 Active
               </span>
             </div>
-            {p.badges.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2 ml-10">
-                {p.badges.map((b) => (
-                  <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
-                ))}
-              </div>
-            )}
           </div>
         ))}
 
         {/* Public GitHub repos */}
         {toShow.map((repo) => {
           const year = new Date(repo.created_at).getFullYear();
+          // @ts-ignore
+          const isPrivate = repo.private || repo.isPrivate;
           return (
             <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer">
               <div className="rounded-xl px-3 py-2.5 border border-transparent hover:bg-[var(--surface-hover)] hover:border-[var(--border)] transition-all duration-150 cursor-pointer">
@@ -309,8 +309,15 @@ function ProjectsOverview({
                       {repo.name[0].toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-[var(--text-primary)] truncate">{repo.name}</p>
-                      <p className="text-xs text-[var(--text-muted)]">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">{repo.name}</p>
+                        {isPrivate && (
+                          <span className="text-[10px] px-1 py-0 rounded bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)] uppercase font-semibold">
+                            Private
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--text-muted)] truncate">
                         {repo.language ?? "Code"} &middot; {year}
                       </p>
                     </div>
@@ -319,13 +326,6 @@ function ProjectsOverview({
                     GitHub
                   </span>
                 </div>
-                {repo.badges.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2 ml-10">
-                    {repo.badges.map((b) => (
-                      <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
-                    ))}
-                  </div>
-                )}
               </div>
             </a>
           );
@@ -726,7 +726,7 @@ function SkillsPanel() {
 // Projects Panel
 // ---------------------------------------------------------------------------
 
-const SKIP_REPOS = new Set(["public", "public-website"]);
+const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
 
 function ProjectsPanel({
   repos,
@@ -735,14 +735,22 @@ function ProjectsPanel({
   repos: EnrichedRepo[];
   featuredProjects: FeaturedProjectContent[];
 }) {
-  const filtered = repos.filter((r) => !SKIP_REPOS.has(r.name));
+  // 1. Combine dynamic repos and manually defined private projects
+  const allProjects = [...repos];
+  
+  // 2. Filter out explicitly skipped repos
+  const filtered = allProjects.filter((r) => !SKIP_REPOS.has(r.name));
+  
+  // 3. Sort: Featured first (in order), then by most recent update
   const featuredOrder = featuredProjects.map((project) => project.title);
   const sorted = [...filtered].sort((a, b) => {
     const ai = featuredOrder.indexOf(a.name);
     const bi = featuredOrder.indexOf(b.name);
+    
     if (ai !== -1 && bi !== -1) return ai - bi;
     if (ai !== -1) return -1;
     if (bi !== -1) return 1;
+    
     return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
   });
 
@@ -762,7 +770,7 @@ function ProjectsPanel({
         </a>
       </div>
 
-      {/* P1 Ops Hub - private, always first */}
+      {/* Manually defined private projects (high priority overrides) */}
       {PRIVATE_PROJECTS.map((p) => (
         <div key={p.name} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 card-glow">
           <div className="flex items-start justify-between gap-4">
@@ -771,7 +779,7 @@ function ProjectsPanel({
                 className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 text-white"
                 style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
               >
-                P
+                {p.name[0].toUpperCase()}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -780,7 +788,7 @@ function ProjectsPanel({
                     Private
                   </span>
                 </div>
-                <p className="text-sm text-[var(--text-muted)] mt-0.5">Operational management platform for P1 workflows</p>
+                <p className="text-sm text-[var(--text-muted)] mt-0.5">Custom project</p>
               </div>
             </div>
             <span className="text-xs font-medium px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -800,9 +808,12 @@ function ProjectsPanel({
         </div>
       ))}
 
-      {/* Public GitHub repos */}
+      {/* Dynamic GitHub repos (Public + Private discovered via API) */}
       {sorted.map((repo) => {
         const year = new Date(repo.created_at).getFullYear();
+        // @ts-ignore - isPrivate is added dynamically in our enrichment if fetched via user/repos
+        const isPrivate = repo.private || repo.isPrivate;
+        
         return (
           <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer" className="block group">
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 card-glow">
@@ -812,9 +823,16 @@ function ProjectsPanel({
                     {repo.name[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                      {repo.name}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                        {repo.name}
+                      </h3>
+                      {isPrivate && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)]">
+                          Private
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-[var(--text-muted)] mt-0.5">
                       {repo.language ?? "Code"} &middot; {year}
                     </p>
@@ -848,7 +866,7 @@ function ProjectsPanel({
         );
       })}
 
-      {sorted.length === 0 && (
+      {sorted.length === 0 && PRIVATE_PROJECTS.length === 0 && (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 text-center">
           <p className="text-sm text-[var(--text-muted)]">Unable to load GitHub repos. Check back soon.</p>
         </div>

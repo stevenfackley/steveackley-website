@@ -325,13 +325,13 @@ describe("PRIVATE_PROJECTS", () => {
     }
   });
 
-  it("uses NEXT_PUBLIC_P1_OPS_HUB_URL env or falls back to '#'", () => {
+  it("uses PUBLIC_P1_OPS_HUB_URL env or falls back to '#'", () => {
     const p1 = PRIVATE_PROJECTS[0];
     // If env is not set, html_url should default to "#"
-    if (!process.env.NEXT_PUBLIC_P1_OPS_HUB_URL) {
+    if (!process.env.PUBLIC_P1_OPS_HUB_URL) {
       expect(p1.html_url).toBe("#");
     } else {
-      expect(p1.html_url).toBe(process.env.NEXT_PUBLIC_P1_OPS_HUB_URL);
+      expect(p1.html_url).toBe(process.env.PUBLIC_P1_OPS_HUB_URL);
     }
   });
 });
