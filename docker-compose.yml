@@ -14,6 +14,8 @@ services:
     environment:
       NODE_ENV: production
       AUTH_TRUST_HOST: "true"
+      AUTH_SECRET: "${AUTH_SECRET}"
+      BETTER_AUTH_SECRET: "${AUTH_SECRET}"
       ADMIN_EMAIL: "stevenfackley@gmail.com"
       PUBLIC_LINKEDIN_URL: "https://linkedin.com/in/stevenfackley"
       PUBLIC_EMAIL: "stevenfackley@gmail.com"
@@ -23,6 +25,8 @@ services:
       GH_API_TOKEN: "${GH_API_TOKEN}"
     volumes:
       - ./docker/entrypoint.sh:/app/docker/entrypoint.sh
+      - ./docker/seed-admin.cjs:/app/docker/seed-admin.cjs
+      - ./uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy

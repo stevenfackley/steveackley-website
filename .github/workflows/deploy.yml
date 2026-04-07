@@ -169,8 +169,11 @@ jobs:
             # Stash any local changes to avoid merge conflicts
             git stash --include-untracked || true
             git pull origin main
+            chmod +x docker/entrypoint.sh
+            chmod +x docker/seed-admin.cjs
             
-            # Construct web.env from secrets (chmod 600 before writing to protect contents)
+            # Construct web.env from secrets
+ (chmod 600 before writing to protect contents)
             AUTH_SECRET="${{ secrets.BETTER_AUTH_SECRET || secrets.AUTH_SECRET }}"
             if [ -z "$AUTH_SECRET" ]; then
               echo "ERROR: BETTER_AUTH_SECRET is not set in GitHub Secrets — deployment aborted to prevent auth failure"

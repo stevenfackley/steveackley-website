@@ -11,7 +11,7 @@ set -e
 echo "==> Entrypoint starting..."
 
 # Debug: show which env vars are set (values hidden)
-for var in DATABASE_URL BETTER_AUTH_SECRET ADMIN_PASSWORD_HASH ADMIN_EMAIL NODE_ENV BETTER_AUTH_URL; do
+for var in DATABASE_URL AUTH_SECRET BETTER_AUTH_SECRET ADMIN_PASSWORD_HASH ADMIN_EMAIL NODE_ENV BETTER_AUTH_URL; do
   if [ -n "$(eval echo \$$var)" ]; then
     echo "  ✓ $var is set"
   else
@@ -31,9 +31,9 @@ if [ -n "$DATABASE_URL" ]; then
   # Print sanitized URL for debugging (hide password)
   echo "  DATABASE_URL host: $(echo "$DATABASE_URL" | sed 's|://[^@]*@|://***@|')"
   echo "==> Migrating database schema (Drizzle)..."
-  # Use drizzle-kit to migrate schema directly from the container
-  # We assume drizzle-kit is in the node_modules
-  npx drizzle-kit migrate || echo "⚠ Drizzle db migrate failed"
+  # Use drizzle-kit to push schema directly from the container
+  # --force helps if there are non-conflicting schema drifts
+  npx drizzle-kit push --force || echo "⚠ Drizzle db push failed"
 else
   echo "⚠ DATABASE_URL not set, skipping schema push"
 fi
