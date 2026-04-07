@@ -180,8 +180,9 @@ jobs:
               exit 1
             fi
             touch web.env && chmod 600 web.env
-            printf 'DATABASE_URL=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\nR2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
+            printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nBETTER_AUTH_SECRET=%s\nBETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\nR2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
               "${{ secrets.DATABASE_URL }}" \
+              "$AUTH_SECRET" \
               "$AUTH_SECRET" \
               "https://steveackley.org" \
               "stevenfackley@gmail.com" \
