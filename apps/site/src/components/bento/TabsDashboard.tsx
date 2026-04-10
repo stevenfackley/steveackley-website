@@ -20,8 +20,6 @@ type TabId = (typeof TABS)[number]["id"];
 interface TabsDashboardProps {
   blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
   githubRepos: EnrichedRepo[];
-  avatarUrl: string;
-  couplePhotoUrl: string;
   homeContent: HomeContent;
   featuredProjects: FeaturedProjectContent[];
 }
@@ -29,8 +27,6 @@ interface TabsDashboardProps {
 export function TabsDashboard({
   blogPosts,
   githubRepos,
-  avatarUrl,
-  couplePhotoUrl,
   homeContent,
   featuredProjects,
 }: TabsDashboardProps) {
@@ -59,8 +55,8 @@ export function TabsDashboard({
       </div>
 
       {/* Tab panels */}
-      {active === "overview"  && <OverviewPanel avatarUrl={avatarUrl} githubRepos={githubRepos} blogPosts={blogPosts} homeContent={homeContent} featuredProjects={featuredProjects} />}
-      {active === "about"     && <AboutPanel avatarUrl={avatarUrl} couplePhotoUrl={couplePhotoUrl} homeContent={homeContent} />}
+      {active === "overview"  && <OverviewPanel githubRepos={githubRepos} blogPosts={blogPosts} homeContent={homeContent} featuredProjects={featuredProjects} />}
+      {active === "about"     && <AboutPanel homeContent={homeContent} />}
       {active === "skills"    && <SkillsPanel />}
       {active === "projects"  && <ProjectsPanel repos={githubRepos} featuredProjects={featuredProjects} />}
       {active === "blog"      && <BlogPanel posts={blogPosts} />}
@@ -112,7 +108,7 @@ function Section({ title, children, className }: { title: string; children: Reac
 // Overview Panel
 // ---------------------------------------------------------------------------
 
-function HeroOverview({ avatarUrl, homeContent }: { avatarUrl: string; homeContent: HomeContent }) {
+function HeroOverview({ homeContent }: { homeContent: HomeContent }) {
   return (
     <CardShell className="lg:col-span-2 relative overflow-hidden min-h-[220px] p-8">
       {/* gradient bg */}
@@ -137,8 +133,8 @@ function HeroOverview({ avatarUrl, homeContent }: { avatarUrl: string; homeConte
               aria-hidden
             />
             <img
-              src={avatarUrl}
-              alt="Steve Ackley"
+              src="/images/brookeandme.png"
+              alt="Steve and Brooke"
               width={72}
               height={72}
               className="relative rounded-full ring-2 ring-white/20 object-cover"
@@ -371,13 +367,11 @@ function BlogPreviewOverview({ posts }: { posts: TabsDashboardProps["blogPosts"]
 }
 
 function OverviewPanel({
-  avatarUrl,
   githubRepos,
   blogPosts,
   homeContent,
   featuredProjects,
 }: {
-  avatarUrl: string;
   githubRepos: EnrichedRepo[];
   blogPosts: TabsDashboardProps["blogPosts"];
   homeContent: HomeContent;
@@ -385,7 +379,7 @@ function OverviewPanel({
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <HeroOverview avatarUrl={avatarUrl} homeContent={homeContent} />
+      <HeroOverview homeContent={homeContent} />
       <SkillsOverview homeContent={homeContent} />
       <AboutOverview homeContent={homeContent} />
       <ProjectsOverview repos={githubRepos} featuredProjects={featuredProjects} />
@@ -432,12 +426,8 @@ const timeline = [
 ];
 
 function AboutPanel({
-  avatarUrl,
-  couplePhotoUrl,
   homeContent,
 }: {
-  avatarUrl: string;
-  couplePhotoUrl: string;
   homeContent: HomeContent;
 }) {
   return (
@@ -445,9 +435,8 @@ function AboutPanel({
       {/* Bio */}
       <Section title="Bio" className="lg:col-span-2">
         <div className="flex flex-col sm:flex-row gap-6 items-start">
-          {/* Photos */}
+          {/* Photo */}
           <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-            {/* GitHub avatar */}
             <div className="relative shrink-0">
               <div
                 className="absolute inset-0 rounded-full blur-sm opacity-50"
@@ -455,31 +444,12 @@ function AboutPanel({
                 aria-hidden
               />
               <img
-                src={avatarUrl}
-                alt="Steve Ackley"
-                width={96}
-                height={96}
+                src="/images/brookeandme.png"
+                alt="Steve and Brooke"
+                width={128}
+                height={128}
                 className="relative rounded-full ring-2 ring-[var(--border)] object-cover"
               />
-            </div>
-
-            {/* Steve and Brooke photo */}
-            <div className="relative shrink-0">
-              {couplePhotoUrl ? (
-                <img
-                  src={couplePhotoUrl}
-                  alt="About photo"
-                  width={160}
-                  height={96}
-                  className="rounded-2xl ring-2 ring-[var(--border)] object-cover"
-                />
-              ) : (
-                <div className="w-40 h-24 rounded-2xl ring-2 ring-[var(--border)] bg-[var(--surface-hover)] flex flex-col items-center justify-center gap-1 text-[var(--text-muted)]">
-                  <span className="text-2xl">📸</span>
-                  <span className="text-xs text-center px-2">Steve &amp; Brooke</span>
-                  <span className="text-[10px] text-center px-2 opacity-60">Photo coming soon</span>
-                </div>
-              )}
             </div>
           </div>
 

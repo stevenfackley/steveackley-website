@@ -25,17 +25,10 @@ try {
 }
 
 // Load settings from database
-const [settings, homeContent, featuredProjects] = await Promise.all([
-  getSiteSettings([
-    SETTING_KEYS.AVATAR_URL,
-    SETTING_KEYS.COUPLE_PHOTO_URL,
-  ] as const),
+const [homeContent, featuredProjects] = await Promise.all([
   getHomeContent(),
   getFeaturedProjects(),
 ]);
-
-const avatarUrl = settings[SETTING_KEYS.AVATAR_URL];
-const couplePhotoUrl = settings[SETTING_KEYS.COUPLE_PHOTO_URL];
 ---
 
 <PublicLayout title={homeContent.title} description={homeContent.description}>
@@ -43,8 +36,6 @@ const couplePhotoUrl = settings[SETTING_KEYS.COUPLE_PHOTO_URL];
     <BentoDashboard 
       blogPosts={blogPosts} 
       githubRepos={githubRepos} 
-      avatarUrl={avatarUrl}
-      couplePhotoUrl={couplePhotoUrl}
       homeContent={homeContent}
       featuredProjects={featuredProjects}
     />
