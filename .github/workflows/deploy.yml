@@ -20,8 +20,6 @@ jobs:
         run: npm install --no-audit --no-fund --legacy-peer-deps
       - name: Run unit tests (site)
         run: npm run test:unit -w apps/site
-      - name: Run unit tests (portal)
-        run: npm run test:unit -w apps/portal
 
   integration-tests:
     name: "🔗 Integration Tests"
@@ -37,8 +35,6 @@ jobs:
         run: npm install --no-audit --no-fund --legacy-peer-deps
       - name: Run integration tests (site)
         run: npm run test:integration -w apps/site
-      - name: Run integration tests (portal)
-        run: npm run test:integration -w apps/portal
 
   e2e-tests:
     name: "🌐 E2E Tests"

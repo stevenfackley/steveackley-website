@@ -7,10 +7,9 @@
 ```mermaid
 flowchart LR
     U["Browser Users"] --> S["apps/site<br/>Astro 5 + MDX + content collections"]
-    U --> P["apps/portal<br/>Next.js App Router"]
     S --> C["File-authored content<br/>src/content/*"]
     S --> D["Shared Postgres / Drizzle schema"]
-    P --> D
+    S --> R["Cloudflare R2 media storage"]
     P --> R["Shared auth / uploads / settings<br/>packages/shared"]
     P --> O["Admin-authored content<br/>blog posts, settings, media"]
     O --> D
@@ -21,8 +20,7 @@ flowchart LR
 
 | Path | Responsibility |
 |---|---|
-| `apps/site` | Public website, resume, blog rendering, project pages, MDX and content collections |
-| `apps/portal` | Admin and client portal route ownership, authenticated application surfaces |
+| `apps/site` | Public website, resume, blog rendering, project pages, admin/client portal |
 | `packages/shared` | Shared DB schema, Better Auth config, settings helpers, uploads, common types |
 | `docs` | Architecture, data flow, security, route ownership, content model, ADRs |
 
@@ -30,8 +28,7 @@ flowchart LR
 
 | Area | Technology |
 |---|---|
-| Public site | Astro 5, React islands, MDX, Astro content collections |
-| Portal | Next.js 15 App Router, React 19 |
+| Site / Portal | Astro 5, React islands, MDX, Astro content collections |
 | Shared backend | PostgreSQL 16, Drizzle ORM, Better Auth |
 | Storage | Cloudflare R2 |
 | Styling | CSS/Tailwind-compatible tokens and app-local styling |
@@ -46,17 +43,15 @@ npm install
 docker compose -f docker-compose.dev.yml up -d db
 ```
 
-### Run apps
+### Run app
 
 ```bash
 npm run dev:site
-npm run dev:portal
 ```
 
-Default local URLs:
+Default local URL:
 
 - Site: [http://localhost:3000](http://localhost:3000)
-- Portal: [http://localhost:3001](http://localhost:3001)
 
 ### Workspace scripts
 
@@ -71,9 +66,7 @@ Per-app:
 
 ```bash
 npm run typecheck:site
-npm run typecheck:portal
 npm run build:site
-npm run build:portal
 ```
 
 Targeted reproducibility checks:
@@ -81,6 +74,7 @@ Targeted reproducibility checks:
 ```bash
 npm run test:site:health
 ```
+
 
 That path runs the public site health-route contract test only, which is useful
 when validating deployment health behavior without pulling the broader site or
@@ -106,18 +100,19 @@ Shared environment values still live at the repo root today, but the runtime bou
 | Resume timeline and skill data | Astro content collection | `apps/site/src/content/resume/*` |
 | Homepage copy and public narrative content | Astro content collection | `apps/site/src/content/pages/*` |
 | Public project writeups | Astro content collection / MDX | `apps/site/src/content/projects/*` |
-| Blog posts | Database-backed authored content | Portal admin workflows + shared DB |
-| Site settings | Database-backed authored content | Portal admin workflows + shared DB |
+| Blog posts | Database-backed authored content | `apps/site` admin workflows + shared DB |
+| Site settings | Database-backed authored content | `apps/site` admin workflows + shared DB |
 
 ## Route Ownership
 
 | Surface | Owner |
 |---|---|
 | `/`, `/blog/*`, `/resume`, public project pages | `apps/site` |
-| `/admin/*` | `apps/portal` |
-| `/client/*` | `apps/portal` |
+| `/admin/*` | `apps/site` |
+| `/client/*` | `apps/site` |
 
-When `PORTAL_BASE_URL` is configured, the Astro site middleware redirects `/admin/*` and `/client/*` to the portal deployment. Without that variable, the legacy Astro private routes remain available so the current single-container release path still works.
+The Astro site handles all routes, including authenticated admin/client portal surfaces.
+
 
 ## Documentation
 
