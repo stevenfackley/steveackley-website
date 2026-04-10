@@ -41,4 +41,11 @@ export async function getSiteSettings<const TKeys extends readonly SiteSettingKe
   }
 }
 
+export async function setSiteSetting(key: SiteSettingKey, value: string): Promise<void> {
+  await db
+    .insert(siteSettings)
+    .values({ key, value })
+    .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+}
+
 export { SETTING_KEYS, DEFAULTS };
