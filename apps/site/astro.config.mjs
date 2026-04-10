@@ -13,7 +13,7 @@ export default defineConfig({
   adapter: node({ mode: 'standalone' }),
   integrations: [react(), mdx()],
   security: {
-    checkOrigin: false,
+    checkOrigin: true,
   },
   server: {
     host: '127.0.0.1',

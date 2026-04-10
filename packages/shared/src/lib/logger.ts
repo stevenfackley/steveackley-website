@@ -1,72 +1,55 @@
 /**
- * Structured logging utilities for the application.
- * Provides consistent log formatting across all modules.
+ * Structured logging utilities using Pino.
+ * - Production: JSON output to stdout
+ * - Development: pretty-printed output via pino-pretty
+ *
+ * Exports a typed `logger` with info/warn/error/debug methods
+ * and a `withRequestId` helper that returns a child logger bound
+ * to a specific requestId.
  */
+
+import pino from "pino";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  context?: Record<string, unknown>;
-  error?: {
-    name: string;
-    message: string;
-    stack?: string;
-  };
-}
+const isProduction = process.env.NODE_ENV === "production";
 
-function formatLog(entry: LogEntry): string {
-  const base = `[${entry.timestamp}] [${entry.level.toUpperCase()}] ${entry.message}`;
-  const parts: string[] = [];
-  
-  if (entry.error) {
-    parts.push(`Error: ${entry.error.message}`);
-  }
-  if (entry.context && Object.keys(entry.context).length > 0) {
-    parts.push(JSON.stringify(entry.context));
-  }
-  
-  if (parts.length > 0) {
-    return `${base} | ${parts.join(" | ")}`;
-  }
-  return base;
-}
+const baseLogger = pino(
+  {
+    level: isProduction ? "info" : "debug",
+    base: { service: "steveackleyorg" },
+    timestamp: pino.stdTimeFunctions.isoTime,
+  },
+  isProduction
+    ? pino.destination(1) // stdout, JSON
+    : (pino as any).transport({
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname",
+        },
+      })
+);
 
-function createLogEntry(
-  level: LogLevel,
-  message: string,
-  context?: Record<string, unknown>,
-  error?: Error
-): LogEntry {
-  return {
-    timestamp: new Date().toISOString(),
-    level,
-    message,
-    context,
-    error: error
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        }
-      : undefined,
-  };
-}
-
+/**
+ * Application logger. Interface is compatible with the previous custom logger:
+ *   debug(message, context?)
+ *   info(message, context?)
+ *   warn(message, context?)
+ *   error(message, error?, context?)
+ */
 export const logger = {
   debug(message: string, context?: Record<string, unknown>): void {
-    if (process.env.NODE_ENV === "production") return;
-    console.debug(formatLog(createLogEntry("debug", message, context)));
+    baseLogger.debug(context ?? {}, message);
   },
 
   info(message: string, context?: Record<string, unknown>): void {
-    console.info(formatLog(createLogEntry("info", message, context)));
+    baseLogger.info(context ?? {}, message);
   },
 
   warn(message: string, context?: Record<string, unknown>): void {
-    console.warn(formatLog(createLogEntry("warn", message, context)));
+    baseLogger.warn(context ?? {}, message);
   },
 
   error(
@@ -74,8 +57,49 @@ export const logger = {
     error?: Error,
     context?: Record<string, unknown>
   ): void {
-    console.error(
-      formatLog(createLogEntry("error", message, context, error))
+    baseLogger.error(
+      {
+        ...(context ?? {}),
+        ...(error
+          ? { err: { name: error.name, message: error.message, stack: error.stack } }
+          : {}),
+      },
+      message
     );
   },
 };
+
+/**
+ * Returns a child logger with `requestId` bound to every log line.
+ * Use once per request, then pass the child logger down the call chain.
+ */
+export function withRequestId(requestId: string): typeof logger {
+  const child = baseLogger.child({ requestId });
+
+  return {
+    debug(message: string, context?: Record<string, unknown>): void {
+      child.debug(context ?? {}, message);
+    },
+    info(message: string, context?: Record<string, unknown>): void {
+      child.info(context ?? {}, message);
+    },
+    warn(message: string, context?: Record<string, unknown>): void {
+      child.warn(context ?? {}, message);
+    },
+    error(
+      message: string,
+      error?: Error,
+      context?: Record<string, unknown>
+    ): void {
+      child.error(
+        {
+          ...(context ?? {}),
+          ...(error
+            ? { err: { name: error.name, message: error.message, stack: error.stack } }
+            : {}),
+        },
+        message
+      );
+    },
+  };
+}
