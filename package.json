@@ -11,6 +11,7 @@
     "build:site": "npm run build -w apps/site",
     "build:portal": "npm run build -w apps/portal",
     "test:site": "npm run test -w apps/site",
+    "test:site:health": "npm run test:health -w apps/site",
     "test:portal": "npm run test -w apps/portal",
     "lint:site": "npm run lint -w apps/site",
     "lint:portal": "npm run lint -w apps/portal",

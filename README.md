@@ -76,6 +76,16 @@ npm run build:site
 npm run build:portal
 ```
 
+Targeted reproducibility checks:
+
+```bash
+npm run test:site:health
+```
+
+That path runs the public site health-route contract test only, which is useful
+when validating deployment health behavior without pulling the broader site or
+portal test surface into the loop.
+
 ## Environment Model
 
 Shared environment values still live at the repo root today, but the runtime boundary is now per app.

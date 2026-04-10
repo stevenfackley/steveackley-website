@@ -16,6 +16,7 @@
     "db:pull": "drizzle-kit introspect",
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
+    "test:health": "vitest run src/__tests__/integration/health-route.test.ts",
     "test:unit": "vitest run src/__tests__/unit",
     "test:integration": "vitest run src/__tests__/integration",
     "test:watch": "vitest",
