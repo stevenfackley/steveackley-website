@@ -13,6 +13,7 @@ import pino from "pino";
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 const isProduction = process.env.NODE_ENV === "production";
+const isTest = process.env.NODE_ENV === "test";
 
 const baseLogger = pino(
   {
@@ -32,6 +33,17 @@ const baseLogger = pino(
       })
 );
 
+function formatTestLog(
+  level: string,
+  message: string,
+  extra?: Record<string, unknown>
+): string {
+  const suffix = extra && Object.keys(extra).length
+    ? " " + JSON.stringify(extra)
+    : "";
+  return `[${level}] ${message}${suffix}`;
+}
+
 /**
  * Application logger. Interface is compatible with the previous custom logger:
  *   debug(message, context?)
@@ -41,14 +53,17 @@ const baseLogger = pino(
  */
 export const logger = {
   debug(message: string, context?: Record<string, unknown>): void {
+    if (isTest) { console.debug(formatTestLog("DEBUG", message, context)); return; }
     baseLogger.debug(context ?? {}, message);
   },
 
   info(message: string, context?: Record<string, unknown>): void {
+    if (isTest) { console.info(formatTestLog("INFO", message, context)); return; }
     baseLogger.info(context ?? {}, message);
   },
 
   warn(message: string, context?: Record<string, unknown>): void {
+    if (isTest) { console.warn(formatTestLog("WARN", message, context)); return; }
     baseLogger.warn(context ?? {}, message);
   },
 
@@ -57,6 +72,14 @@ export const logger = {
     error?: Error,
     context?: Record<string, unknown>
   ): void {
+    if (isTest) {
+      const extra: Record<string, unknown> = {
+        ...(context ?? {}),
+        ...(error ? { err: { name: error.name, message: error.message } } : {}),
+      };
+      console.error(formatTestLog("ERROR", message, Object.keys(extra).length ? extra : undefined));
+      return;
+    }
     baseLogger.error(
       {
         ...(context ?? {}),
