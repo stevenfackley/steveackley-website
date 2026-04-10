@@ -82,11 +82,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const reqLogger = withRequestId(requestId);
 
   const url = new URL(context.request.url);
-  const portalBaseUrl = (process.env.PORTAL_BASE_URL ?? `${url.protocol}//portal.${url.host}`).replace(/\/$/, "");
-
-  if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/client")) {
-    return context.redirect(`${portalBaseUrl}${url.pathname}${url.search}`);
-  }
 
   reqLogger.info("incoming request", {
     method: context.request.method,

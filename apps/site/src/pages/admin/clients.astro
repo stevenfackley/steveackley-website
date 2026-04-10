@@ -1,0 +1,49 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getClientsSnapshot } from '@/lib/dashboard';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const clients = await getClientsSnapshot();
+---
+
+<AdminLayout title="Clients">
+  <div class="space-y-6">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Clients</h1>
+
+    <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[var(--border)] bg-[var(--surface-hover)]">
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Company</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden sm:table-cell">Contact</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden sm:table-cell">Email</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden md:table-cell">Created</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          {clients.length === 0 ? (
+            <tr>
+              <td colspan="4" class="px-4 py-10 text-center text-[var(--text-muted)]">No clients found.</td>
+            </tr>
+          ) : clients.map((client) => (
+            <tr class="hover:bg-[var(--surface-hover)] transition-colors">
+              <td class="px-4 py-3 font-medium text-[var(--text-primary)]">
+                {client.companyName ?? <span class="text-[var(--text-muted)] italic">—</span>}
+              </td>
+              <td class="px-4 py-3 text-[var(--text-secondary)] hidden sm:table-cell">
+                {[client.contactFirstName, client.contactLastName].filter(Boolean).join(' ') || <span class="text-[var(--text-muted)] italic">—</span>}
+              </td>
+              <td class="px-4 py-3 text-[var(--text-secondary)] hidden sm:table-cell">{client.email}</td>
+              <td class="px-4 py-3 text-[var(--text-muted)] hidden md:table-cell">
+                {client.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>

@@ -1,12 +1,5 @@
 import { count, desc, eq } from "drizzle-orm";
-import {
-  clientApps,
-  db,
-  messages,
-  posts,
-  siteSettings,
-  users,
-} from "@shared/index";
+import { clientApps, db, messages, posts, siteSettings, users } from "@/db";
 
 export async function getAdminOverview() {
   const [

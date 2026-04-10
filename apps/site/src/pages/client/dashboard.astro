@@ -1,0 +1,75 @@
+---
+import ClientLayout from '@/layouts/ClientLayout.astro';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'CLIENT') {
+  return Astro.redirect('/login');
+}
+---
+
+<ClientLayout title="Dashboard">
+  <div class="space-y-6">
+    <!-- Callout card -->
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Client Overview</p>
+        <h2 class="mt-0.5 text-xl font-semibold text-[var(--text-primary)]">A calmer project surface.</h2>
+        <p class="mt-2 text-sm text-[var(--text-secondary)] max-w-prose">
+          This dashboard is structured to show status, recent communication, and account context in a much quieter
+          layout than the admin side. It is ready to absorb authenticated project data as that layer comes online.
+        </p>
+      </div>
+      <div class="flex sm:flex-col gap-6 sm:gap-4 shrink-0 sm:text-right">
+        <div>
+          <span class="block text-xs text-[var(--text-muted)]">Designed for</span>
+          <strong class="text-[var(--text-primary)]">Clarity</strong>
+        </div>
+        <div>
+          <span class="block text-xs text-[var(--text-muted)]">Next step</span>
+          <strong class="text-[var(--text-primary)]">Live project data</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two-col grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">What belongs here</p>
+          <span class="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs text-[var(--text-secondary)]">Primary tasks</span>
+        </div>
+        <ul class="space-y-2 text-sm text-[var(--text-secondary)]">
+          <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Project snapshots, milestones, and delivery checkpoints</li>
+          <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Relevant client messages and responses</li>
+          <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Account details without exposing internal admin controls</li>
+        </ul>
+      </section>
+
+      <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Navigation</p>
+          <span class="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs text-[var(--text-secondary)]">Current routes</span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <a
+            href="/client/account"
+            class="inline-flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2.5 text-sm text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+          >
+            Account
+            <svg class="h-4 w-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a
+            href="/client/messages"
+            class="inline-flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2.5 text-sm text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+          >
+            Messages
+            <svg class="h-4 w-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+</ClientLayout>
