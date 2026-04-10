@@ -1,0 +1,59 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getAdminOverview } from '@/lib/dashboard';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const overview = await getAdminOverview();
+---
+
+<AdminLayout title="Dashboard">
+  <div class="space-y-8">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Dashboard</h1>
+
+    <!-- Stat cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+        <p class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Posts</p>
+        <p class="mt-2 text-3xl font-bold text-[var(--text-primary)]">{overview.posts}</p>
+        <p class="mt-1 text-sm text-[var(--text-muted)]">{overview.publishedPosts} published</p>
+      </div>
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+        <p class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Users</p>
+        <p class="mt-2 text-3xl font-bold text-[var(--text-primary)]">{overview.users}</p>
+        <p class="mt-1 text-sm text-[var(--text-muted)]">{overview.clients} clients</p>
+      </div>
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+        <p class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Apps</p>
+        <p class="mt-2 text-3xl font-bold text-[var(--text-primary)]">{overview.apps}</p>
+        <p class="mt-1 text-sm text-[var(--text-muted)]">client apps</p>
+      </div>
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+        <p class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Messages</p>
+        <p class="mt-2 text-3xl font-bold text-[var(--text-primary)]">{overview.messages}</p>
+        <p class="mt-1 text-sm text-[var(--text-muted)]">total</p>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+      <h2 class="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-4">Quick Actions</h2>
+      <div class="flex flex-wrap gap-3">
+        <a href="/admin/posts/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity">
+          New Post
+        </a>
+        <a href="/admin/posts" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] text-[var(--text-primary)] text-sm font-medium hover:border-[var(--accent)] transition-colors">
+          All Posts
+        </a>
+        <a href="/admin/messages" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] text-[var(--text-primary)] text-sm font-medium hover:border-[var(--accent)] transition-colors">
+          Messages
+        </a>
+        <a href="/admin/settings" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] text-[var(--text-primary)] text-sm font-medium hover:border-[var(--accent)] transition-colors">
+          Settings
+        </a>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

@@ -1,0 +1,64 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getAppsSnapshot } from '@/lib/dashboard';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const apps = await getAppsSnapshot();
+---
+
+<AdminLayout title="Apps">
+  <div class="space-y-6">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Apps</h1>
+
+    <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[var(--border)] bg-[var(--surface-hover)]">
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Name</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden sm:table-cell">Environment</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden md:table-cell">URL</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Live</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          {apps.length === 0 ? (
+            <tr>
+              <td colspan="4" class="px-4 py-10 text-center text-[var(--text-muted)]">No apps found.</td>
+            </tr>
+          ) : apps.map((app) => (
+            <tr class="hover:bg-[var(--surface-hover)] transition-colors">
+              <td class="px-4 py-3 font-medium text-[var(--text-primary)]">{app.name}</td>
+              <td class="px-4 py-3 hidden sm:table-cell">
+                <span class={[
+                  'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium',
+                  app.environment === 'PRODUCTION'
+                    ? 'bg-green-500/15 text-green-400'
+                    : app.environment === 'TEST'
+                    ? 'bg-yellow-500/15 text-yellow-400'
+                    : 'bg-[var(--surface-hover)] text-[var(--text-muted)]',
+                ].join(' ')}>
+                  {app.environment}
+                </span>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <a href={app.url} target="_blank" rel="noopener noreferrer" class="text-[var(--accent)] hover:underline truncate max-w-xs block">
+                  {app.url}
+                </a>
+              </td>
+              <td class="px-4 py-3">
+                {app.isLive ? (
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-green-500/15 text-green-400">Live</span>
+                ) : (
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-muted)]">Offline</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>

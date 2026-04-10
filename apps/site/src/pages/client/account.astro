@@ -1,0 +1,35 @@
+---
+import ClientLayout from '@/layouts/ClientLayout.astro';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'CLIENT') {
+  return Astro.redirect('/login');
+}
+---
+
+<ClientLayout title="Account">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Profile Surface</p>
+        <span class="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs text-[var(--text-secondary)]">Account</span>
+      </div>
+      <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-2">Account details belong in a focused route.</h2>
+      <p class="text-sm text-[var(--text-secondary)]">
+        This screen is laid out for authenticated company profile details, billing contacts, and account-level
+        preferences without mixing those concerns into the dashboard.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Planned modules</p>
+        <span class="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs text-[var(--text-secondary)]">Ready slots</span>
+      </div>
+      <ul class="space-y-2 text-sm text-[var(--text-secondary)]">
+        <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Company and primary contact information</li>
+        <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Communication preferences and notification controls</li>
+        <li class="flex items-start gap-2"><span class="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0"></span>Secure profile maintenance and audit visibility</li>
+      </ul>
+    </section>
+  </div>
+</ClientLayout>

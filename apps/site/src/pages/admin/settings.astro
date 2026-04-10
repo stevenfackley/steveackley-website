@@ -1,0 +1,120 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { SettingsUploadField } from '@/components/admin/SettingsUploadField';
+import { db, siteSettings } from '@/db';
+import { setSiteSetting } from '@shared/lib/settings';
+import { SETTING_KEYS } from '@shared/lib/setting-keys';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+let successMessage: string | null = null;
+let errorMessage: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const avatarUrl = String(formData.get('avatarUrl') ?? '').trim();
+    const couplePhotoUrl = String(formData.get('couplePhotoUrl') ?? '').trim();
+    await Promise.all([
+      setSiteSetting(SETTING_KEYS.AVATAR_URL, avatarUrl),
+      setSiteSetting(SETTING_KEYS.COUPLE_PHOTO_URL, couplePhotoUrl),
+    ]);
+    successMessage = 'Settings saved.';
+  } catch (err) {
+    errorMessage = 'Failed to save settings.';
+  }
+}
+
+const allSettings = await db.select().from(siteSettings);
+const getValue = (key: string) => allSettings.find((s) => s.key === key)?.value ?? '';
+---
+
+<AdminLayout title="Settings">
+  <div class="space-y-6">
+    <!-- Edit form -->
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div class="mb-5">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Site Configuration</p>
+        <h2 class="mt-0.5 text-xl font-semibold text-[var(--text-primary)]">Settings</h2>
+      </div>
+
+      {successMessage && (
+        <div class="mb-4 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div class="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+          {errorMessage}
+        </div>
+      )}
+
+      <form method="POST" class="space-y-5">
+        <SettingsUploadField
+          client:load
+          name="avatarUrl"
+          label="Avatar URL"
+          defaultValue={getValue(SETTING_KEYS.AVATAR_URL)}
+          placeholder="https://..."
+        />
+        <SettingsUploadField
+          client:load
+          name="couplePhotoUrl"
+          label="Couple Photo URL"
+          defaultValue={getValue(SETTING_KEYS.COUPLE_PHOTO_URL)}
+          placeholder="https://..."
+        />
+        <div class="pt-1">
+          <button
+            type="submit"
+            class="rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          >
+            Save Settings
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- All keys snapshot -->
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div class="mb-5 flex items-start justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Configuration Snapshot</p>
+          <h2 class="mt-0.5 text-xl font-semibold text-[var(--text-primary)]">All Keys</h2>
+        </div>
+        <span class="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-sm text-[var(--text-secondary)]">
+          <strong class="text-[var(--text-primary)]">{allSettings.length}</strong> keys
+        </span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-[var(--border)]">
+              <th class="pb-2 pr-6 text-left text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Key</th>
+              <th class="pb-2 pr-6 text-left text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Value</th>
+              <th class="pb-2 text-left text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Updated</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border)]">
+            {allSettings.map((setting) => (
+              <tr>
+                <td class="py-2.5 pr-6 font-mono text-xs text-[var(--text-primary)]">{setting.key}</td>
+                <td class="py-2.5 pr-6 text-[var(--text-secondary)] max-w-xs truncate">{setting.value}</td>
+                <td class="py-2.5 text-[var(--text-muted)] whitespace-nowrap">
+                  {setting.updatedAt?.toLocaleString() ?? 'Unknown'}
+                </td>
+              </tr>
+            ))}
+            {allSettings.length === 0 && (
+              <tr>
+                <td colspan={3} class="py-6 text-center text-[var(--text-muted)]">No settings found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</AdminLayout>

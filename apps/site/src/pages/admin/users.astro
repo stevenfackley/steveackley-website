@@ -1,0 +1,57 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getUsersSnapshot } from '@/lib/dashboard';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const users = await getUsersSnapshot();
+---
+
+<AdminLayout title="Users">
+  <div class="space-y-6">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Users</h1>
+
+    <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[var(--border)] bg-[var(--surface-hover)]">
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Name</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden sm:table-cell">Email</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Role</th>
+            <th class="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden md:table-cell">Company</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border)]">
+          {users.length === 0 ? (
+            <tr>
+              <td colspan="4" class="px-4 py-10 text-center text-[var(--text-muted)]">No users found.</td>
+            </tr>
+          ) : users.map((user) => (
+            <tr class="hover:bg-[var(--surface-hover)] transition-colors">
+              <td class="px-4 py-3 font-medium text-[var(--text-primary)]">
+                {user.name ?? <span class="text-[var(--text-muted)] italic">—</span>}
+              </td>
+              <td class="px-4 py-3 text-[var(--text-secondary)] hidden sm:table-cell">{user.email}</td>
+              <td class="px-4 py-3">
+                {user.role === 'CLIENT' ? (
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[var(--accent)]/15 text-[var(--accent)]">
+                    CLIENT
+                  </span>
+                ) : (
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[var(--surface-hover)] text-[var(--text-muted)]">
+                    {user.role}
+                  </span>
+                )}
+              </td>
+              <td class="px-4 py-3 text-[var(--text-secondary)] hidden md:table-cell">
+                {user.companyName ?? <span class="text-[var(--text-muted)] italic">—</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</AdminLayout>

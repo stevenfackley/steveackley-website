@@ -3,8 +3,27 @@ import { z } from 'astro:schema';
 import { db, posts } from '@/db';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { setSiteSetting } from '@shared/lib/settings';
+import { SETTING_KEYS } from '@shared/lib/setting-keys';
 
 export const server = {
+  saveSettings: defineAction({
+    accept: 'form',
+    input: z.object({
+      avatarUrl: z.string(),
+      couplePhotoUrl: z.string(),
+    }),
+    handler: async (input, context) => {
+      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
+        throw new Error('Unauthorized');
+      }
+      await Promise.all([
+        setSiteSetting(SETTING_KEYS.AVATAR_URL, input.avatarUrl.trim()),
+        setSiteSetting(SETTING_KEYS.COUPLE_PHOTO_URL, input.couplePhotoUrl.trim()),
+      ]);
+      return { success: true };
+    },
+  }),
   togglePublished: defineAction({
     input: z.object({
       id: z.string(),
