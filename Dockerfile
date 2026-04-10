@@ -9,6 +9,7 @@ RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
 COPY apps/site/package.json ./apps/site/package.json
 COPY apps/portal/package.json ./apps/portal/package.json
+COPY packages/shared/package.json ./packages/shared/package.json
 RUN npm ci --include=dev --legacy-peer-deps
 
 # Stage 2: Builder
