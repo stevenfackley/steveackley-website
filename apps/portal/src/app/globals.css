@@ -743,6 +743,14 @@ main {
   margin: 0.85rem 1rem 1rem;
 }
 
+.portal-success-banner {
+  color: #bbf7d0;
+  background: rgba(20, 83, 45, 0.36);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 14px;
+  padding: 0.8rem 0.95rem;
+}
+
 .portal-form-actions {
   display: flex;
   flex-wrap: wrap;
