@@ -40,11 +40,11 @@ test.describe("Admin / client route redirects", () => {
 });
 
 test.describe("Auth link destinations", () => {
-  test("sign in link in nav points to /admin/login", async ({ page }) => {
+  test("sign in link in nav points to /login", async ({ page }) => {
     await page.goto("/blog");
     await page.setViewportSize({ width: 1024, height: 768 });
     const signIn = page.getByRole("link", { name: /sign in/i }).first();
-    await expect(signIn).toHaveAttribute("href", "/admin/login");
+    await expect(signIn).toHaveAttribute("href", "/login");
   });
 });
 
