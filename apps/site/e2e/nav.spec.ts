@@ -13,11 +13,11 @@ test.describe("Navigation", () => {
     await expect(nav.getByRole("link", { name: "Blog" })).toHaveAttribute("href", "/blog");
   });
 
-  test("sign in link points to /admin/login", async ({ page }) => {
+  test("sign in link points to /login", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     const signIn = page.getByRole("link", { name: /sign in/i }).first();
     await expect(signIn).toBeVisible();
-    await expect(signIn).toHaveAttribute("href", "/admin/login");
+    await expect(signIn).toHaveAttribute("href", "/login");
   });
 
   test("nav name logo links to homepage", async ({ page }) => {
@@ -100,12 +100,12 @@ test.describe("Navigation", () => {
       await expect(menu.getByRole("link", { name: "Blog" })).toBeVisible();
     });
 
-    test("mobile menu sign in link points to /admin/login", async ({ page }) => {
+    test("mobile menu sign in link points to /login", async ({ page }) => {
       await page.locator("#mobile-menu-btn").click();
       const menu = page.locator("#mobile-menu");
       await expect(menu.getByRole("link", { name: /sign in/i })).toHaveAttribute(
         "href",
-        "/admin/login"
+        "/login"
       );
     });
   });

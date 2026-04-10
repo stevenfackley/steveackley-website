@@ -1,0 +1,31 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { LoginForm } from '@/components/admin/LoginForm';
+
+if (Astro.locals.user) {
+  if (Astro.locals.user.role === 'ADMIN') {
+    return Astro.redirect('/admin/dashboard');
+  } else {
+    return Astro.redirect('/client/dashboard');
+  }
+}
+---
+
+<BaseLayout title="Sign In">
+  <div class="min-h-[80vh] flex flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
+          Welcome Back
+        </h1>
+        <p class="mt-2 text-[var(--text-muted)]">
+          Sign in to your account
+        </p>
+      </div>
+
+      <div class="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 shadow-xl shadow-black/5">
+        <LoginForm client:load />
+      </div>
+    </div>
+  </div>
+</BaseLayout>

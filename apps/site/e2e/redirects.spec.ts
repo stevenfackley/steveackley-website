@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
  * a live destination.
  */
 
-async function assertRedirectsToPortal(
+async function assertRedirectsToLogin(
   page: import("@playwright/test").Page,
   path: string
 ) {
@@ -15,35 +15,28 @@ async function assertRedirectsToPortal(
     maxRedirects: 0,
     failOnStatusCode: false,
   });
-  // Middleware must issue a redirect (3xx)
+  // Must issue a redirect (3xx)
   expect([301, 302, 307, 308]).toContain(response.status());
-  // Location must preserve the original path
+  // Location must point to /login or /admin/login (which redirects to /login)
   const location = response.headers()["location"] ?? "";
-  expect(location).toContain(path);
+  expect(location).toMatch(/\/login/);
 }
 
 test.describe("Admin / client route redirects", () => {
-  const adminPaths = [
+  const protectedPaths = [
     "/admin",
-    "/admin/login",
     "/admin/dashboard",
     "/admin/posts",
     "/admin/settings",
+    "/client",
+    "/client/dashboard",
   ];
 
-  for (const path of adminPaths) {
-    test(`GET ${path} redirects to portal preserving path`, async ({ page }) => {
-      await assertRedirectsToPortal(page, path);
+  for (const path of protectedPaths) {
+    test(`GET ${path} redirects to login when unauthenticated`, async ({ page }) => {
+      await assertRedirectsToLogin(page, path);
     });
   }
-
-  test("GET /client redirects to portal preserving path", async ({ page }) => {
-    await assertRedirectsToPortal(page, "/client");
-  });
-
-  test("GET /client/dashboard redirects to portal preserving path", async ({ page }) => {
-    await assertRedirectsToPortal(page, "/client/dashboard");
-  });
 });
 
 test.describe("Auth link destinations", () => {
