@@ -26,12 +26,12 @@
     "generate:resume-pdf": "node scripts/generate-resume-pdf.mjs"
   },
   "dependencies": {
-    "@eslint/js": "^9.37.0",
-    "@astrojs/check": "^0.9.7",
+    "@astrojs/check": "^0.9.8",
     "@astrojs/mdx": "^4.3.0",
-    "@astrojs/node": "^9.5.5",
+    "@astrojs/node": "^10.0.4",
     "@astrojs/react": "^5.0.0",
     "@aws-sdk/client-s3": "^3.1005.0",
+    "@eslint/js": "^9.37.0",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.12.18",
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/extension-code-block-lowlight": "^3.20.0",
@@ -42,7 +42,7 @@
     "@tiptap/pm": "^3.20.0",
     "@tiptap/react": "^3.20.0",
     "@tiptap/starter-kit": "^3.20.0",
-    "astro": "^5.18.1",
+    "astro": "^6.1.5",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.5.4",
@@ -58,6 +58,7 @@
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.5.0",
     "uuid": "^13.0.0",
+    "yaml": "^2.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -72,8 +73,8 @@
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.7.0",
-    "@vitest/coverage-v8": "^2.1.9",
-    "drizzle-kit": "^0.31.9",
+    "@vitest/coverage-v8": "^4.1.4",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-plugin-astro": "^1.3.1",
     "jsdom": "^28.1.0",
@@ -83,6 +84,6 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.4"
   }
 }
