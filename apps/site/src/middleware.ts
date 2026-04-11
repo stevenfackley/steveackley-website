@@ -116,6 +116,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.session = null;
   }
 
+  // ── Auth Protection ─────────────────────────────────────────
+  // Redirect unauthenticated users or those with insufficient roles
+  const isAdminPath = url.pathname === "/admin" || url.pathname.startsWith("/admin/");
+  const isClientPath = url.pathname === "/client" || url.pathname.startsWith("/client/");
+
+  if (isAdminPath) {
+    if (!context.locals.user || context.locals.user.role !== "ADMIN") {
+      return context.redirect("/login");
+    }
+  }
+
+  if (isClientPath) {
+    if (!context.locals.user || (context.locals.user.role !== "CLIENT" && context.locals.user.role !== "ADMIN")) {
+      // Admins are allowed to see client portal for support
+      return context.redirect("/login");
+    }
+  }
+  // ────────────────────────────────────────────────────────────
+
   const response = await next();
   response.headers.set('Content-Security-Policy', CSP);
   response.headers.set('X-Request-Id', requestId);

@@ -47,7 +47,7 @@ jobs:
     env:
       DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
       BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
-      BETTER_AUTH_URL: "http://localhost:3000"
+      BETTER_AUTH_URL: "http://127.0.0.1:3000"
       GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
       NODE_ENV: "test"
       CI: "true"
@@ -74,6 +74,12 @@ jobs:
           node-version: "20"
       - name: Install dependencies
         run: npm install --no-audit --no-fund --legacy-peer-deps
+      - name: Wait for Database
+        run: |
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for database..."
+            sleep 2
+          done
       - name: Apply database schema
         run: cd apps/site && npx drizzle-kit push --force
       - name: Install Playwright browsers
@@ -87,20 +93,20 @@ jobs:
         env:
           NODE_ENV: production
           PORT: 3000
-          HOST: "0.0.0.0"
+          HOST: "127.0.0.1"
       - name: Wait for server to be ready
         run: |
-          echo "Waiting for Astro to accept connections on 127.0.0.1:3000..."
+          echo "Waiting for Astro health check on 127.0.0.1:3000/api/health..."
           for i in $(seq 1 60); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3000/ 2>/dev/null || echo "000")
-            if echo "$HTTP_CODE" | grep -qE "^[1-9][0-9][0-9]$"; then
-              echo "Server is up (HTTP $HTTP_CODE) ✓"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3000/api/health 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Server is healthy (HTTP 200) ✓"
               exit 0
             fi
             echo "Attempt $i/60: HTTP $HTTP_CODE — waiting 2s..."
             sleep 2
           done
-          echo "Server did not start in time ✗"
+          echo "Server did not become healthy in time ✗"
           echo "=== Astro Server Startup Logs ==="
           cat /tmp/astro-server.log
           exit 1
@@ -114,6 +120,14 @@ jobs:
           echo "=== Astro Server Logs (/tmp/astro-server.log) ==="
           tail -n 200 /tmp/astro-server.log 2>/dev/null || echo "(log file not found)"
           echo "=== End of Logs ==="
+      - name: Upload Playwright Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/site/playwright-report/
+          retention-days: 7
+
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"
