@@ -7,9 +7,7 @@ const { mockSend } = vi.hoisted(() => {
 
 vi.mock("@aws-sdk/client-s3", () => {
   return {
-    S3Client: vi.fn().mockImplementation(() => ({
-      send: mockSend,
-    })),
+    S3Client: vi.fn(function() { return { send: mockSend }; }),
     PutObjectCommand: class {
       constructor(public input: any) {}
     },
