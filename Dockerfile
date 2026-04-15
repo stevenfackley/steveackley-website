@@ -18,6 +18,8 @@ RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_ENV=production
+# Re-run install with full source tree so workspace packages hoist correctly
+RUN npm install --no-audit --no-fund --no-package-lock
 RUN npm run build:site
 
 # Stage 3: Runner
