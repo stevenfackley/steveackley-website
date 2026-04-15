@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install dependencies
-        run: npm install --no-audit --no-fund --legacy-peer-deps
+        run: npm install --no-audit --no-fund
       - name: Run unit tests (site)
         run: npm run test:unit -w apps/site
 
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install dependencies
-        run: npm install --no-audit --no-fund --legacy-peer-deps
+        run: npm install --no-audit --no-fund
       - name: Run integration tests (site)
         run: npm run test:integration -w apps/site
 
@@ -73,7 +73,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install dependencies
-        run: npm install --no-audit --no-fund --legacy-peer-deps
+        run: npm install --no-audit --no-fund
       - name: Wait for Database
         run: |
           until pg_isready -h localhost -p 5432; do
