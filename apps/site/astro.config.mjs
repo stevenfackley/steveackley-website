@@ -27,8 +27,7 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: ['@tiptap/*'],
-      external: ['better-auth', /^better-auth\/.*/],
+      noExternal: ['@tiptap/*', 'better-auth', /^better-auth\/.*/],
     },
     server: {
       headers: {
