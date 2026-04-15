@@ -1,4 +1,5 @@
 import { defineCollection, z } from "astro:content";
+import { glob } from "astro/loaders";
 
 const homeOverviewSkillSchema = z.object({
   name: z.string(),
@@ -19,6 +20,7 @@ const homeOpportunitySchema = z.object({
 });
 
 const pages = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/pages" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
@@ -42,6 +44,7 @@ const pages = defineCollection({
 });
 
 const projects = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/projects" }),
   schema: z.object({
     title: z.string(),
     summary: z.string(),
@@ -54,6 +57,7 @@ const projects = defineCollection({
 });
 
 const blog = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/blog" }),
   schema: z.object({
     title: z.string(),
     excerpt: z.string(),
@@ -65,6 +69,7 @@ const blog = defineCollection({
 });
 
 const resume = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/resume" }),
   schema: z.object({
     type: z.enum(["summary", "experience", "education", "certification", "skill-category", "tech-stack"]),
     order: z.number().int().default(100),
