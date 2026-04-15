@@ -2,25 +2,17 @@
 # steveackley.org — Production Dockerfile for Astro 5
 # =============================================================================
 
-# Stage 1: Dependencies
-FROM node:22-alpine AS deps
-WORKDIR /app
-RUN apk add --no-cache libc6-compat openssl
-COPY package.json package-lock.json ./
-COPY apps/site/package.json ./apps/site/package.json
-COPY packages/shared/package.json ./packages/shared/package.json
-RUN npm ci --include=dev --legacy-peer-deps
-
-# Stage 2: Builder
+# Stage 1: Builder
+# Install with full source tree present so npm workspace hoisting is correct.
 FROM node:22-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npm install --no-audit --no-fund --no-package-lock
 ENV NODE_ENV=production
 RUN npm run build:site
 
-# Stage 3: Runner
+# Stage 2: Runner
 FROM node:22-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
