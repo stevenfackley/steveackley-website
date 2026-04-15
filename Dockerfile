@@ -9,7 +9,7 @@ RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
 COPY apps/site/package.json ./apps/site/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
-RUN npm ci --include=dev --legacy-peer-deps
+RUN npm install --no-audit --no-fund --no-package-lock
 
 # Stage 2: Builder
 FROM node:22-alpine AS builder
