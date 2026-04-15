@@ -74,6 +74,7 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.1.4",
+    "vite": "^6.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-plugin-astro": "^1.3.1",
