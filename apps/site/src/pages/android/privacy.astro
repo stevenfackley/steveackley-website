@@ -1,0 +1,120 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+
+const title = "Privacy Policy — GhostCrab";
+const description = "Privacy policy for GhostCrab, the Android remote client for OpenClaw Gateway.";
+const effectiveDate = "April 14, 2026";
+---
+
+<PublicLayout title={title} description={description}>
+  <main class="max-w-3xl mx-auto px-6 py-16 prose prose-invert">
+    <h1>Privacy Policy — GhostCrab</h1>
+
+    <p class="text-sm text-gray-400">
+      Effective date: {effectiveDate} &nbsp;·&nbsp;
+      Developer: Steve Ackley &nbsp;·&nbsp;
+      <a href="mailto:stevenfackley@gmail.com">stevenfackley@gmail.com</a>
+    </p>
+
+    <h2>1. Overview</h2>
+    <p>
+      GhostCrab is a thin Android client that connects to an OpenClaw Gateway you control.
+      It does <strong>not</strong> collect, transmit, or sell personal data to third parties.
+      There are no analytics SDKs, no advertising networks, and no cloud backend operated by this app.
+    </p>
+
+    <h2>2. Data Stored on Your Device</h2>
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Where</th><th>Why</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gateway URL(s)</td>
+          <td>Android DataStore (Preferences)</td>
+          <td>Remember connection profiles across launches</td>
+        </tr>
+        <tr>
+          <td>Profile display names</td>
+          <td>Android DataStore (Preferences)</td>
+          <td>User-set label for each saved gateway</td>
+        </tr>
+        <tr>
+          <td>Last-connected timestamp</td>
+          <td>Android DataStore (Preferences)</td>
+          <td>Display "last seen" in the profile list</td>
+        </tr>
+        <tr>
+          <td>Bearer token(s)</td>
+          <td>EncryptedSharedPreferences (AES-256-GCM, Android Keystore)</td>
+          <td>Authenticate to your gateway without re-entering on every launch</td>
+        </tr>
+        <tr>
+          <td>Onboarding progress</td>
+          <td>Android DataStore (Preferences)</td>
+          <td>Resume a partially completed setup walkthrough</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>All data is stored locally on the device. Nothing is transmitted to any server operated by the developer.</p>
+
+    <h2>3. Data Transmitted to Your Gateway</h2>
+    <p>When you connect to a gateway, the app sends:</p>
+    <ul>
+      <li>HTTP requests to the gateway URL you entered.</li>
+      <li>A Bearer token in the <code>Authorization</code> header if configured. <strong>This header is stripped from device logs.</strong></li>
+      <li>Configuration read/write payloads to the gateway's API.</li>
+      <li>AI recommendation query text if you use the AI Recommendations feature.</li>
+    </ul>
+    <p>
+      <strong>You operate the gateway.</strong> The developer has no visibility into, and no access to,
+      any data transmitted between GhostCrab and your gateway.
+    </p>
+
+    <h2>4. Permissions</h2>
+    <table>
+      <thead><tr><th>Permission</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><code>INTERNET</code></td><td>Connect to your OpenClaw Gateway</td></tr>
+        <tr><td><code>ACCESS_NETWORK_STATE</code></td><td>Detect network availability before attempting connections</td></tr>
+        <tr><td><code>ACCESS_WIFI_STATE</code></td><td>Required for mDNS multicast on some devices</td></tr>
+        <tr><td><code>CHANGE_WIFI_MULTICAST_STATE</code></td><td>Enable mDNS (LAN discovery); acquired only while the Scan screen is open</td></tr>
+      </tbody>
+    </table>
+    <p>No location, camera, microphone, contacts, or storage permissions are requested.</p>
+
+    <h2>5. Third-Party Services</h2>
+    <p>
+      GhostCrab uses <strong>Android Downloadable Fonts</strong> (via Google Mobile Services) to load
+      Inter and JetBrains Mono typefaces. This is a system-level mechanism; the app does not send any
+      user data to Google in this process. See
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's privacy policy</a>
+      for GMS behaviour.
+    </p>
+    <p>No other third-party SDKs, analytics libraries, or advertising frameworks are included.</p>
+
+    <h2>6. Children's Privacy</h2>
+    <p>
+      GhostCrab is a developer/administrator utility. It is not directed at children under 13
+      and does not knowingly collect data from children.
+    </p>
+
+    <h2>7. Security</h2>
+    <ul>
+      <li>Bearer tokens are stored in Android EncryptedSharedPreferences backed by the Android Keystore (AES-256-GCM). They are bound to the device and cannot be read on another device.</li>
+      <li>If the Keystore entry becomes unreadable (e.g. after a factory reset), the app deletes the corrupted entry and prompts re-authentication.</li>
+      <li>HTTP connections are permitted for LAN use; the app displays a warning banner when a connection is unencrypted.</li>
+    </ul>
+
+    <h2>8. Changes to This Policy</h2>
+    <p>
+      Material changes will be accompanied by an updated effective date.
+      The policy at this URL is authoritative for all distributed versions.
+    </p>
+
+    <h2>9. Contact</h2>
+    <p>
+      Questions or concerns: <a href="mailto:stevenfackley@gmail.com">stevenfackley@gmail.com</a>
+    </p>
+  </main>
+</PublicLayout>
