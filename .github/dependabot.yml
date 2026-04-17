@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 10
+    groups:
+      astro:
+        patterns: ["astro", "@astrojs/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react*"]
+      testing:
+        patterns: ["vitest*", "@vitest/*", "@playwright/*"]
+      lint:
+        patterns: ["eslint*", "@typescript-eslint/*", "typescript-eslint"]
+
+  - package-ecosystem: npm
+    directory: /apps/site
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 10
+    groups:
+      astro:
+        patterns: ["astro", "@astrojs/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react*"]
+      testing:
+        patterns: ["vitest*", "@vitest/*", "@playwright/*"]
+
+  - package-ecosystem: npm
+    directory: /packages/shared
+    schedule: { interval: weekly, day: monday }
+
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: weekly, day: monday }
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
