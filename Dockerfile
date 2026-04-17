@@ -4,7 +4,7 @@
 
 # Stage 1: Builder
 # Install with full source tree present so npm workspace hoisting is correct.
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY . .
@@ -13,7 +13,7 @@ ENV NODE_ENV=production
 RUN npm run build:site
 
 # Stage 2: Runner
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 ENV NODE_ENV=production
