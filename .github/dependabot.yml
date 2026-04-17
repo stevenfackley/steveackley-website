@@ -1,5 +1,8 @@
 version: 2
 updates:
+  # Single npm entry: root package-lock.json is the hoisted lockfile for the
+  # npm-workspaces monorepo (apps/* + packages/*). Listing sub-dirs separately
+  # causes duplicate PRs — do NOT re-add /apps/site or /packages/shared.
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly, day: monday }
@@ -10,25 +13,13 @@ updates:
       react:
         patterns: ["react", "react-dom", "@types/react*"]
       testing:
-        patterns: ["vitest*", "@vitest/*", "@playwright/*"]
+        patterns: ["vitest*", "@vitest/*", "@playwright/*", "jsdom"]
       lint:
-        patterns: ["eslint*", "@typescript-eslint/*", "typescript-eslint"]
-
-  - package-ecosystem: npm
-    directory: /apps/site
-    schedule: { interval: weekly, day: monday }
-    open-pull-requests-limit: 10
-    groups:
-      astro:
-        patterns: ["astro", "@astrojs/*"]
-      react:
-        patterns: ["react", "react-dom", "@types/react*"]
-      testing:
-        patterns: ["vitest*", "@vitest/*", "@playwright/*"]
-
-  - package-ecosystem: npm
-    directory: /packages/shared
-    schedule: { interval: weekly, day: monday }
+        patterns: ["eslint*", "@eslint/*", "@typescript-eslint/*", "typescript-eslint"]
+      tiptap:
+        patterns: ["@tiptap/*"]
+      types:
+        patterns: ["@types/*"]
 
   - package-ecosystem: docker
     directory: /
