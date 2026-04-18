@@ -16,5 +16,11 @@
     "test": "npm run test:site",
     "lint": "npm run lint:site",
     "typecheck": "npm run typecheck:site"
+  },
+  "overrides": {
+    "hono": "^4.12.14",
+    "dompurify": "^3.4.0",
+    "yaml": "^2.8.3",
+    "esbuild": "^0.25.0"
   }
 }
