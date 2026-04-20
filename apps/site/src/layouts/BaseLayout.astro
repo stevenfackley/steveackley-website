@@ -8,11 +8,24 @@ import { SETTING_KEYS } from '@/lib/setting-keys';
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article' | 'profile';
+  noindex?: boolean;
 }
 
-const { title = 'Steve Ackley', description = 'Staff Software Engineer - .NET, Azure, Full-Stack' } = Astro.props;
+const {
+  title = 'Steve Ackley',
+  description = 'Staff Software Engineer - .NET, Azure, Full-Stack',
+  ogImage,
+  ogType = 'website',
+  noindex = false,
+} = Astro.props;
 const fullTitle = title === 'Steve Ackley' ? title : `${title} | Steve Ackley`;
 const avatarUrl = 'https://github.com/stevenfackley.png';
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.toString();
+const socialImage = ogImage ?? avatarUrl;
 
 // Read site default theme from DB
 let siteTheme = 'light';
@@ -31,6 +44,21 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="description" content={description} />
     <title>{fullTitle}</title>
+
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:site_name" content="Steve Ackley" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
     
     <!-- Theme init: runs before paint to prevent flash -->
     <script is:inline define:vars={{ siteTheme }}>
