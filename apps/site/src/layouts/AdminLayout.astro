@@ -7,6 +7,7 @@ interface Props {
 
 const { title = 'Admin' } = Astro.props;
 const currentPath = Astro.url.pathname;
+const adminTitle = title === 'Admin' ? 'Admin' : `${title} · Admin`;
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard' },
@@ -20,7 +21,7 @@ const navItems = [
 ];
 ---
 
-<BaseLayout title={title}>
+<BaseLayout title={adminTitle} noindex={true}>
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex gap-8">
       <!-- Sidebar -->

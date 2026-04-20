@@ -4,6 +4,7 @@ import PostContent from '@/components/blog/PostContent.astro';
 import { formatDate } from '@/lib/utils';
 import { db, posts as postsTable } from '@/db';
 import { eq } from 'drizzle-orm';
+import { blogPostingSchema } from '@/lib/seo';
 
 const { slug } = Astro.params;
 
@@ -21,6 +22,15 @@ const [post] = await db
 if (!post || !post.published) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
+
+const postSchema = blogPostingSchema({
+  title: post.title,
+  slug: post.slug,
+  excerpt: post.excerpt,
+  coverImage: post.coverImage,
+  createdAt: post.createdAt,
+  updatedAt: post.updatedAt,
+});
 ---
 
 <PublicLayout
@@ -28,6 +38,7 @@ if (!post || !post.published) {
   description={post.excerpt || post.title}
   ogImage={post.coverImage ?? undefined}
   ogType="article"
+  jsonLd={postSchema}
 >
   <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12">
     <a href="/blog" class="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-8 transition-colors">

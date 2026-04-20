@@ -11,6 +11,7 @@ interface Props {
   ogImage?: string;
   ogType?: 'website' | 'article' | 'profile';
   noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const {
@@ -19,13 +20,28 @@ const {
   ogImage,
   ogType = 'website',
   noindex = false,
+  jsonLd,
 } = Astro.props;
 const fullTitle = title === 'Steve Ackley' ? title : `${title} | Steve Ackley`;
-const avatarUrl = 'https://github.com/stevenfackley.png';
+const faviconUrl = '/avatar.png';
 const canonicalUrl = Astro.site
   ? new URL(Astro.url.pathname, Astro.site).toString()
   : Astro.url.toString();
-const socialImage = ogImage ?? avatarUrl;
+const siteOrigin = Astro.site ? Astro.site.origin : 'https://steveackley.org';
+const socialImage = ogImage ?? `${siteOrigin}${faviconUrl}`;
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Steve Ackley',
+  url: siteOrigin,
+};
+
+const pageSchemas: Array<Record<string, unknown>> = [websiteSchema];
+if (jsonLd) {
+  if (Array.isArray(jsonLd)) pageSchemas.push(...jsonLd);
+  else pageSchemas.push(jsonLd);
+}
 
 // Read site default theme from DB
 let siteTheme = 'light';
@@ -59,6 +75,10 @@ try {
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
+
+    {pageSchemas.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
     
     <!-- Theme init: runs before paint to prevent flash -->
     <script is:inline define:vars={{ siteTheme }}>
@@ -74,8 +94,8 @@ try {
     </script>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href={avatarUrl} />
-    <link rel="apple-touch-icon" href={avatarUrl} />
+    <link rel="icon" type="image/png" href={faviconUrl} />
+    <link rel="apple-touch-icon" href={faviconUrl} />
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
