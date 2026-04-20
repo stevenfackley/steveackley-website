@@ -18,10 +18,8 @@ test.describe("Resume", () => {
       await expect(page.locator("nav a[href='/resume']").first()).toBeVisible();
     });
 
-    test("resume client component hydrates and shows name", async ({ page }) => {
+    test("renders hero name", async ({ page }) => {
       await page.goto("/resume");
-      // ResumeClient is client:load — wait for hydration
-      // The hero shows "Steve Ackley" from content
       await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible({ timeout: 10_000 });
     });
   });
