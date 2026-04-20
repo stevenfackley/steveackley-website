@@ -3,6 +3,7 @@ import PublicLayout from '@/layouts/PublicLayout.astro';
 import { ResumeClient } from '@/components/ResumeClient';
 import { getResumeContent } from '@/lib/content';
 import { getSiteSetting, SETTING_KEYS } from '@/lib/settings';
+import { personSchema } from '@/lib/seo';
 
 const [avatarUrl, resumeContent] = await Promise.all([
   getSiteSetting(SETTING_KEYS.AVATAR_URL),
@@ -10,6 +11,11 @@ const [avatarUrl, resumeContent] = await Promise.all([
 ]);
 ---
 
-<PublicLayout title="Resume" description="Steve Ackley - Staff Software Engineer resume">
+<PublicLayout
+  title="Resume"
+  description="Steve Ackley - Staff Software Engineer resume"
+  ogType="profile"
+  jsonLd={personSchema}
+>
   <ResumeClient client:load avatarUrl={avatarUrl} content={resumeContent} />
 </PublicLayout>

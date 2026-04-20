@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { getPublicRepos, enrichRepos, type EnrichedRepo } from '@/lib/github';
 import { getSiteSettings, SETTING_KEYS } from '@/lib/settings';
 import { getHomeContent, getFeaturedProjects } from '@/lib/content';
+import { personSchema } from '@/lib/seo';
 
 // Fetch live blog posts for the preview
 const blogPosts = await db
@@ -31,7 +32,7 @@ const [homeContent, featuredProjects] = await Promise.all([
 ]);
 ---
 
-<PublicLayout title={homeContent.title} description={homeContent.description}>
+<PublicLayout title={homeContent.title} description={homeContent.description} jsonLd={personSchema}>
   <div class="py-8">
     <BentoDashboard 
       blogPosts={blogPosts} 
