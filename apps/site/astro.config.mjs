@@ -9,6 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  site: 'https://steveackley.org',
   output: 'server',
   adapter: node({ mode: 'standalone' }),
   integrations: [react(), mdx()],

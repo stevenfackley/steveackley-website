@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /client/
+Disallow: /api/
+Disallow: /login
+Disallow: /resume/print
+
+Sitemap: https://steveackley.org/sitemap.xml

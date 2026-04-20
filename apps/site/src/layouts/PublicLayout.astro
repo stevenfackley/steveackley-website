@@ -4,11 +4,14 @@ import BaseLayout from './BaseLayout.astro';
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
+  ogType?: 'website' | 'article' | 'profile';
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, ogImage, ogType, noindex } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} ogImage={ogImage} ogType={ogType} noindex={noindex}>
   <slot />
 </BaseLayout>
