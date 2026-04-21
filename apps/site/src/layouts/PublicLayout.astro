@@ -7,13 +7,14 @@ interface Props {
   ogImage?: string;
   ogType?: 'website' | 'article' | 'profile';
   ogProfile?: { firstName: string; lastName: string; username: string };
+  ogArticle?: { publishedTime: Date; modifiedTime: Date; author?: string };
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
-const { title, description, ogImage, ogType, ogProfile, noindex, jsonLd } = Astro.props;
+const { title, description, ogImage, ogType, ogProfile, ogArticle, noindex, jsonLd } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description} ogImage={ogImage} ogType={ogType} ogProfile={ogProfile} noindex={noindex} jsonLd={jsonLd}>
+<BaseLayout title={title} description={description} ogImage={ogImage} ogType={ogType} ogProfile={ogProfile} ogArticle={ogArticle} noindex={noindex} jsonLd={jsonLd}>
   <slot />
 </BaseLayout>

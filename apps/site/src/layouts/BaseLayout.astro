@@ -11,6 +11,7 @@ interface Props {
   ogImage?: string;
   ogType?: 'website' | 'article' | 'profile';
   ogProfile?: { firstName: string; lastName: string; username: string };
+  ogArticle?: { publishedTime: Date; modifiedTime: Date; author?: string };
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
@@ -21,6 +22,7 @@ const {
   ogImage,
   ogType = 'website',
   ogProfile,
+  ogArticle,
   noindex = false,
   jsonLd,
 } = Astro.props;
@@ -78,6 +80,13 @@ try {
         <meta property="profile:first_name" content={ogProfile.firstName} />
         <meta property="profile:last_name" content={ogProfile.lastName} />
         <meta property="profile:username" content={ogProfile.username} />
+      </>
+    )}
+    {ogArticle && (
+      <>
+        <meta property="article:published_time" content={ogArticle.publishedTime.toISOString()} />
+        <meta property="article:modified_time" content={ogArticle.modifiedTime.toISOString()} />
+        <meta property="article:author" content={ogArticle.author ?? 'Steve Ackley'} />
       </>
     )}
 
