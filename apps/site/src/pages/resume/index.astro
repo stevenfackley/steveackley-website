@@ -4,11 +4,12 @@ import { ResumeSkills } from '@/components/resume/ResumeSkills';
 import { ResumeEmailButton } from '@/components/resume/ResumeEmailButton';
 import { getResumeContent } from '@/lib/content';
 import { getSiteSetting, SETTING_KEYS } from '@/lib/settings';
-import { personSchema } from '@/lib/seo';
+import { resumePersonSchema, breadcrumbSchema } from '@/lib/seo';
 
 const EMAIL = 'stevenfackley@gmail.com';
 const LINKEDIN = 'https://www.linkedin.com/in/stevenackley';
 const GITHUB_URL = 'https://github.com/stevenfackley';
+const SITE_ORIGIN = 'https://steveackley.org';
 
 const [avatarUrl, resumeContent] = await Promise.all([
   getSiteSetting(SETTING_KEYS.AVATAR_URL),
@@ -16,13 +17,22 @@ const [avatarUrl, resumeContent] = await Promise.all([
 ]);
 
 const { summary, coreSkills, techTags, experience, certifications, education } = resumeContent;
+
+const jsonLd = [
+  resumePersonSchema(resumeContent, avatarUrl),
+  breadcrumbSchema([
+    { name: 'Home', url: SITE_ORIGIN },
+    { name: 'Resume', url: `${SITE_ORIGIN}/resume` },
+  ]),
+];
 ---
 
 <PublicLayout
   title="Resume"
-  description="Steve Ackley - Staff Software Engineer resume"
+  description="Staff Software Engineer at Lockheed Martin. .NET, Azure &amp; Angular specialist with 10+ years experience. Microsoft-certified. Open to consulting."
   ogType="profile"
-  jsonLd={personSchema}
+  ogProfile={{ firstName: 'Steve', lastName: 'Ackley', username: 'stevenackley' }}
+  jsonLd={jsonLd}
 >
   <div class="min-h-screen">
     <div

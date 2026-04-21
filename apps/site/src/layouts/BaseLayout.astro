@@ -10,6 +10,7 @@ interface Props {
   description?: string;
   ogImage?: string;
   ogType?: 'website' | 'article' | 'profile';
+  ogProfile?: { firstName: string; lastName: string; username: string };
   noindex?: boolean;
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
@@ -19,6 +20,7 @@ const {
   description = 'Staff Software Engineer - .NET, Azure, Full-Stack',
   ogImage,
   ogType = 'website',
+  ogProfile,
   noindex = false,
   jsonLd,
 } = Astro.props;
@@ -70,6 +72,14 @@ try {
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={socialImage} />
     <meta property="og:site_name" content="Steve Ackley" />
+
+    {ogProfile && (
+      <>
+        <meta property="profile:first_name" content={ogProfile.firstName} />
+        <meta property="profile:last_name" content={ogProfile.lastName} />
+        <meta property="profile:username" content={ogProfile.username} />
+      </>
+    )}
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
