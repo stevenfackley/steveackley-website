@@ -6,6 +6,8 @@ import { db, posts as postsTable } from '@/db';
 import { eq, desc, count } from 'drizzle-orm';
 import type { PaginationInfo } from '@/types';
 
+const SITE_ORIGIN = 'https://steveackley.org';
+
 const PER_PAGE = 10;
 const page = Number(Astro.url.searchParams.get('page') ?? '1');
 const currentPage = Math.max(1, page);
@@ -36,9 +38,33 @@ const pagination: PaginationInfo = {
   hasPreviousPage: currentPage > 1,
   hasNextPage: currentPage < totalPages,
 };
+
+const blogJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Blog – Steve Ackley',
+  description: 'Writing on .NET, Azure, software architecture, and engineering practices.',
+  url: `${SITE_ORIGIN}/blog`,
+  author: { '@type': 'Person', name: 'Steve Ackley', url: SITE_ORIGIN },
+  ...(posts.length > 0 && {
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: posts.map((p, i) => ({
+        '@type': 'ListItem',
+        position: (currentPage - 1) * PER_PAGE + i + 1,
+        url: `${SITE_ORIGIN}/blog/${p.slug}`,
+        name: p.title,
+      })),
+    },
+  }),
+};
 ---
 
-<PublicLayout title="Blog" description="Thoughts on software engineering, technology, and life.">
+<PublicLayout
+  title="Blog"
+  description="Writing on .NET, Azure, software architecture, and engineering practices."
+  jsonLd={blogJsonLd}
+>
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
     <header class="mb-12">
       <h1 class="text-3xl font-bold text-[var(--text-primary)]">Blog</h1>
