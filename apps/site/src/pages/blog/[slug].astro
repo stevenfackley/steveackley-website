@@ -38,6 +38,7 @@ const postSchema = blogPostingSchema({
   description={post.excerpt || post.title}
   ogImage={post.coverImage ?? undefined}
   ogType="article"
+  ogArticle={{ publishedTime: post.createdAt, modifiedTime: post.updatedAt }}
   jsonLd={postSchema}
 >
   <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12">
