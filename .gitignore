@@ -77,3 +77,8 @@ apps/*/dist/
 
 # .NET build artifacts
 **/obj/
+*.lock
+/.claude
+*.log
+*.lscache
+/apps/site/test-results
