@@ -199,7 +199,7 @@ jobs:
             # URL-encode the plus sign in DATABASE_URL if present (it breaks Node URL parser)
             ENCODED_DB_URL=$(echo "${{ secrets.DATABASE_URL }}" | sed 's/\+/%2B/g')
 
-            touch .env && chmod 600 .env
+            : > .env && chmod 600 .env
             printf 'DATABASE_URL=%s\nAUTH_SECRET=%s\nBETTER_AUTH_SECRET=%s\n' \
               "$ENCODED_DB_URL" \
               "$AUTH_SECRET" \
@@ -216,6 +216,7 @@ jobs:
               "${{ secrets.R2_SECRET_ACCESS_KEY }}" \
               "${{ secrets.R2_BUCKET }}" \
               "${{ secrets.R2_PUBLIC_URL }}" >> .env
+            printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" >> .env
 
 
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web

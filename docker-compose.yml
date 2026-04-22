@@ -3,6 +3,17 @@
 # =============================================================================
 
 services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    networks:
+      - web
+      - internal
+    depends_on:
+      - web
+
   web:
     image: ${IMAGE_REF:-ghcr.io/stevenfackley/steveackley-web:latest}
     build: .
