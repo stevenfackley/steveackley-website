@@ -39,3 +39,20 @@ Regenerate `package-lock.json` so Dependabot sees the patched versions.
 - `esbuild: ^0.25.0` is narrower than what `vite`/`astro` transitively want (`^0.27.0`). No CI breakage observed because CI bypasses the override. If we ever switch CI to `npm ci`, relax the esbuild override to `>=0.25.0` to allow 0.27+.
 - **No major bumps.** All fixes are patch/minor within their current major (hono 4.x, dompurify 3.x, yaml 2.x, esbuild 0.x — no breaking API changes in the bumped ranges).
 - Override entries should be revisited and removed whenever the parent packages (`@modelcontextprotocol/sdk`, `isomorphic-dompurify`, `yaml-language-server`, `@esbuild-kit/core-utils`) bump their pins above the vulnerable ranges.
+
+
+---
+
+## 2026-04-28 — Dependabot sweep: lucide-react 0→1, plus minors
+
+**Status:** accepted (awareness-only stub per saved sweep policy)
+**Context:** 10 open Dependabot PRs swept. Minors/patches: aws-sdk/client-s3 patch, better-auth 1.6.5→1.6.9, isomorphic-dompurify 3.9→3.10, msw 2.13.4→2.13.6, tailwindcss 4.2.2→4.2.4 (+ postcss adapter), typescript-eslint lint group, testing group (3 updates), astro group (4 updates). One major warranted an ADR note.
+**Decision:** Auto-merge per policy.
+**Consequences — major to watch:**
+- **lucide-react 0.575.0 → 1.11.0** (PR #63):
+  - Pre-1.0, the package was treating each minor like an API-stable point release; v1.0 was the rename of "this is the package" with no big breaking surface in icon names.
+  - **Tree-shaking:** v1 dropped legacy CommonJS entry points; ES-module-only. Astro/Vite stack is fine.
+  - **Icon API:** prop names and default sizes unchanged for the icons we use. If we ever pinned an exotic icon by an old name, double-check.
+  - **Stroke width default:** unchanged at 2; visual diff should be zero.
+  - Risk: low.
+**Why no review:** private/solo repo, deploy workflow is the real build, revert is cheap.
