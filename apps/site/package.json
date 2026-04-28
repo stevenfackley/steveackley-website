@@ -30,7 +30,7 @@
     "@astrojs/mdx": "^5.0.4",
     "@astrojs/node": "^10.0.6",
     "@astrojs/react": "^5.0.4",
-    "@aws-sdk/client-s3": "^3.1005.0",
+    "@aws-sdk/client-s3": "^3.1038.0",
     "@eslint/js": "^10.0.1",
     "@modelcontextprotocol/server-sequential-thinking": "^2025.12.18",
     "@tailwindcss/typography": "^0.5.19",
