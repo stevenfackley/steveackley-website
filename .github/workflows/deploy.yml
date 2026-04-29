@@ -221,7 +221,9 @@ jobs:
 
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose up -d --remove-orphans
-            docker image prune -f
+            # Cleanup is best-effort; concurrent prunes (from prior overlapping deploy)
+            # return "a prune operation is already running" with exit 1 — don't fail the deploy.
+            docker image prune -f || true
 
             # Wait for the web container to pass its health checks (up to 60s)
             echo "Waiting for steveackley-web to become healthy..."
