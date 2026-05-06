@@ -78,7 +78,7 @@
     "eslint": "^10",
     "eslint-plugin-astro": "^1.7.0",
     "jsdom": "^29.1.1",
-    "msw": "^2.13.6",
+    "msw": "^2.14.3",
     "tailwindcss": "^4.2.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
