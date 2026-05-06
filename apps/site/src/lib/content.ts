@@ -20,7 +20,7 @@ export async function getResumeContent(): Promise<ResumeContent> {
   }
 
   return {
-    summary: summaryEntry.body.trim(),
+    summary: summaryEntry.body?.trim() ?? "",
     coreSkills: byOrder
       .filter((entry) => entry.data.type === "skill-category")
       .flatMap((entry) =>
@@ -40,7 +40,7 @@ export async function getResumeContent(): Promise<ResumeContent> {
         location: entry.data.location ?? "",
         period: entry.data.period ?? "",
         role: entry.data.role ?? "",
-        body: entry.body.trim(),
+        body: entry.body?.trim() ?? "",
         tags: entry.data.tags ?? [],
       })),
     certifications: byOrder

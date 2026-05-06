@@ -9,10 +9,26 @@ interface Props {
   label?: string;
 }
 
+function isSafeHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return (u.protocol === "http:" || u.protocol === "https:") && Boolean(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function toSafeHttpUrl(value: string): string {
+  if (!value) return "";
+  if (!isSafeHttpUrl(value)) return "";
+  return new URL(value).toString();
+}
+
 export function SettingsUploadField({ name, defaultValue = '', placeholder, label }: Props) {
   const [url, setUrl] = useState(defaultValue);
   const fileRef = useRef<HTMLInputElement>(null);
   const { clearError, error, uploadFile, uploading } = useFileUpload();
+  const previewSrc = toSafeHttpUrl(url);
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,12 +97,14 @@ export function SettingsUploadField({ name, defaultValue = '', placeholder, labe
       </div>
       {url && (
         <div className="mt-2 flex items-center gap-2">
-          <img
-            src={url}
-            alt="Preview"
-            className="h-10 w-10 rounded-lg object-cover ring-1 ring-[var(--border)] shrink-0"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
+          {previewSrc && (
+            <img
+              src={previewSrc}
+              alt="Preview"
+              className="h-10 w-10 rounded-lg object-cover ring-1 ring-[var(--border)] shrink-0"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
           <span className="text-xs text-[var(--text-muted)] truncate">{url}</span>
         </div>
       )}

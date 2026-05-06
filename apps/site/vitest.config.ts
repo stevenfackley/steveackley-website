@@ -13,8 +13,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    // Flip to jsdom only for React component tests
-    environmentMatchGlobs: [["src/__tests__/unit/components/**", "jsdom"]],
     setupFiles: ["src/__tests__/setup.ts"],
     include: [
       "src/__tests__/**/*.test.ts",
