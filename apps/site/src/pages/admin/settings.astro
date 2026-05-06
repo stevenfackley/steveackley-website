@@ -1,9 +1,6 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
-import { SettingsUploadField } from '@/components/admin/SettingsUploadField';
 import { db, siteSettings } from '@/db';
-import { setSiteSetting } from '@shared/lib/settings';
-import { SETTING_KEYS } from '@shared/lib/setting-keys';
 
 if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
   return Astro.redirect('/login');
@@ -14,10 +11,9 @@ let errorMessage: string | null = null;
 
 if (Astro.request.method === 'POST') {
   try {
-    const formData = await Astro.request.formData();
-    // Site settings currently handled via static assets or other keys
+    await Astro.request.formData();
     successMessage = 'Settings saved.';
-  } catch (err) {
+  } catch {
     errorMessage = 'Failed to save settings.';
   }
 }

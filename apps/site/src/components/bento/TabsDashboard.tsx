@@ -294,7 +294,7 @@ function ProjectsOverview({
         {/* Public GitHub repos */}
         {toShow.map((repo) => {
           const year = new Date(repo.created_at).getFullYear();
-          // @ts-ignore
+          // @ts-expect-error - isPrivate added dynamically during repo enrichment
           const isPrivate = repo.private || repo.isPrivate;
           return (
             <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer">
@@ -781,7 +781,7 @@ function ProjectsPanel({
       {/* Dynamic GitHub repos (Public + Private discovered via API) */}
       {sorted.map((repo) => {
         const year = new Date(repo.created_at).getFullYear();
-        // @ts-ignore - isPrivate is added dynamically in our enrichment if fetched via user/repos
+        // @ts-expect-error - isPrivate added dynamically during repo enrichment
         const isPrivate = repo.private || repo.isPrivate;
         
         return (
