@@ -21,6 +21,9 @@
     "hono": "^4.12.14",
     "dompurify": "^3.4.0",
     "yaml": "^2.8.3",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "yaml-language-server": {
+      "yaml": "^2.8.3"
+    }
   }
 }
