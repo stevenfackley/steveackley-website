@@ -4,7 +4,6 @@ import BentoDashboard from '@/components/bento/BentoDashboard.astro';
 import { db, posts as postsTable } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { getPublicRepos, enrichRepos, type EnrichedRepo } from '@/lib/github';
-import { getSiteSettings, SETTING_KEYS } from '@/lib/settings';
 import { getHomeContent, getFeaturedProjects } from '@/lib/content';
 import { personSchema } from '@/lib/seo';
 
