@@ -11,18 +11,24 @@ interface Props {
 
 function isSafeHttpUrl(value: string): boolean {
   try {
-    const u = new URL(value, window.location.origin);
-    return u.protocol === "http:" || u.protocol === "https:";
+    const u = new URL(value);
+    return (u.protocol === "http:" || u.protocol === "https:") && Boolean(u.hostname);
   } catch {
     return false;
   }
+}
+
+function toSafeHttpUrl(value: string): string {
+  if (!value) return "";
+  if (!isSafeHttpUrl(value)) return "";
+  return new URL(value).toString();
 }
 
 export function SettingsUploadField({ name, defaultValue = '', placeholder, label }: Props) {
   const [url, setUrl] = useState(defaultValue);
   const fileRef = useRef<HTMLInputElement>(null);
   const { clearError, error, uploadFile, uploading } = useFileUpload();
-  const previewSrc = url && isSafeHttpUrl(url) ? url : "";
+  const previewSrc = toSafeHttpUrl(url);
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
