@@ -15,129 +15,17 @@ permissions:
   contents: read
 
 jobs:
-  unit-tests:
-    name: "🧪 Unit Tests"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund --no-package-lock
-      - name: Run unit tests (site)
-        run: npm run test:unit -w apps/site
-
-  integration-tests:
-    name: "🔗 Integration Tests"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund --no-package-lock
-      - name: Run integration tests (site)
-        run: npm run test:integration -w apps/site
-
-  e2e-tests:
-    name: "🌐 E2E Tests"
-    needs: [unit-tests, integration-tests]
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/e2etest"
-      BETTER_AUTH_SECRET: "ci-e2e-test-secret-not-for-production-00000"
-      BETTER_AUTH_URL: "http://127.0.0.1:3000"
-      GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
-      NODE_ENV: "test"
-      CI: "true"
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpassword
-          POSTGRES_DB: e2etest
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund --no-package-lock
-      - name: Wait for Database
-        run: |
-          until pg_isready -h localhost -p 5432; do
-            echo "Waiting for database..."
-            sleep 2
-          done
-      - name: Apply database schema
-        run: cd apps/site && npx drizzle-kit push --force
-      - name: Install Playwright browsers
-        run: npx playwright install-deps chromium && npx playwright install chromium
-      - name: Build Astro app
-        run: npm run build:site
-        env:
-          NODE_ENV: production
-      - name: Start Astro production server
-        run: node ./apps/site/dist/server/entry.mjs > /tmp/astro-server.log 2>&1 &
-        env:
-          NODE_ENV: production
-          PORT: 3000
-          HOST: "127.0.0.1"
-      - name: Wait for server to be ready
-        run: |
-          echo "Waiting for Astro health check on 127.0.0.1:3000/api/health..."
-          for i in $(seq 1 60); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3000/api/health 2>/dev/null || echo "000")
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "Server is healthy (HTTP 200) ✓"
-              exit 0
-            fi
-            echo "Attempt $i/60: HTTP $HTTP_CODE — waiting 2s..."
-            sleep 2
-          done
-          echo "Server did not become healthy in time ✗"
-          echo "=== Astro Server Startup Logs ==="
-          cat /tmp/astro-server.log
-          exit 1
-      - name: Run E2E tests
-        run: npm run test:e2e -w apps/site
-        env:
-          BASE_URL: "http://127.0.0.1:3000"
-      - name: Show server logs on failure
-        if: failure()
-        run: |
-          echo "=== Astro Server Logs (/tmp/astro-server.log) ==="
-          tail -n 200 /tmp/astro-server.log 2>/dev/null || echo "(log file not found)"
-          echo "=== End of Logs ==="
-      - name: Upload Playwright Report
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: apps/site/playwright-report/
-          retention-days: 7
-
+  ci:
+    uses: stevenfackley/gh-actions/.github/workflows/ci-astro.yml@v1
+    with:
+      project-name: steveackley-web
+      workspace: apps/site
+      build-cmd: npm run build:site
+    secrets: inherit
 
   build-and-push:
     name: "🐳 Build & Push to GHCR"
-    needs: [unit-tests, integration-tests, e2e-tests]
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -185,13 +73,13 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.EC2_APP_DIR }}
-            
+
             # Stash any local changes to avoid merge conflicts
             git stash --include-untracked || true
             git pull origin main
             chmod +x docker/entrypoint.sh
             chmod +x docker/seed-admin.cjs
-            
+
             # Construct .env from secrets (chmod 600 before writing to protect contents)
             AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
             if [ -z "$AUTH_SECRET" ]; then
