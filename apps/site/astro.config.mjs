@@ -27,6 +27,13 @@ export default defineConfig({
         '@shared': path.resolve(__dirname, '../../packages/shared/src'),
       },
     },
+    // Pin JSX runtime to automatic. Without this, dep-resolution drift can flip
+    // esbuild to the default 'transform' (classic), which emits React.createElement
+    // without auto-importing React and breaks client-only React islands.
+    esbuild: {
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    },
     ssr: {
       noExternal: ['@tiptap/*', 'better-auth', /^better-auth\/.*/],
     },
