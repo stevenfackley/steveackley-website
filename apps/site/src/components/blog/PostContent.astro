@@ -6,4 +6,26 @@ interface Props {
 const { content } = Astro.props;
 ---
 
-<div class="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl" set:html={content} />
+<div
+  class="prose prose-neutral dark:prose-invert max-w-none
+    prose-headings:font-semibold
+    prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
+    prose-img:rounded-xl
+    prose-pre:bg-zinc-900 prose-pre:text-zinc-100 prose-pre:ring-1 prose-pre:ring-zinc-800
+    prose-code:bg-zinc-100 prose-code:text-zinc-900
+    dark:prose-code:bg-zinc-800 dark:prose-code:text-zinc-100
+    prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:font-medium
+    prose-code:before:content-none prose-code:after:content-none"
+  set:html={content}
+/>
+
+<style is:global>
+  /* Inline-code styles must NOT leak into <pre><code> blocks — those inherit from pre. */
+  .prose pre code {
+    background-color: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-weight: inherit !important;
+  }
+</style>

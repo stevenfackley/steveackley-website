@@ -8,7 +8,10 @@ FROM node:26-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY . .
-RUN npm install --no-audit --no-fund --no-package-lock
+# Use npm ci (lockfile-strict) so the Docker build matches local builds and
+# CI test runs exactly. --no-package-lock previously allowed dep drift that
+# silently switched the JSX transform from automatic to classic in prod.
+RUN npm ci --no-audit --no-fund
 ENV NODE_ENV=production
 RUN npm run build:site
 
