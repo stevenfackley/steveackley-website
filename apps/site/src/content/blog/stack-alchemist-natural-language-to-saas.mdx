@@ -1,0 +1,81 @@
+---
+title: "Stack Alchemist: Turning a Plain-English Brief into a Compilable SaaS Repo"
+excerpt: How Stack Alchemist converts a natural-language brief into a fully compilable, deployable codebase — and why a compile loop, not the LLM, is the source of truth.
+publishedAt: 2026-05-31
+tags:
+  - stack-alchemist
+  - dotnet
+  - nextjs
+  - llm
+  - release
+draft: true
+---
+
+Stack Alchemist is live at [stackalchemist.app](https://stackalchemist.app). It takes a plain-English brief and produces a **fully compilable, deployable SaaS repository** — PostgreSQL schema, a .NET Web API, a Next.js frontend, and optional infrastructure-as-code scripts.
+
+The hard part of code generation isn't getting an LLM to emit plausible code. It's getting code that *actually builds*. Stack Alchemist treats the compiler — not the model — as the source of truth.
+
+## The compile guarantee
+
+Every generation runs `dotnet build` on the output. If it fails, the build errors are fed back to the model as repair context and it tries again, up to three times. The model proposes; the compiler decides. You don't get a zip full of code that looks right and breaks on first `dotnet run`.
+
+## How a generation flows
+
+```
+User brief (natural language, or entity wizard in the canvas)
+        │
+        ▼
+  Next.js frontend
+  Simple Mode: LLM extracts a JSON schema from the prompt
+  Advanced Mode: user builds the schema by hand on a canvas
+        │
+        ▼  POST /api/generate
+  .NET Engine API
+  1. Load Handlebars templates (dotnet/ + nextjs/ + infra/)
+  2. Render project-level variables (ProjectName, DbConnectionString, …)
+  3. Call Claude → receive [[FILE:path]] … [[END_FILE]] blocks
+  4. Reconstruct: merge model output into template injection zones
+  5. Write to a temp dir → push onto an in-process Channel
+        │
+        ▼
+  Compile Worker (BackgroundService)
+  6. dotnet build in the temp dir
+  7. On failure: extract CS errors → repair prompt → retry (max 3×)
+  8. On success: zip → upload to Cloudflare R2
+  9. Presigned download URL (168h expiry)
+ 10. PATCH the Supabase generations row → frontend Realtime fires
+        │
+        ▼
+  User downloads project.zip
+```
+
+The Engine and the Compile Worker run **in the same process**, communicating over an in-process `Channel<T>` — so local development only needs the one Engine project running, no separate worker host.
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15 (App Router), React 19, Tailwind CSS, `@xyflow/react` |
+| Generation engine | .NET 10 Web API, Handlebars.Net, `System.IO.Abstractions` |
+| LLM | Claude Sonnet 4.6 (configurable via `ANTHROPIC_MODEL`; mock fallback when no API key is set) |
+| Compile worker | In-process `BackgroundService` — `dotnet build` + LLM repair loop |
+| Database & auth | Supabase PostgreSQL, Row Level Security, Supabase Auth |
+| Realtime | Supabase Realtime (WebSockets) — live generation progress |
+| Object storage | Cloudflare R2 (S3-compatible, zero egress) |
+| Payments | Stripe Checkout + webhooks |
+| Testing | xUnit, NSubstitute, FluentAssertions, Testcontainers |
+
+Templates are the skeleton; the LLM only fills marked injection zones via `[[FILE:path]]…[[END_FILE]]` blocks that get reconstructed back into the rendered template. That keeps structure deterministic and reserves the model for the parts that genuinely vary per project.
+
+## Delivery tiers
+
+| Tier | Price | What you get |
+|---|---|---|
+| Spark | Free | Guided schema capture and prompt planning (evaluation) |
+| Blueprint | $299 | Schema JSON, OpenAPI spec, SQL migrations, Markdown docs |
+| Boilerplate | $599 | Everything in Blueprint + full compilable codebase (zip) |
+| Infrastructure | $999 | Everything in Boilerplate + AWS CDK, Terraform, Helm charts, deploy runbook |
+
+The free tier never touches the paid generation pipeline — leaving `ANTHROPIC_API_KEY` unset falls back to a mock client, so the UI can be developed and demoed with zero API cost.
+
+Proprietary and source-available: fork and run locally for evaluation; commercial production use is licensed per tier.
