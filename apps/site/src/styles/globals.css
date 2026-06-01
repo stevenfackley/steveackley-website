@@ -313,6 +313,7 @@ html.dark * {
    ============================================================ */
 .prose pre {
   background-color: var(--surface);
+  color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
