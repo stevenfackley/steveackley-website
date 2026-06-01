@@ -17,7 +17,6 @@ afterEach(() => {
 import {
   getPublicRepos,
   enrichRepos,
-  PRIVATE_PROJECTS,
   type GitHubRepo,
 } from "@/lib/github";
 
@@ -31,6 +30,7 @@ function makeRepo(overrides: Partial<GitHubRepo> = {}): GitHubRepo {
     html_url: "https://github.com/stevenfackley/my-repo",
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-06-01T00:00:00Z",
+    pushed_at: "2024-06-01T00:00:00Z",
     language: "TypeScript",
     topics: ["nextjs", "react"],
     fork: false,
@@ -307,31 +307,3 @@ describe("REPO_BADGE_OVERRIDES", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// PRIVATE_PROJECTS constant
-// ---------------------------------------------------------------------------
-describe("PRIVATE_PROJECTS", () => {
-  it("has at least one entry", () => {
-    expect(PRIVATE_PROJECTS.length).toBeGreaterThan(0);
-  });
-
-  it("all private projects have required fields", () => {
-    for (const p of PRIVATE_PROJECTS) {
-      expect(p.name).toBeTruthy();
-      expect(p.description).toBeTruthy();
-      expect(p.isPrivate).toBe(true);
-      expect(p.status).toBe("active");
-      expect(Array.isArray(p.badges)).toBe(true);
-    }
-  });
-
-  it("uses PUBLIC_P1_OPS_HUB_URL env or falls back to '#'", () => {
-    const p1 = PRIVATE_PROJECTS[0];
-    // If env is not set, html_url should default to "#"
-    if (!process.env.PUBLIC_P1_OPS_HUB_URL) {
-      expect(p1.html_url).toBe("#");
-    } else {
-      expect(p1.html_url).toBe(process.env.PUBLIC_P1_OPS_HUB_URL);
-    }
-  });
-});
