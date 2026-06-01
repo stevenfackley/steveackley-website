@@ -1,36 +1,64 @@
 # Deployment Architecture
 
-## Deployment Diagram
+## Diagram
 
 ```mermaid
 flowchart TB
-    internet["Internet"] --> domain["steveackley.org"]
-    internet --> portalDomain["portal.steveackley.org"]
-    domain --> site["apps/site deployment"]
-    portalDomain --> portal["apps/portal deployment"]
-    site --> db["Shared Postgres"]
-    portal --> db
-    portal --> r2["Cloudflare R2"]
+    internet["Internet"] --> cf["Cloudflare<br/>(DNS + Tunnel)"]
+    cf --> ec2["EC2 instance"]
+    ec2 --> web["steveackley-web<br/>(Astro 6 SSR, node)"]
+    ec2 --> db["steveackley-db<br/>(Postgres 16, named volume)"]
+    web --> db
+    web --> github["GitHub API"]
+    web --> r2["Cloudflare R2"]
 ```
 
-## Domain Model
+Single Docker Compose stack on one EC2 instance, fronted by a Cloudflare Tunnel (no inbound web ports — port 22 only).
 
-| Domain | App | Purpose |
+## Domain
+
+| Domain | Target |
+|---|---|
+| `steveackley.org` | The single deployed app (`steveackley-web` container) |
+
+## Image Pipeline
+
+```
+git push main ──▶ CI (gh-actions ci-astro@v1) ──▶ build & push GHCR ──▶ SSH deploy
+                  unit + integration + e2e         tags: latest + sha-<SHA>
+```
+
+- CI lives at `.github/workflows/deploy.yml`. Unit/integration/E2E delegated to the reusable `stevenfackley/gh-actions/.github/workflows/ci-astro.yml@v1`.
+- Build job pushes `ghcr.io/stevenfackley/steveackley-web:latest` plus an immutable `sha-<SHA>` tag.
+- Deploy job SSHes to EC2, writes `.env` from GitHub secrets, runs `docker compose pull web && docker compose up -d --remove-orphans`, and polls `http://localhost:3000/` until 200.
+
+## Dockerfile
+
+- Multi-stage `node:26-alpine` build + runner.
+- **Builder uses `npm ci`** (lockfile-strict) — critical for reproducibility. The earlier `npm install --no-package-lock` allowed npm to drift dep resolution between local builds and CI, which silently flipped the JSX transform from automatic to classic and broke React island hydration in prod. Never re-introduce `--no-package-lock` in the Docker build.
+- Runner copies only `dist/`, `node_modules/`, `package.json`, Drizzle config/migrations, and the entrypoint/seed scripts.
+
+## Env Vars
+
+| Variable | Used by | Source |
 |---|---|---|
-| `steveackley.org` | `apps/site` | Public website |
-| `portal.steveackley.org` | `apps/portal` | Admin and client portal |
+| `DATABASE_URL` | SSR pages, Drizzle migrations, Better Auth | GitHub Secret → `.env` |
+| `BETTER_AUTH_SECRET`, `AUTH_SECRET` | Better Auth | GitHub Secret |
+| `BETTER_AUTH_URL` | Auth redirect base | Hardcoded to `https://steveackley.org` in deploy.yml |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH` | Seed admin on startup | GitHub Secret |
+| `GH_API_TOKEN` | GitHub repo enrichment in `lib/github.ts` | GitHub Secret |
+| `R2_*` (5 vars) | Media upload helper | GitHub Secret |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Cloudflare Tunnel sidecar container | GitHub Secret |
 
-## Environment Partitioning
+## Data Persistence
 
-| Variable set | Site | Portal |
-|---|---|---|
-| Public rendering data (`DATABASE_URL`, `GH_API_TOKEN`) | Yes | Optional |
-| Auth secrets (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) | Redirect-only awareness | Yes |
-| Upload/storage (`R2_*`) | No | Yes |
-| Route split (`PORTAL_BASE_URL`) | Yes | No |
+- Postgres data lives in the named Docker volume `postgres_data`. Survives container recreate.
+- Uploads bind-mount `./uploads:/app/uploads` (legacy; R2 is the long-term store).
 
-## Operational Notes
+## Cloudflare Tunnel
 
-- The target state is a dedicated portal deployment that owns auth callbacks and interactive admin/client features.
-- Until `PORTAL_BASE_URL` is set in production, the Astro site continues to serve the legacy private routes so the current single-container deployment remains functional.
-- Shared infrastructure should be versioned and documented independently of either frontend.
+A `cloudflared` sidecar container holds an outbound tunnel from EC2 to Cloudflare's edge. All HTTPS traffic enters via the tunnel; there is no inbound `:80` or `:443` open on the EC2 security group. See [deployment/CLOUDFLARE_TUNNEL_SETUP.md](./deployment/CLOUDFLARE_TUNNEL_SETUP.md) for setup detail.
+
+## Why Single Container
+
+A personal site + blog + admin doesn't justify a Kubernetes cluster. One EC2 instance with Docker Compose covers prod, with named-volume data persistence and immutable image tags providing roughly the same operational story for far less ongoing complexity.
