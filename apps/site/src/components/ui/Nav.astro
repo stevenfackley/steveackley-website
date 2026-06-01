@@ -3,6 +3,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/resume', label: 'Resume' },
   { href: '/blog', label: 'Blog' },
+  { href: 'mailto:stevenfackley@gmail.com?subject=Hello%20Steve', label: 'Contact' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -85,8 +86,9 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
           </span>
         )}
 
-        <!-- Account / Sign In button -->
-        {isLoggedIn ? (
+        <!-- Account button (logged-in only). Public visitors don't see "Sign In";
+             the /login route still works directly for admins. -->
+        {isLoggedIn && (
           <a
             href={accountHref}
             class="ml-1 text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-150"
@@ -96,17 +98,6 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
             </svg>
             <span class="text-xs hidden sm:inline">My Account</span>
-          </a>
-        ) : (
-          <a
-            href="/login"
-            class="ml-1 text-sm px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-150"
-            title="Sign In"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
-              <path fill-rule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1ZM6 4.5a2 2 0 1 1 4 0V6H6V4.5Z" clip-rule="evenodd" />
-            </svg>
-            <span class="text-xs hidden sm:inline">Sign In</span>
           </a>
         )}
         </div>
@@ -157,13 +148,9 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
       {isLoggedIn && (
         <p class="px-3 py-1.5 text-xs text-[var(--text-muted)]">{greeting}</p>
       )}
-      {isLoggedIn ? (
+      {isLoggedIn && (
         <a href={accountHref} class="block px-3 py-2 text-sm rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]">
           My Account
-        </a>
-      ) : (
-        <a href="/login" class="block px-3 py-2 text-sm rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
-          Sign In
         </a>
       )}
     </div>

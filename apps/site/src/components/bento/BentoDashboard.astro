@@ -15,7 +15,7 @@ const { blogPosts, githubRepos, homeContent, featuredProjects } = Astro.props;
 ---
 
 <TabsDashboard
-  client:only="react"
+  client:load
   blogPosts={blogPosts}
   githubRepos={githubRepos}
   homeContent={homeContent}

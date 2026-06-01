@@ -201,3 +201,32 @@ export async function enrichRepos(repos: GitHubRepo[]): Promise<EnrichedRepo[]> 
     status: "active" as const,
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Shared cache: SSR pages AND the /api/github/repos endpoint both call this so
+// they never burn duplicate GitHub round-trips. 30s TTL + in-flight de-dupe.
+// ---------------------------------------------------------------------------
+
+const REPO_CACHE_TTL_MS = 30_000;
+
+let repoCache: { data: EnrichedRepo[]; fetchedAt: number } | null = null;
+let repoInflight: Promise<EnrichedRepo[]> | null = null;
+
+export async function getCachedRepos(): Promise<{ repos: EnrichedRepo[]; fetchedAt: number }> {
+  if (repoCache && Date.now() - repoCache.fetchedAt <= REPO_CACHE_TTL_MS) {
+    return { repos: repoCache.data, fetchedAt: repoCache.fetchedAt };
+  }
+  if (!repoInflight) {
+    repoInflight = (async () => {
+      const repos = await getPublicRepos();
+      const enriched = await enrichRepos(repos);
+      repoCache = { data: enriched, fetchedAt: Date.now() };
+      return enriched;
+    })();
+    repoInflight.finally(() => {
+      repoInflight = null;
+    });
+  }
+  const data = await repoInflight;
+  return { repos: data, fetchedAt: repoCache?.fetchedAt ?? Date.now() };
+}

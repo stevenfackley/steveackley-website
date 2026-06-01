@@ -3,29 +3,38 @@ import PublicLayout from '@/layouts/PublicLayout.astro';
 import BentoDashboard from '@/components/bento/BentoDashboard.astro';
 import { db, posts as postsTable } from '@/db';
 import { eq, desc } from 'drizzle-orm';
-import { getPublicRepos, enrichRepos, type EnrichedRepo } from '@/lib/github';
+import { getCachedRepos, type EnrichedRepo } from '@/lib/github';
 import { getHomeContent, getFeaturedProjects } from '@/lib/content';
 import { personSchema } from '@/lib/seo';
 
-// Fetch live blog posts for the preview
-const blogPosts = await db
-  .select()
+// Fan out all four reads in parallel — the SSR waterfall used to be ~200–800ms.
+// Blog select is narrowed to only what the dashboard preview needs; the full
+// `content` HTML blob would otherwise get serialized into the React island props.
+const blogPostsPromise = db
+  .select({
+    id: postsTable.id,
+    title: postsTable.title,
+    slug: postsTable.slug,
+    excerpt: postsTable.excerpt,
+    createdAt: postsTable.createdAt,
+  })
   .from(postsTable)
   .where(eq(postsTable.published, true))
   .orderBy(desc(postsTable.createdAt))
   .limit(3);
 
-// Fetch live GitHub repos
-let githubRepos: EnrichedRepo[] = [];
-try {
-  const rawRepos = await getPublicRepos();
-  githubRepos = await enrichRepos(rawRepos);
-} catch (e) {
-  console.error("Failed to fetch GitHub repos:", e);
-}
+// Shared 30s in-process cache — same data the /api/github/repos endpoint serves
+// to the client poller. SSR and the client share one GH round-trip per window.
+const githubReposPromise = getCachedRepos()
+  .then((r) => r.repos)
+  .catch((e): EnrichedRepo[] => {
+    console.error("Failed to fetch GitHub repos:", e);
+    return [];
+  });
 
-// Load settings from database
-const [homeContent, featuredProjects] = await Promise.all([
+const [blogPosts, githubRepos, homeContent, featuredProjects] = await Promise.all([
+  blogPostsPromise,
+  githubReposPromise,
   getHomeContent(),
   getFeaturedProjects(),
 ]);
