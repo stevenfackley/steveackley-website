@@ -1,10 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn, formatDateShort } from "@/lib/utils";
 import type { PostSummary } from "@/types";
-import { PRIVATE_PROJECTS, type EnrichedRepo } from "@/lib/github";
+import type { EnrichedRepo } from "@/lib/github";
 import type { FeaturedProjectContent, HomeContent } from "@/content/types";
+
+// Compact relative-time formatter ("just now", "12s ago", "3m ago", "2d ago").
+// `now` is passed in so the same tick drives every render — no per-component timers.
+function relTime(iso: string | undefined, now: number): string {
+  if (!iso) return "";
+  const diff = Math.max(0, now - new Date(iso).getTime());
+  const s = Math.floor(diff / 1000);
+  if (s < 10) return "just now";
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}w ago`;
+  const mo = Math.floor(d / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  return `${Math.floor(d / 365)}y ago`;
+}
+
+function LiveIndicator({ lastSync, now }: { lastSync: number | null; now: number }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+      <span className="relative inline-flex h-1.5 w-1.5">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+      </span>
+      Live · refreshed {lastSync ? relTime(new Date(lastSync).toISOString(), now) : "just now"}
+    </span>
+  );
+}
 
 const TABS = [
   { id: "overview",  label: "Overview"  },
@@ -32,6 +65,45 @@ export function TabsDashboard({
 }: TabsDashboardProps) {
   const [active, setActive] = useState<TabId>("overview");
 
+  // Live-refresh GitHub repos every 30s so visitors can see commits land in real time.
+  // The API endpoint caches server-side for 30s so the GH API isn't pounded.
+  const [repos, setRepos] = useState<EnrichedRepo[]>(githubRepos);
+  const [lastSync, setLastSync] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const res = await fetch("/api/github/repos", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { repos: EnrichedRepo[]; fetchedAt: string };
+        if (cancelled || !Array.isArray(data.repos)) return;
+        setRepos(data.repos);
+        setLastSync(new Date(data.fetchedAt).getTime());
+      } catch {
+        // Network blip — silently keep last good state and try again next tick.
+      }
+    }
+    refresh();
+    const id = window.setInterval(refresh, 30_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  // Tick every 5s so relative timestamps ("12s ago") stay current between fetches.
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 5_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // featuredProjects is intentionally NOT consumed below: the user explicitly wants
+  // pure last-commit ordering with no manual pins. Keeping the prop in the interface
+  // lets callers continue to pass it without code churn — drop it later if it stays unused.
+  void featuredProjects;
+
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
       {/* Tab bar */}
@@ -55,10 +127,10 @@ export function TabsDashboard({
       </div>
 
       {/* Tab panels */}
-      {active === "overview"  && <OverviewPanel githubRepos={githubRepos} blogPosts={blogPosts} homeContent={homeContent} featuredProjects={featuredProjects} />}
+      {active === "overview"  && <OverviewPanel githubRepos={repos} blogPosts={blogPosts} homeContent={homeContent} lastSync={lastSync} now={now} />}
       {active === "about"     && <AboutPanel homeContent={homeContent} />}
       {active === "skills"    && <SkillsPanel />}
-      {active === "projects"  && <ProjectsPanel repos={githubRepos} featuredProjects={featuredProjects} />}
+      {active === "projects"  && <ProjectsPanel repos={repos} lastSync={lastSync} now={now} />}
       {active === "blog"      && <BlogPanel posts={blogPosts} />}
       {active === "connect"   && <ConnectPanel homeContent={homeContent} />}
     </div>
@@ -238,62 +310,29 @@ function AboutOverview({ homeContent }: { homeContent: HomeContent }) {
 
 function ProjectsOverview({
   repos,
-  featuredProjects,
+  lastSync,
+  now,
 }: {
   repos: EnrichedRepo[];
-  featuredProjects: FeaturedProjectContent[];
+  lastSync: number | null;
+  now: number;
 }) {
-  const featuredNames = featuredProjects.map((project) => project.title);
-  const sorted = [...repos].sort((a, b) => {
-    const ai = featuredNames.indexOf(a.name);
-    const bi = featuredNames.indexOf(b.name);
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-  });
+  // Pure last-commit ordering — newest push first.
+  const sorted = [...repos].sort(
+    (a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime()
+  );
   const toShow = sorted.slice(0, 4);
 
   return (
     <CardShell className="lg:col-span-2 p-6">
-      <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-3">
-        Projects &amp; Portfolio
-      </p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)]">
+          Projects &amp; Portfolio
+        </p>
+        <LiveIndicator lastSync={lastSync} now={now} />
+      </div>
       <div className="space-y-1.5">
-        {/* Private projects always first */}
-        {PRIVATE_PROJECTS.map((p) => (
-          <div
-            key={p.name}
-            className="rounded-xl px-3 py-2.5 border border-transparent hover:bg-[var(--surface-hover)] hover:border-[var(--border)] transition-all duration-150"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 text-white"
-                  style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-                >
-                  {p.name[0].toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{p.name}</p>
-                    <span className="text-[10px] px-1 py-0 rounded bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)] uppercase font-semibold">
-                      Private
-                    </span>
-                  </div>
-                  <p className="text-xs text-[var(--text-muted)] truncate">{p.description}</p>
-                </div>
-              </div>
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                Active
-              </span>
-            </div>
-          </div>
-        ))}
-
-        {/* Public GitHub repos */}
         {toShow.map((repo) => {
-          const year = new Date(repo.created_at).getFullYear();
           // @ts-expect-error - isPrivate added dynamically during repo enrichment
           const isPrivate = repo.private || repo.isPrivate;
           return (
@@ -314,7 +353,7 @@ function ProjectsOverview({
                         )}
                       </div>
                       <p className="text-xs text-[var(--text-muted)] truncate">
-                        {repo.language ?? "Code"} &middot; {year}
+                        {repo.language ?? "Code"} &middot; {relTime(repo.pushed_at, now)}
                       </p>
                     </div>
                   </div>
@@ -370,19 +409,21 @@ function OverviewPanel({
   githubRepos,
   blogPosts,
   homeContent,
-  featuredProjects,
+  lastSync,
+  now,
 }: {
   githubRepos: EnrichedRepo[];
   blogPosts: TabsDashboardProps["blogPosts"];
   homeContent: HomeContent;
-  featuredProjects: FeaturedProjectContent[];
+  lastSync: number | null;
+  now: number;
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <HeroOverview homeContent={homeContent} />
       <SkillsOverview homeContent={homeContent} />
       <AboutOverview homeContent={homeContent} />
-      <ProjectsOverview repos={githubRepos} featuredProjects={featuredProjects} />
+      <ProjectsOverview repos={githubRepos} lastSync={lastSync} now={now} />
       <BlogPreviewOverview posts={blogPosts} />
     </div>
   );
@@ -700,36 +741,27 @@ const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"
 
 function ProjectsPanel({
   repos,
-  featuredProjects,
+  lastSync,
+  now,
 }: {
   repos: EnrichedRepo[];
-  featuredProjects: FeaturedProjectContent[];
+  lastSync: number | null;
+  now: number;
 }) {
-  // 1. Combine dynamic repos and manually defined private projects
-  const allProjects = [...repos];
-  
-  // 2. Filter out explicitly skipped repos
-  const filtered = allProjects.filter((r) => !SKIP_REPOS.has(r.name));
-  
-  // 3. Sort: Featured first (in order), then by most recent update
-  const featuredOrder = featuredProjects.map((project) => project.title);
-  const sorted = [...filtered].sort((a, b) => {
-    const ai = featuredOrder.indexOf(a.name);
-    const bi = featuredOrder.indexOf(b.name);
-    
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-    
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-  });
+  // Filter out explicitly skipped repos, then sort strictly by last commit (pushed_at).
+  const sorted = [...repos]
+    .filter((r) => !SKIP_REPOS.has(r.name))
+    .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime());
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[var(--text-muted)]">
-          {sorted.length + PRIVATE_PROJECTS.length} project{sorted.length + PRIVATE_PROJECTS.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-[var(--text-muted)]">
+            {sorted.length} project{sorted.length !== 1 ? "s" : ""}
+          </p>
+          <LiveIndicator lastSync={lastSync} now={now} />
+        </div>
         <a
           href="https://github.com/stevenfackley"
           target="_blank"
@@ -740,50 +772,10 @@ function ProjectsPanel({
         </a>
       </div>
 
-      {/* Manually defined private projects (high priority overrides) */}
-      {PRIVATE_PROJECTS.map((p) => (
-        <div key={p.name} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 card-glow">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 text-white"
-                style={{ background: "linear-gradient(135deg, #2563eb, #7c3aed)" }}
-              >
-                {p.name[0].toUpperCase()}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-[var(--text-primary)]">{p.name}</h3>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--surface-hover)] text-[var(--text-muted)] border border-[var(--border)]">
-                    Private
-                  </span>
-                </div>
-                <p className="text-sm text-[var(--text-muted)] mt-0.5">Custom project</p>
-              </div>
-            </div>
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-              Active
-            </span>
-          </div>
-          <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">{p.description}</p>
-          {p.badges.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-1">
-              {p.badges.map((b) => (
-                <a key={b.imageUrl} href={b.href} target="_blank" rel="noopener noreferrer">
-                  <img src={b.imageUrl} alt={b.label} className="h-5" />
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-
-      {/* Dynamic GitHub repos (Public + Private discovered via API) */}
       {sorted.map((repo) => {
-        const year = new Date(repo.created_at).getFullYear();
         // @ts-expect-error - isPrivate added dynamically during repo enrichment
         const isPrivate = repo.private || repo.isPrivate;
-        
+
         return (
           <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer" className="block group">
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 card-glow">
@@ -804,7 +796,7 @@ function ProjectsPanel({
                       )}
                     </div>
                     <p className="text-sm text-[var(--text-muted)] mt-0.5">
-                      {repo.language ?? "Code"} &middot; {year}
+                      {repo.language ?? "Code"} &middot; {relTime(repo.pushed_at, now)}
                     </p>
                   </div>
                 </div>
@@ -836,7 +828,7 @@ function ProjectsPanel({
         );
       })}
 
-      {sorted.length === 0 && PRIVATE_PROJECTS.length === 0 && (
+      {sorted.length === 0 && (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 text-center">
           <p className="text-sm text-[var(--text-muted)]">Unable to load GitHub repos. Check back soon.</p>
         </div>

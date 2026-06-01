@@ -4,6 +4,7 @@ export interface GitHubRepo {
   html_url: string;
   created_at: string;
   updated_at: string;
+  pushed_at: string;
   language: string | null;
   topics: string[];
   fork: boolean;
@@ -18,43 +19,6 @@ export interface TechBadge {
 
 // Repos to skip from the public listing
 const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
-
-// Manually defined private repo (P1 Ops Hub)
-export const PRIVATE_PROJECTS = [
-  {
-    name: "P1 Ops Hub",
-    description:
-      "Operational management platform for P1 workflows. Enterprise platform centralising processes, reporting, and automation.",
-    html_url: import.meta.env.PUBLIC_P1_OPS_HUB_URL ?? "#",
-    created_at: "2024-01-01T00:00:00Z",
-    language: "Python",
-    topics: ["django", "python", "postgresql", "docker"],
-    isPrivate: true,
-    badges: [
-      {
-        label: "Django",
-        imageUrl: "https://img.shields.io/badge/Django-4.2-092E20?logo=django",
-        href: "https://www.djangoproject.com/",
-      },
-      {
-        label: "Python",
-        imageUrl: "https://img.shields.io/badge/Python-3.11-3776AB?logo=python",
-        href: "https://www.python.org/",
-      },
-      {
-        label: "PostgreSQL",
-        imageUrl: "https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql",
-        href: "https://www.postgresql.org/",
-      },
-      {
-        label: "Docker",
-        imageUrl: "https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker",
-        href: "https://www.docker.com/",
-      },
-    ] as TechBadge[],
-    status: "active" as const,
-  },
-];
 
 // Badge overrides — bridge until each repo's README is updated with shields.io badges.
 // Once a repo's README has them, remove its entry here and they'll be parsed automatically.
