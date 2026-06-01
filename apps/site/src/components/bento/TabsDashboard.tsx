@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn, formatDateShort } from "@/lib/utils";
 import type { PostSummary } from "@/types";
 import type { EnrichedRepo } from "@/lib/github";
@@ -104,17 +104,52 @@ export function TabsDashboard({
   // lets callers continue to pass it without code churn — drop it later if it stays unused.
   void featuredProjects;
 
+  // Roving tabindex + arrow-key nav per ARIA APG tabs pattern.
+  // https://www.w3.org/WAI/ARIA/apg/patterns/tabs/
+  const tablistRef = useRef<HTMLDivElement | null>(null);
+  function handleTabKey(e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) {
+    let nextIndex = currentIndex;
+    switch (e.key) {
+      case "ArrowRight": nextIndex = (currentIndex + 1) % TABS.length; break;
+      case "ArrowLeft":  nextIndex = (currentIndex - 1 + TABS.length) % TABS.length; break;
+      case "Home":       nextIndex = 0; break;
+      case "End":        nextIndex = TABS.length - 1; break;
+      default: return;
+    }
+    e.preventDefault();
+    const next = TABS[nextIndex];
+    setActive(next.id);
+    // Defer focus until the new active tab has rendered with tabindex=0.
+    requestAnimationFrame(() => {
+      const btn = tablistRef.current?.querySelector<HTMLButtonElement>(`#tab-${next.id}`);
+      btn?.focus();
+      btn?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    });
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
       {/* Tab bar */}
       <div className="mb-6 border-b border-[var(--border)]">
-        <nav className="-mb-px flex gap-1 overflow-x-auto" aria-label="Dashboard sections">
-          {TABS.map((tab) => (
+        <div
+          ref={tablistRef}
+          role="tablist"
+          aria-label="Dashboard sections"
+          className="-mb-px flex gap-1 overflow-x-auto"
+        >
+          {TABS.map((tab, i) => (
             <button
               key={tab.id}
+              id={`tab-${tab.id}`}
+              type="button"
+              role="tab"
+              aria-selected={active === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              tabIndex={active === tab.id ? 0 : -1}
               onClick={() => setActive(tab.id)}
+              onKeyDown={(e) => handleTabKey(e, i)}
               className={cn(
-                "whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-150",
+                "whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] rounded-t",
                 active === tab.id
                   ? "border-[var(--accent)] text-[var(--accent)]"
                   : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:border-[var(--border-hover)]"
@@ -123,16 +158,24 @@ export function TabsDashboard({
               {tab.label}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
-      {/* Tab panels */}
-      {active === "overview"  && <OverviewPanel githubRepos={repos} blogPosts={blogPosts} homeContent={homeContent} lastSync={lastSync} now={now} />}
-      {active === "about"     && <AboutPanel homeContent={homeContent} />}
-      {active === "skills"    && <SkillsPanel />}
-      {active === "projects"  && <ProjectsPanel repos={repos} lastSync={lastSync} now={now} />}
-      {active === "blog"      && <BlogPanel posts={blogPosts} />}
-      {active === "connect"   && <ConnectPanel homeContent={homeContent} />}
+      {/* Active tab panel — single wrapper carries the role/labelling for whichever tab is selected. */}
+      <div
+        id={`panel-${active}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${active}`}
+        tabIndex={0}
+        className="focus:outline-none"
+      >
+        {active === "overview"  && <OverviewPanel githubRepos={repos} blogPosts={blogPosts} homeContent={homeContent} lastSync={lastSync} now={now} />}
+        {active === "about"     && <AboutPanel homeContent={homeContent} />}
+        {active === "skills"    && <SkillsPanel />}
+        {active === "projects"  && <ProjectsPanel repos={repos} lastSync={lastSync} now={now} />}
+        {active === "blog"      && <BlogPanel posts={blogPosts} />}
+        {active === "connect"   && <ConnectPanel homeContent={homeContent} />}
+      </div>
     </div>
   );
 }
