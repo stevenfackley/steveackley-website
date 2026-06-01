@@ -4,35 +4,54 @@
 
 ```mermaid
 flowchart LR
-    admin["Admin user"] --> portal["Next.js portal"]
-    portal --> db["PostgreSQL"]
-    portal --> r2["Cloudflare R2"]
-    public["Public user"] --> site["Astro site"]
-    site --> content["Collections + MDX"]
-    site --> db
+    public["Public user"] --> site["apps/site (Astro SSR)"]
+    admin["Admin user"] --> adminUI["/admin/* (same app)"]
+    site --> content["File collections<br/>(pages, projects, resume)"]
+    site --> db["PostgreSQL"]
+    site --> github["GitHub API"]
+    adminUI --> db
+    adminUI --> r2["Cloudflare R2"]
 ```
 
-## Public Render Flow
+One app, two audiences. Public requests are read-only; admin requests write to Postgres and R2.
 
-1. Public request hits `apps/site`.
-2. Astro reads file-authored content from collections and public DB-backed content from PostgreSQL.
-3. Astro renders the response with minimal client hydration.
+## Public Render Flow (home page)
 
-## Portal Authoring Flow
+1. Request hits `apps/site` at `/`.
+2. `pages/index.astro` fans out four reads in parallel via `Promise.all`:
+   - Blog posts — narrowed Drizzle `select` (id, title, slug, excerpt, createdAt) so the full HTML `content` blob doesn't leak into island props.
+   - GitHub repos via `getCachedRepos()` — 30s in-process cache + in-flight de-dupe.
+   - Home content — Astro `pages` collection.
+   - Featured projects — Astro `projects` collection.
+3. Astro renders the `TabsDashboard` React island with `client:load` — full SSR markup ships immediately; hydration replaces it.
+4. On mount, the React island polls `/api/github/repos` every 30s and ticks relative timestamps every 5s — both stay client-only via `useEffect`.
 
-1. Admin/client request hits `apps/portal`.
-2. Next route handlers, server components, and future server actions use `packages/shared`.
-3. Writes land in PostgreSQL or Cloudflare R2.
-4. Public site reflects DB-backed changes on subsequent renders.
+## Public Render Flow (blog)
+
+1. `pages/blog/index.astro` (or `[slug].astro`) queries the `Post` table via Drizzle.
+2. Posts with `published = true` are returned in `createdAt desc` order.
+3. The `content` column (raw TipTap HTML) is injected via `set:html` inside `PostContent.astro`.
+
+## Admin Authoring Flow
+
+1. Admin signs in via `/login` → Better Auth handler at `pages/api/auth/[...all].ts`.
+2. `/admin/posts/new` and `/admin/posts/[id]/edit` use TipTap to produce HTML, then call Astro server actions (Zod-validated, admin-gated) that write to `Post`.
+3. Media uploads route through a shared R2 upload helper before the post body is saved.
 
 ## Auth Flow
 
-1. Portal auth requests go through `apps/portal/src/app/api/auth/[...all]/route.ts`.
-2. Shared Better Auth config in `packages/shared` owns auth setup.
-3. Astro no longer owns authenticated route handling; it redirects `/admin/*` and `/client/*` to `PORTAL_BASE_URL`.
+- Better Auth config lives in `packages/shared/lib/auth`; the Astro handler re-exports it from `apps/site/src/lib/auth.ts`.
+- Sessions are DB-persisted (`Session`, `Account`, `User` tables).
+- Role check (`admin` vs `client`) gates admin routes via middleware.
 
-## Upload Flow
+## GitHub Cache Flow
 
-1. Portal upload UI submits media.
-2. Shared upload helper validates and writes to R2.
-3. Resulting public URL is stored in DB-backed content/settings as needed.
+```
+SSR request ──┐
+              ├──▶ getCachedRepos() ──▶ cache fresh? ── return ─┐
+Polling req ──┘                              │                  │
+                                             ├── stale ─▶ fetch + enrich + cache ─┐
+                                             └── inflight Promise ── await ───────┘
+```
+
+Both SSR and the `/api/github/repos` endpoint go through `getCachedRepos()` in `lib/github.ts`. One GitHub round-trip per 30s window regardless of concurrent visitors.
