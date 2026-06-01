@@ -11,13 +11,17 @@ test.describe("Navigation", () => {
     await expect(nav.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     await expect(nav.getByRole("link", { name: "Resume" })).toHaveAttribute("href", "/resume");
     await expect(nav.getByRole("link", { name: "Blog" })).toHaveAttribute("href", "/blog");
+    await expect(nav.getByRole("link", { name: "Contact" }).first()).toHaveAttribute(
+      "href",
+      /^mailto:/
+    );
   });
 
-  test("sign in link points to /login", async ({ page }) => {
+  test("public nav does not expose a Sign In link", async ({ page }) => {
+    // PR #111 removed the public-facing "Sign In" affordance; /login still works directly
+    // for admins, but logged-out visitors should never see an auth link in the nav.
     await page.setViewportSize({ width: 1024, height: 768 });
-    const signIn = page.getByRole("link", { name: /sign in/i }).first();
-    await expect(signIn).toBeVisible();
-    await expect(signIn).toHaveAttribute("href", "/login");
+    await expect(page.getByRole("link", { name: /sign in/i })).toHaveCount(0);
   });
 
   test("nav name logo links to homepage", async ({ page }) => {
@@ -98,15 +102,16 @@ test.describe("Navigation", () => {
       await expect(menu.getByRole("link", { name: "Home" })).toBeVisible();
       await expect(menu.getByRole("link", { name: "Resume" })).toBeVisible();
       await expect(menu.getByRole("link", { name: "Blog" })).toBeVisible();
+      await expect(menu.getByRole("link", { name: "Contact" })).toHaveAttribute(
+        "href",
+        /^mailto:/
+      );
     });
 
-    test("mobile menu sign in link points to /login", async ({ page }) => {
+    test("mobile menu does not expose a Sign In link to logged-out visitors", async ({ page }) => {
       await page.locator("#mobile-menu-btn").click();
       const menu = page.locator("#mobile-menu");
-      await expect(menu.getByRole("link", { name: /sign in/i })).toHaveAttribute(
-        "href",
-        "/login"
-      );
+      await expect(menu.getByRole("link", { name: /sign in/i })).toHaveCount(0);
     });
   });
 });

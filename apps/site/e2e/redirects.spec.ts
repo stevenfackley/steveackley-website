@@ -40,11 +40,11 @@ test.describe("Admin / client route redirects", () => {
 });
 
 test.describe("Auth link destinations", () => {
-  test("sign in link in nav points to /login", async ({ page }) => {
-    await page.goto("/blog");
-    await page.setViewportSize({ width: 1024, height: 768 });
-    const signIn = page.getByRole("link", { name: /sign in/i }).first();
-    await expect(signIn).toHaveAttribute("href", "/login");
+  test("/login route is reachable directly", async ({ page }) => {
+    // The public nav no longer surfaces "Sign In" (PR #111). Admins still reach
+    // the login page by typing the URL or via the post-sign-out redirect.
+    const response = await page.goto("/login");
+    expect(response?.ok()).toBe(true);
   });
 });
 
