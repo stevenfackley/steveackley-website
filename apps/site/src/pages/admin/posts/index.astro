@@ -13,7 +13,7 @@ const allPosts = await db.select().from(postsTable).orderBy(desc(postsTable.upda
 
 <AdminLayout title="Posts">
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Posts</h1>
       <a
         href="/admin/posts/new"
