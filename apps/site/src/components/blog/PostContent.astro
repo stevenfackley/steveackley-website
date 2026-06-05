@@ -14,8 +14,14 @@ const { content } = Astro.props;
 -->
 <div
   class="prose prose-neutral dark:prose-invert max-w-none
-    prose-headings:font-semibold
-    prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline
+    prose-headings:font-semibold prose-headings:tracking-tight
+    prose-h2:mt-12 prose-h2:mb-4 prose-h3:mt-8 prose-h3:mb-3
+    prose-p:leading-relaxed
+    prose-a:text-[var(--accent)] prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+    prose-strong:text-[var(--text-primary)]
+    prose-li:marker:text-[var(--accent)]
+    prose-blockquote:border-l-[var(--accent)] prose-blockquote:not-italic prose-blockquote:font-normal prose-blockquote:text-[var(--text-secondary)]
+    prose-hr:border-[var(--border)]
     prose-img:rounded-xl
     prose-code:before:content-none prose-code:after:content-none"
   set:html={content}

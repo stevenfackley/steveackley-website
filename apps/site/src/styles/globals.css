@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Dark mode is class-based (html.dark, toggled in Nav.astro), not OS-based.
+   Without this, Tailwind v4's `dark:` utilities (e.g. dark:prose-invert on the
+   blog post body) default to prefers-color-scheme and ignore the .dark class,
+   leaving prose text un-inverted on a dark background = unreadable. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;

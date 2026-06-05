@@ -1,0 +1,54 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const user = Astro.locals.user;
+---
+
+<AdminLayout title="Account">
+  <div class="space-y-6">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Account</h1>
+
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-4">Profile</p>
+      <dl class="space-y-3 text-sm">
+        <div class="flex items-center justify-between gap-4">
+          <dt class="text-[var(--text-muted)]">Name</dt>
+          <dd class="text-[var(--text-primary)] font-medium">{user.name ?? '—'}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4">
+          <dt class="text-[var(--text-muted)]">Email</dt>
+          <dd class="text-[var(--text-primary)] font-medium">{user.email}</dd>
+        </div>
+        <div class="flex items-center justify-between gap-4">
+          <dt class="text-[var(--text-muted)]">Role</dt>
+          <dd class="text-[var(--text-primary)] font-medium">{user.role}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-3">Session</p>
+      <button
+        id="sign-out-btn"
+        type="button"
+        class="rounded-xl border border-[var(--border)] bg-[var(--surface-hover)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors disabled:opacity-60"
+      >
+        Sign out
+      </button>
+    </section>
+  </div>
+</AdminLayout>
+
+<script>
+  import { authClient } from '@/lib/auth-client';
+  const btn = document.getElementById('sign-out-btn') as HTMLButtonElement | null;
+  btn?.addEventListener('click', async () => {
+    btn.disabled = true;
+    await authClient.signOut();
+    window.location.href = '/';
+  });
+</script>
