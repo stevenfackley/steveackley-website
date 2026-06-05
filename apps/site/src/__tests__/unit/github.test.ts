@@ -80,18 +80,16 @@ describe("getPublicRepos", () => {
     expect(names).toContain("axon-main");
   });
 
-  it("returns an empty array when the API responds with a non-ok status", async () => {
+  it("throws on a non-ok status so callers can serve the last good cache", async () => {
     vi.spyOn(global, "fetch").mockResolvedValueOnce(
       new Response("Server Error", { status: 500 })
     );
-    const repos = await getPublicRepos();
-    expect(repos).toEqual([]);
+    await expect(getPublicRepos()).rejects.toThrow();
   });
 
-  it("returns an empty array when fetch throws a network error", async () => {
+  it("propagates network errors instead of swallowing them as empty", async () => {
     vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network error"));
-    const repos = await getPublicRepos();
-    expect(repos).toEqual([]);
+    await expect(getPublicRepos()).rejects.toThrow();
   });
 
   it("returns all non-fork, non-skipped repos", async () => {
@@ -304,6 +302,73 @@ describe("REPO_BADGE_OVERRIDES", () => {
 
     // tech should come from badge labels
     expect(enriched[0].tech).toEqual(enriched[0].badges.map((b) => b.label));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getCachedRepos — resilience (no cache poisoning) + badge caching
+// Module state (caches) is reset per test via vi.resetModules() + dynamic import.
+// ---------------------------------------------------------------------------
+describe("getCachedRepos", () => {
+  it("keeps serving the last good repos when a later refresh fails", async () => {
+    vi.resetModules();
+    const mod = await import("@/lib/github");
+
+    let clock = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => clock);
+
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation((url) => {
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(
+          new Response(JSON.stringify([makeRepo({ name: "a" }), makeRepo({ name: "b" })]), { status: 200 })
+        );
+      }
+      return Promise.resolve(new Response("Not Found", { status: 404 })); // READMEs
+    });
+
+    const first = await mod.getCachedRepos();
+    expect(first.repos.map((r) => r.name)).toEqual(["a", "b"]);
+
+    // Next refresh window: GitHub is rate-limited. Pre-fix, this empty/failed
+    // result poisoned the cache and blanked the section.
+    fetchSpy.mockImplementation(() =>
+      Promise.resolve(new Response("rate limited", { status: 403 }))
+    );
+    clock += 31_000; // past the 30s repo TTL → forces a refetch
+
+    const second = await mod.getCachedRepos();
+    expect(second.repos.map((r) => r.name)).toEqual(["a", "b"]);
+  });
+
+  it("does not re-fetch READMEs on a refresh within the badge TTL", async () => {
+    vi.resetModules();
+    const mod = await import("@/lib/github");
+
+    let clock = 2_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => clock);
+
+    let readmeCalls = 0;
+    vi.spyOn(global, "fetch").mockImplementation((url) => {
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(
+          new Response(JSON.stringify([makeRepo({ name: "a" })]), { status: 200 })
+        );
+      }
+      if (s.includes("/readme")) {
+        readmeCalls++;
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+      }
+      return Promise.resolve(new Response("Not Found", { status: 404 }));
+    });
+
+    await mod.getCachedRepos();
+    expect(readmeCalls).toBe(1);
+
+    clock += 31_000; // past repo TTL (refetch list) but within badge TTL
+    await mod.getCachedRepos();
+    expect(readmeCalls).toBe(1); // badges reused — no second README burst
   });
 });
 
