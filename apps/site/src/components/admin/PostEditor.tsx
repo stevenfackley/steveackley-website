@@ -2,7 +2,6 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -11,12 +10,17 @@ interface Props { value: string; onChange: (html: string) => void; }
 export function PostEditor({ value, onChange }: Props) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // StarterKit v3 bundles Link (and Underline/List/etc). Configure Link through
+      // StarterKit instead of adding @tiptap/extension-link again — a duplicate mark
+      // corrupts the schema and makes editor.getHTML() throw.
+      StarterKit.configure({
+        link: { openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } },
+      }),
       Image.configure({ inline: false, allowBase64: false }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } }),
       Placeholder.configure({ placeholder: "Start writing your post..." }),
     ],
     content: value,
+    immediatelyRender: false,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: { attributes: { class: "tiptap-editor focus:outline-none" } },
   });
