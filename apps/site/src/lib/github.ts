@@ -161,14 +161,13 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
       signal: controller.signal,
       headers,
     });
-    if (!res.ok) return [];
+    // Throw (don't return []) so callers can tell a transient failure apart from a
+    // genuinely empty list and avoid caching the failure over the last good data.
+    if (!res.ok) throw new Error(`GitHub /repos request failed: ${res.status}`);
     const repos: (GitHubRepo & { archived: boolean })[] = await res.json();
-    
+
     // Filter out forks, archived projects, and explicitly skipped repos.
     return repos.filter((r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name));
-  } catch (e) {
-    console.error("Error fetching GitHub repos:", e);
-    return [];
   } finally {
     clearTimeout(timeout);
   }
@@ -203,8 +202,41 @@ export async function enrichRepos(repos: GitHubRepo[]): Promise<EnrichedRepo[]> 
 }
 
 // ---------------------------------------------------------------------------
+// Per-repo badge cache. READMEs / shields.io badges change rarely, so cache them
+// for hours. This stops the 30s repo-list refresh from firing one README request
+// per repo every cycle — that concurrent burst was tripping GitHub's secondary
+// rate limit, which made the whole repo fetch fail and blanked the section.
+// ---------------------------------------------------------------------------
+
+const BADGE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+
+const badgeCache = new Map<string, { badges: TechBadge[]; fetchedAt: number }>();
+
+async function cachedBadges(name: string): Promise<TechBadge[]> {
+  if (REPO_BADGE_OVERRIDES[name]) return REPO_BADGE_OVERRIDES[name];
+  const hit = badgeCache.get(name);
+  if (hit && Date.now() - hit.fetchedAt <= BADGE_CACHE_TTL_MS) return hit.badges;
+  const badges = await detectBadgesFromReadme(name);
+  badgeCache.set(name, { badges, fetchedAt: Date.now() });
+  return badges;
+}
+
+async function enrichReposCached(repos: GitHubRepo[]): Promise<EnrichedRepo[]> {
+  const badgeResults = await Promise.all(repos.map((r) => cachedBadges(r.name)));
+  return repos.map((r, i) => ({
+    ...r,
+    badges: badgeResults[i],
+    tech: badgeResults[i].length > 0 ? badgeResults[i].map((b) => b.label) : inferTech(r),
+    status: "active" as const,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 // Shared cache: SSR pages AND the /api/github/repos endpoint both call this so
 // they never burn duplicate GitHub round-trips. 30s TTL + in-flight de-dupe.
+//
+// On a failed refresh we keep serving the last good data instead of caching the
+// failure — one transient GitHub error must NOT blank the repo section for 30s.
 // ---------------------------------------------------------------------------
 
 const REPO_CACHE_TTL_MS = 30_000;
@@ -219,14 +251,25 @@ export async function getCachedRepos(): Promise<{ repos: EnrichedRepo[]; fetched
   if (!repoInflight) {
     repoInflight = (async () => {
       const repos = await getPublicRepos();
-      const enriched = await enrichRepos(repos);
+      const enriched = await enrichReposCached(repos);
       repoCache = { data: enriched, fetchedAt: Date.now() };
       return enriched;
     })();
-    repoInflight.finally(() => {
-      repoInflight = null;
-    });
+    // Reset the in-flight slot once settled. The .catch on the derived promise
+    // stops a rejected refresh from surfacing as an unhandled rejection — the
+    // real error is handled by the awaiting caller below, which serves stale.
+    void repoInflight
+      .finally(() => {
+        repoInflight = null;
+      })
+      .catch(() => {});
   }
-  const data = await repoInflight;
-  return { repos: data, fetchedAt: repoCache?.fetchedAt ?? Date.now() };
+  try {
+    const data = await repoInflight;
+    return { repos: data, fetchedAt: repoCache?.fetchedAt ?? Date.now() };
+  } catch (e) {
+    console.error("getCachedRepos: GitHub fetch failed; serving last good cache.", e);
+    if (repoCache) return { repos: repoCache.data, fetchedAt: repoCache.fetchedAt };
+    return { repos: [], fetchedAt: Date.now() };
+  }
 }
