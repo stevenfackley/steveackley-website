@@ -1,17 +1,17 @@
 ---
-title: Steve Ackley
-description: Staff Software Engineer - .NET, Azure, Full-Stack
+title: Steve Ackley — .NET & AWS Engineer / Consultant
+description: Software engineer and consultant specializing in .NET, AWS, and cloud architecture. Available for contract, consulting, and advisory work.
 heroName: Steve Ackley
-heroTitle: Software Engineer · .NET · Azure · Full-Stack
-heroSummary: 12+ years designing and shipping enterprise-grade software. Core stack is C# / .NET on Azure, with deep experience across full-stack, cloud architecture, and technical leadership.
+heroTitle: Software Engineer · .NET · AWS · Full-Stack
+heroSummary: 12+ years designing and shipping enterprise-grade software. Core stack is C# / .NET on AWS, with deep experience across full-stack, cloud architecture, and technical leadership.
 heroLocation: United States
 availabilityLabel: Available for opportunities
-aboutSummary: Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem. C#, .NET, Azure, Angular, and SQL Server.
+aboutSummary: Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem. C#, .NET, AWS, Angular, and SQL Server.
 aboutBio: I build pragmatic systems with a strong bias toward maintainability, delivery discipline, and clean architecture. Most of my professional work has lived in the Microsoft stack, but I am increasingly applying the same engineering bar to modern TypeScript and React-based products.
 overviewSkills:
   - name: C# / .NET
     level: 5
-  - name: Azure Cloud
+  - name: AWS Cloud
     level: 5
   - name: SQL Server
     level: 5
@@ -60,7 +60,7 @@ featuredProjects:
 opportunities:
   - icon: "💼"
     title: Contract & Freelance
-    body: Short or long-term engagements on challenging .NET / Azure projects alongside my day job.
+    body: Short or long-term engagements on challenging .NET / AWS projects alongside my day job.
   - icon: "🚀"
     title: Side Projects
     body: Open to interesting technical problems and collaborations outside of Lockheed work.

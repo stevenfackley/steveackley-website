@@ -26,7 +26,7 @@ const {
   noindex = false,
   jsonLd,
 } = Astro.props;
-const fullTitle = title === 'Steve Ackley' ? title : `${title} | Steve Ackley`;
+const fullTitle = title.includes('Steve Ackley') ? title : `${title} | Steve Ackley`;
 const faviconUrl = '/avatar.png';
 const canonicalUrl = Astro.site
   ? new URL(Astro.url.pathname, Astro.site).toString()
