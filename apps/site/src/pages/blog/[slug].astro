@@ -4,7 +4,7 @@ import PostContent from '@/components/blog/PostContent.astro';
 import { formatDate } from '@/lib/utils';
 import { db, posts as postsTable } from '@/db';
 import { eq } from 'drizzle-orm';
-import { blogPostingSchema } from '@/lib/seo';
+import { blogPostingSchema, breadcrumbSchema } from '@/lib/seo';
 
 const { slug } = Astro.params;
 
@@ -31,6 +31,12 @@ const postSchema = blogPostingSchema({
   createdAt: post.createdAt,
   updatedAt: post.updatedAt,
 });
+
+const crumbs = breadcrumbSchema([
+  { name: 'Home', url: 'https://steveackley.org/' },
+  { name: 'Blog', url: 'https://steveackley.org/blog' },
+  { name: post.title, url: `https://steveackley.org/blog/${post.slug}` },
+]);
 ---
 
 <PublicLayout
@@ -39,7 +45,7 @@ const postSchema = blogPostingSchema({
   ogImage={post.coverImage ?? undefined}
   ogType="article"
   ogArticle={{ publishedTime: post.createdAt, modifiedTime: post.updatedAt }}
-  jsonLd={postSchema}
+  jsonLd={[postSchema, crumbs]}
 >
   <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12">
     <a href="/blog" class="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-8 transition-colors">
