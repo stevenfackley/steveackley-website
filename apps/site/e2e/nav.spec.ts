@@ -18,10 +18,12 @@ test.describe("Navigation", () => {
   });
 
   test("public nav does not expose a Sign In link", async ({ page }) => {
-    // PR #111 removed the public-facing "Sign In" affordance; /login still works directly
-    // for admins, but logged-out visitors should never see an auth link in the nav.
+    // The top nav stays auth-free for logged-out visitors. A discreet Sign In link
+    // lives in the footer (not the nav) so admins can reach /login — assert on the
+    // nav specifically, mirroring the mobile-menu test below.
     await page.setViewportSize({ width: 1024, height: 768 });
-    await expect(page.getByRole("link", { name: /sign in/i })).toHaveCount(0);
+    const nav = page.locator("nav").first();
+    await expect(nav.getByRole("link", { name: /sign in/i })).toHaveCount(0);
   });
 
   test("nav name logo links to homepage", async ({ page }) => {
