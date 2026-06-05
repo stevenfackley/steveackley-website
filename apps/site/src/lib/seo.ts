@@ -13,7 +13,7 @@ export const personSchema = {
     'https://github.com/stevenfackley',
     'https://www.linkedin.com/in/stevenackley',
   ],
-  knowsAbout: ['.NET', 'Azure', 'C#', 'Full-Stack Development', 'Software Architecture'],
+  knowsAbout: ['.NET', 'AWS', 'C#', 'Full-Stack Development', 'Software Architecture'],
 } as const;
 
 export function resumePersonSchema(
