@@ -1,0 +1,38 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { PostForm } from '@/components/admin/PostForm';
+import { db, posts as postsTable } from '@/db';
+import { eq } from 'drizzle-orm';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const { id } = Astro.params;
+const [post] = id
+  ? await db.select().from(postsTable).where(eq(postsTable.id, id)).limit(1)
+  : [];
+
+if (!post) {
+  return Astro.redirect('/admin/posts');
+}
+---
+
+<AdminLayout title="Edit Post">
+  <div class="space-y-6">
+    <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Edit Post</h1>
+    <PostForm
+      mode="update"
+      postId={post.id}
+      defaultValues={{
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt,
+        coverImage: post.coverImage,
+        published: post.published,
+        scheduledAt: post.scheduledAt,
+      }}
+      client:load
+    />
+  </div>
+</AdminLayout>
