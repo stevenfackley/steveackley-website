@@ -53,6 +53,14 @@ const crumbs = breadcrumbSchema([
     </a>
 
     <article>
+      {post.coverImage && (
+        <img
+          src={post.coverImage}
+          alt={post.title}
+          loading="eager"
+          class="mb-8 aspect-[16/9] w-full rounded-2xl border border-[var(--border)] object-cover"
+        />
+      )}
       <header class="mb-8">
         <time class="text-sm text-[var(--text-muted)]">{formatDate(post.createdAt)}</time>
         <h1 class="mt-2 text-3xl font-bold text-[var(--text-primary)] leading-tight">
