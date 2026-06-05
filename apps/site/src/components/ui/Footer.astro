@@ -2,6 +2,8 @@
 const linkedin = import.meta.env.PUBLIC_LINKEDIN_URL ?? 'https://www.linkedin.com/in/stevenackley';
 const email = import.meta.env.PUBLIC_EMAIL ?? 'stevenfackley@gmail.com';
 const year = new Date().getFullYear();
+
+const isLoggedIn = !!Astro.locals.user;
 ---
 
 <footer class="border-t border-[var(--border)] py-8 mt-auto">
@@ -25,6 +27,14 @@ const year = new Date().getFullYear();
         >
           Email
         </a>
+        {!isLoggedIn && (
+          <a
+            href="/login"
+            class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+          >
+            Sign In
+          </a>
+        )}
       </div>
     </div>
   </div>
