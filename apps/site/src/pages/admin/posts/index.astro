@@ -1,0 +1,27 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { AdminPostTable } from '@/components/admin/AdminPostTable';
+import { db, posts as postsTable } from '@/db';
+import { desc } from 'drizzle-orm';
+
+if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  return Astro.redirect('/login');
+}
+
+const allPosts = await db.select().from(postsTable).orderBy(desc(postsTable.updatedAt));
+---
+
+<AdminLayout title="Posts">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold text-[var(--text-primary)]">Posts</h1>
+      <a
+        href="/admin/posts/new"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+      >
+        New Post
+      </a>
+    </div>
+    <AdminPostTable posts={allPosts} client:load />
+  </div>
+</AdminLayout>
