@@ -8,6 +8,7 @@ const STATIC_ROUTES: Array<{ path: string; changefreq: string; priority: string 
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/blog', changefreq: 'daily', priority: '0.9' },
   { path: '/resume', changefreq: 'monthly', priority: '0.8' },
+  { path: '/android/privacy', changefreq: 'yearly', priority: '0.3' },
 ];
 
 function xmlEscape(value: string): string {

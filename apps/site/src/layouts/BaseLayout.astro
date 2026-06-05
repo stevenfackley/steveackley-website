@@ -32,7 +32,7 @@ const canonicalUrl = Astro.site
   ? new URL(Astro.url.pathname, Astro.site).toString()
   : Astro.url.toString();
 const siteOrigin = Astro.site ? Astro.site.origin : 'https://steveackley.org';
-const socialImage = ogImage ?? `${siteOrigin}${faviconUrl}`;
+const socialImage = ogImage ?? `${siteOrigin}/og-default.png`;
 
 const websiteSchema = {
   '@context': 'https://schema.org',
@@ -66,6 +66,7 @@ try {
     <title>{fullTitle}</title>
 
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title="Steve Ackley — Blog" href="/rss.xml" />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:title" content={fullTitle} />
