@@ -13,8 +13,16 @@ export default defineConfig({
   output: 'server',
   adapter: node({ mode: 'standalone' }),
   integrations: [react(), mdx()],
+  // checkOrigin (Astro's CSRF guard) is disabled because the site runs behind a
+  // Cloudflare Tunnel that terminates TLS and forwards plain HTTP to the container.
+  // Astro then computes url.origin as http://… while the browser sends an https
+  // Origin header, so every form POST (image upload, admin saves) was rejected with
+  // "Cross-site POST form submissions are forbidden" (403). CSRF is still covered:
+  // Better Auth session cookies are SameSite=Lax + Secure, so a cross-site POST
+  // never carries the admin session. Re-enable once the tunnel forwards
+  // X-Forwarded-Proto: https so Astro computes the correct https origin.
   security: {
-    checkOrigin: true,
+    checkOrigin: false,
   },
   server: {
     host: '127.0.0.1',
