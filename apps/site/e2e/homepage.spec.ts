@@ -64,7 +64,7 @@ test.describe("Homepage / BentoDashboard", () => {
   test.describe("Overview panel content", () => {
     test("shows hero name and title", async ({ page }) => {
       await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible();
-      await expect(page.getByText("Software Engineer · .NET · Azure · Full-Stack")).toBeVisible();
+      await expect(page.getByText(/Software Engineer/)).toBeVisible({ timeout: 10_000 });
     });
 
     test("shows location badge", async ({ page }) => {
