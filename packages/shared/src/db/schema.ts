@@ -33,7 +33,9 @@ export const sessions = pgTable("Session", {
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
   userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-});
+}, (table) => ({
+  userIdIdx: index("Session_userId_idx").on(table.userId),
+}));
 
 // Better-Auth Account table
 export const accounts = pgTable("Account", {
@@ -50,7 +52,9 @@ export const accounts = pgTable("Account", {
   password: text("password"),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => ({
+  userIdIdx: index("Account_userId_idx").on(table.userId),
+}));
 
 // Better-Auth Verification table
 export const verifications = pgTable("Verification", {
@@ -60,7 +64,9 @@ export const verifications = pgTable("Verification", {
   expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => ({
+  identifierIdx: index("Verification_identifier_idx").on(table.identifier),
+}));
 
 // ClientApp table
 export const clientApps = pgTable("ClientApp", {

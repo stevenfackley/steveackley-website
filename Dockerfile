@@ -1,10 +1,11 @@
 # =============================================================================
-# steveackley.org — Production Dockerfile for Astro 5
+# steveackley.org — Production Dockerfile for Astro 6
 # =============================================================================
 
 # Stage 1: Builder
 # Install with full source tree present so npm workspace hoisting is correct.
-FROM node:26-alpine AS builder
+# Base image pinned by digest for reproducible builds; bump deliberately.
+FROM node:26-alpine@sha256:144769ec3f32e8ee36b3cfde91e82bee25d9367b20f31a151f3f7eea3a2a8541 AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY . .
@@ -16,7 +17,7 @@ ENV NODE_ENV=production
 RUN npm run build:site
 
 # Stage 2: Runner
-FROM node:26-alpine AS runner
+FROM node:26-alpine@sha256:144769ec3f32e8ee36b3cfde91e82bee25d9367b20f31a151f3f7eea3a2a8541 AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 ENV NODE_ENV=production
@@ -46,6 +47,10 @@ USER astrojs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOST=0.0.0.0
+
+# busybox wget ships in node:alpine; hit the unauthenticated health endpoint.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1
 
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
 CMD ["node", "./dist/server/entry.mjs"]
