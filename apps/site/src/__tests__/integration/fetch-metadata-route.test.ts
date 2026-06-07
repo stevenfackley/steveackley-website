@@ -200,4 +200,42 @@ describe("POST /api/fetch-metadata", () => {
       expect(body.error).toBe("Failed to fetch metadata");
     });
   });
+
+  // ── SSRF protection ──────────────────────────────────────────────────────────
+  // The endpoint fetches an admin-supplied URL server-side. Without validation an
+  // admin (or a CSRF-forged request, since checkOrigin is disabled behind the
+  // tunnel) could pivot to internal services / the cloud metadata endpoint.
+  describe("SSRF protection", () => {
+    const blocked: ReadonlyArray<readonly [string, string]> = [
+      ["a non-URL string", "not a url"],
+      ["a non-http(s) scheme", "file:///etc/passwd"],
+      ["localhost", "http://localhost:5432/"],
+      ["the loopback IP", "http://127.0.0.1/"],
+      ["the cloud metadata IP", "http://169.254.169.254/latest/meta-data/"],
+      ["a private 10.x address", "http://10.0.0.5/"],
+      ["a private 192.168.x address", "http://192.168.1.1/"],
+      ["a private 172.16-31.x address", "http://172.16.0.10/"],
+    ];
+
+    for (const [label, url] of blocked) {
+      it(`rejects ${label} with 400 and never calls fetch`, async () => {
+        const fetchSpy = vi.spyOn(global, "fetch");
+        const res = await POST(
+          makeContext({ user: { role: "ADMIN" }, body: { url } }) as any
+        );
+        expect(res.status).toBe(400);
+        expect(fetchSpy).not.toHaveBeenCalled();
+      });
+    }
+
+    it("still allows a public https URL", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce(
+        new Response("<html><head><title>ok</title></head></html>", { status: 200 })
+      );
+      const res = await POST(
+        makeContext({ user: { role: "ADMIN" }, body: { url: "https://example.com" } }) as any
+      );
+      expect(res.status).toBe(200);
+    });
+  });
 });
