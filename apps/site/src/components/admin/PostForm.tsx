@@ -109,15 +109,21 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
         <div className="space-y-5">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 space-y-4">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Publish Settings</h3>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div
-                className={`relative h-5 w-9 rounded-full transition-colors ${published ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
-                onClick={() => setPublished(!published)}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={published}
+              aria-label="Published"
+              onClick={() => setPublished(!published)}
+              className="flex items-center gap-3 cursor-pointer border-0 bg-transparent p-0 text-left"
+            >
+              <span
+                className={`relative block h-5 w-9 rounded-full transition-colors ${published ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`}
               >
-                <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${published ? "translate-x-4" : "translate-x-0.5"}`} />
-              </div>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${published ? "translate-x-4" : "translate-x-0.5"}`} />
+              </span>
               <span className="text-sm text-[var(--text-secondary)]">{published ? "Published" : "Draft"}</span>
-            </label>
+            </button>
 
             <div>
               <label className={lbl}>Schedule Publish</label>
