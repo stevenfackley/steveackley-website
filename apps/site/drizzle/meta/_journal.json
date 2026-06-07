@@ -15,6 +15,13 @@
       "when": 1774801696811,
       "tag": "0001_shiny_gressill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780793354015,
+      "tag": "0002_auth_table_indexes",
+      "breakpoints": true
     }
   ]
 }
