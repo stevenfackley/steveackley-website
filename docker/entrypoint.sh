@@ -39,8 +39,9 @@ else
   echo "⚠ DATABASE_URL not set, skipping schema push"
 fi
 
-# Seed admin user if credentials are provided
-if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD_HASH" ]; then
+# Seed admin user if credentials are provided. ADMIN_PASSWORD (plaintext) is
+# preferred; ADMIN_PASSWORD_HASH is accepted only if it is a scrypt hash.
+if [ -n "$ADMIN_EMAIL" ] && { [ -n "$ADMIN_PASSWORD" ] || [ -n "$ADMIN_PASSWORD_HASH" ]; }; then
   echo "==> Seeding admin user..."
   node /app/docker/seed-admin.cjs || echo "⚠ Admin seed failed (non-fatal)"
 fi
