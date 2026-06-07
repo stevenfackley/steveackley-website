@@ -118,6 +118,12 @@ jobs:
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" >> .env
 
 
+            # Reclaim disk BEFORE pulling. Accumulated image tags + layers from
+            # many deploys filled the box ("no space left on device" on pull).
+            # -af removes all images not used by a running container, plus build
+            # cache. NO --volumes, so the Postgres data volume is never touched.
+            docker system prune -af || true
+
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose up -d --remove-orphans
             # Cleanup is best-effort; concurrent prunes (from prior overlapping deploy)
