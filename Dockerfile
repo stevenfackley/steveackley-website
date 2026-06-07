@@ -39,6 +39,7 @@ COPY --from=builder /app/apps/site/scripts ./scripts
 # Copy entrypoint and seed scripts
 COPY --chown=astrojs:nodejs docker/entrypoint.sh /app/docker/entrypoint.sh
 COPY --chown=astrojs:nodejs docker/seed-admin.cjs /app/docker/seed-admin.cjs
+COPY --chown=astrojs:nodejs docker/password.cjs /app/docker/password.cjs
 RUN chmod +x /app/docker/entrypoint.sh
 
 USER astrojs

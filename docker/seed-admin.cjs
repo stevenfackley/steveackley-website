@@ -1,64 +1,112 @@
 /**
  * Seed Admin User — runs at container startup via entrypoint.sh
- * (Drizzle version)
+ *
+ * Better Auth (emailAndPassword) reads the credential from the Account table
+ * (providerId = 'credential', password = scrypt `<salt>:<key>`), NOT from
+ * User.passwordHash. The previous version of this script only wrote the dead
+ * User.passwordHash column, so deploys never actually provisioned a working
+ * login. This version upserts the Better Auth Account credential.
+ *
+ * Credential source (first match wins):
+ *   1. ADMIN_PASSWORD       — plaintext, hashed here with scrypt
+ *   2. ADMIN_PASSWORD_HASH  — only if already in scrypt `salt:key` format
+ * A legacy bcrypt ADMIN_PASSWORD_HASH cannot be used by Better Auth; in that
+ * case the User row is still ensured but the script warns that login will not
+ * work until ADMIN_PASSWORD is provided.
  */
 const postgres = require("postgres");
-const { drizzle } = require("drizzle-orm/postgres-js");
+const { randomUUID } = require("node:crypto");
+const { hashPassword, isScryptHash } = require("./password.cjs");
 
-// Minimal schema for seeding
-const { pgTable, text, boolean, pgEnum, timestamp } = require("drizzle-orm/pg-core");
-const { eq } = require("drizzle-orm");
+const ADMIN_NAME = "Steve Ackley";
 
-const roleEnum = pgEnum("Role", ["ADMIN", "CLIENT"]);
-const users = pgTable("User", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("passwordHash"),
-  name: text("name"),
-  role: roleEnum("role").notNull().default("CLIENT"),
-  emailVerified: boolean("emailVerified").notNull().default(false),
-  updatedAt: timestamp("updatedAt").defaultNow(),
-});
+async function resolveCredentialHash() {
+  const plaintext = process.env.ADMIN_PASSWORD;
+  if (plaintext) {
+    return hashPassword(plaintext);
+  }
+  const legacy = process.env.ADMIN_PASSWORD_HASH;
+  if (isScryptHash(legacy)) {
+    return legacy;
+  }
+  return null;
+}
 
 async function main() {
   const email = process.env.ADMIN_EMAIL;
-  const passwordHash = process.env.ADMIN_PASSWORD_HASH;
   const dbUrl = process.env.DATABASE_URL;
 
-  if (!email || !passwordHash || !dbUrl) {
-    console.log("  ADMIN_EMAIL, ADMIN_PASSWORD_HASH or DATABASE_URL not set, skipping admin seed.");
+  if (!email || !dbUrl) {
+    console.log("  ADMIN_EMAIL or DATABASE_URL not set, skipping admin seed.");
     return;
   }
 
-  const queryClient = postgres(dbUrl, { max: 1 });
-  const db = drizzle(queryClient);
+  const credentialHash = await resolveCredentialHash();
+  if (!credentialHash) {
+    console.log(
+      "  ⚠ No usable admin password: set ADMIN_PASSWORD (plaintext). " +
+        "A bcrypt ADMIN_PASSWORD_HASH is NOT usable by Better Auth — login will " +
+        "not work until ADMIN_PASSWORD is provided. Ensuring User row only."
+    );
+  }
+
+  const sql = postgres(dbUrl, { max: 1 });
 
   try {
-    const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    // ── Upsert the User row ──────────────────────────────────────────────────
+    const [existingUser] = await sql`
+      SELECT id FROM "User" WHERE email = ${email} LIMIT 1
+    `;
 
-    if (existing) {
-      if (existing.passwordHash !== passwordHash || existing.role !== "ADMIN") {
-        await db
-          .update(users)
-          .set({ passwordHash, name: "Steve Ackley", role: "ADMIN", emailVerified: true, updatedAt: new Date() })
-          .where(eq(users.email, email));
-        console.log(`  ✓ Updated admin user: ${email}`);
-      } else {
-        console.log(`  ✓ Admin user up to date: ${email}`);
-      }
+    let userId;
+    if (existingUser) {
+      userId = existingUser.id;
+      await sql`
+        UPDATE "User"
+        SET name = ${ADMIN_NAME},
+            role = 'ADMIN',
+            "emailVerified" = true,
+            "passwordHash" = COALESCE(${credentialHash}, "passwordHash"),
+            "updatedAt" = NOW()
+        WHERE id = ${userId}
+      `;
+      console.log(`  ✓ Updated admin user: ${email}`);
     } else {
-      await db.insert(users).values({
-        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-        email,
-        passwordHash,
-        name: "Steve Ackley",
-        role: "ADMIN",
-        emailVerified: true,
-      });
+      userId = randomUUID();
+      await sql`
+        INSERT INTO "User" (id, email, name, role, "emailVerified", "passwordHash", "createdAt", "updatedAt")
+        VALUES (${userId}, ${email}, ${ADMIN_NAME}, 'ADMIN', true, ${credentialHash}, NOW(), NOW())
+      `;
       console.log(`  ✓ Created admin user: ${email}`);
     }
+
+    if (!credentialHash) {
+      return; // User ensured; nothing to provision for login.
+    }
+
+    // ── Upsert the Better Auth credential Account row ────────────────────────
+    const [existingAccount] = await sql`
+      SELECT id FROM "Account"
+      WHERE "userId" = ${userId} AND "providerId" = 'credential'
+      LIMIT 1
+    `;
+
+    if (existingAccount) {
+      await sql`
+        UPDATE "Account"
+        SET password = ${credentialHash}, "updatedAt" = NOW()
+        WHERE id = ${existingAccount.id}
+      `;
+      console.log("  ✓ Updated Better Auth credential account");
+    } else {
+      await sql`
+        INSERT INTO "Account" (id, "userId", "accountId", "providerId", password, "createdAt", "updatedAt")
+        VALUES (${randomUUID()}, ${userId}, ${email}, 'credential', ${credentialHash}, NOW(), NOW())
+      `;
+      console.log("  ✓ Created Better Auth credential account");
+    }
   } finally {
-    await queryClient.end();
+    await sql.end();
   }
 }
 
