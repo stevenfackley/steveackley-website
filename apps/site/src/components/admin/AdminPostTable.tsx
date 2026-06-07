@@ -57,6 +57,7 @@ export function AdminPostTable({ posts }: { posts: PostSummary[] }) {
     <div className="space-y-3">
       <input
         type="search"
+        aria-label="Search posts"
         value={search}
         onChange={(e) => handleSearch(e.target.value)}
         placeholder="Search posts…"
@@ -77,10 +78,10 @@ export function AdminPostTable({ posts }: { posts: PostSummary[] }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)]">
-                  <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Title</th>
-                  <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden md:table-cell">Updated</th>
-                  <th className="text-right px-4 py-3 font-medium text-[var(--text-muted)]">Actions</th>
+                  <th scope="col" className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Title</th>
+                  <th scope="col" className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">Status</th>
+                  <th scope="col" className="text-left px-4 py-3 font-medium text-[var(--text-muted)] hidden md:table-cell">Updated</th>
+                  <th scope="col" className="text-right px-4 py-3 font-medium text-[var(--text-muted)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -128,9 +129,9 @@ function PostRow({ post }: { post: PostSummary }) {
       <td className="px-4 py-3 hidden md:table-cell text-[var(--text-muted)] whitespace-nowrap">{formatDateShort(post.updatedAt)}</td>
       <td className="px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={handleToggle} disabled={isPending}>{post.published ? "Unpublish" : "Publish"}</Button>
+          <Button variant="ghost" size="sm" onClick={handleToggle} disabled={isPending} aria-label={`${post.published ? "Unpublish" : "Publish"} post: ${post.title}`}>{post.published ? "Unpublish" : "Publish"}</Button>
           <a href={`/admin/posts/${post.id}/edit`}><Button variant="secondary" size="sm">Edit</Button></a>
-          <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
+          <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending} aria-label={`Delete post: ${post.title}`}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
         </div>
       </td>
     </tr>
@@ -151,9 +152,9 @@ function PostCard({ post }: { post: PostSummary }) {
         <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{formatDateShort(post.updatedAt)}</span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" size="sm" onClick={handleToggle} disabled={isPending}>{post.published ? "Unpublish" : "Publish"}</Button>
+        <Button variant="ghost" size="sm" onClick={handleToggle} disabled={isPending} aria-label={`${post.published ? "Unpublish" : "Publish"} post: ${post.title}`}>{post.published ? "Unpublish" : "Publish"}</Button>
         <a href={`/admin/posts/${post.id}/edit`} className="flex-1 min-w-[5rem]"><Button variant="secondary" size="sm" className="w-full">Edit</Button></a>
-        <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
+        <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending} aria-label={`Delete post: ${post.title}`}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
       </div>
     </div>
   );
