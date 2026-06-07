@@ -96,9 +96,10 @@ jobs:
               "$AUTH_SECRET" \
               "$AUTH_SECRET" >> .env
 
-            printf 'BETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\n' \
+            printf 'BETTER_AUTH_URL=%s\nADMIN_EMAIL=%s\nADMIN_PASSWORD=%s\nADMIN_PASSWORD_HASH=%s\nGH_API_TOKEN=%s\n' \
               "https://steveackley.org" \
               "stevenfackley@gmail.com" \
+              "${{ secrets.ADMIN_PASSWORD }}" \
               "${{ secrets.ADMIN_PASSWORD_HASH }}" \
               "${{ secrets.GH_API_TOKEN }}" >> .env
             printf 'R2_ACCOUNT_ID=%s\nR2_ACCESS_KEY_ID=%s\nR2_SECRET_ACCESS_KEY=%s\nR2_BUCKET=%s\nR2_PUBLIC_URL=%s\n' \
