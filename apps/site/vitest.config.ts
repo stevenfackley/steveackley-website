@@ -38,6 +38,14 @@ export default defineConfig({
         "**/*.d.ts",
         "**/node_modules/**",
       ],
+      // Regression ratchet: set a few points below current coverage so normal
+      // churn passes but a real drop fails CI. Raise as coverage improves.
+      thresholds: {
+        statements: 65,
+        branches: 50,
+        functions: 45,
+        lines: 65,
+      },
     },
   },
 });
