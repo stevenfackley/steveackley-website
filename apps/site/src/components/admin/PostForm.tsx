@@ -74,8 +74,9 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <div>
-            <label className={lbl}>Title *</label>
+            <label htmlFor="post-title" className={lbl}>Title *</label>
             <input
+              id="post-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -93,10 +94,11 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
             )}
           </div>
           <div>
-            <label className={lbl}>
+            <label htmlFor="post-excerpt" className={lbl}>
               Excerpt <span className="text-[var(--text-muted)]">(auto-generated if empty)</span>
             </label>
             <textarea
+              id="post-excerpt"
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               rows={3}
@@ -120,8 +122,9 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
             </label>
 
             <div>
-              <label className={lbl}>Schedule Publish</label>
+              <label htmlFor="post-scheduledAt" className={lbl}>Schedule Publish</label>
               <input
+                id="post-scheduledAt"
                 type="datetime-local"
                 value={scheduledAt}
                 onChange={(e) => setScheduledAt(e.target.value)}
@@ -156,7 +159,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950">
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950">
           <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
         </div>
       )}
