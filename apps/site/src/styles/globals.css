@@ -8,7 +8,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
@@ -16,44 +17,66 @@
    Base Theme — Light Mode (default)
    ============================================================ */
 :root {
-  --background: #f8f9fc;
+  --background: #f6f7fd;
   --surface: #ffffff;
-  --surface-hover: #f1f3f9;
-  --border: #e2e6f0;
-  --border-hover: #c7cee0;
-  --text-primary: #0f1117;
-  --text-secondary: #4a5270;
-  --text-muted: #7b849e;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --surface-hover: #eef0fa;
+  --border: #e2e6f3;
+  --border-hover: #c7cee6;
+  --text-primary: #0e1018;
+  --text-secondary: #474e6e;
+  --text-muted: #767e9d;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
   --accent-text: #ffffff;
-  --accent-glow: rgba(37, 99, 235, 0.18);
-  --gradient-start: #2563eb;
-  --gradient-end: #7c3aed;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(37,99,235,0.10);
+  --accent-2: #0d9488;
+  --accent-glow: rgba(79, 70, 229, 0.16);
+  --gradient-start: #3b82f6;
+  --gradient-mid: #8b5cf6;
+  --gradient-end: #14b8a6;
+  --card-shadow: 0 1px 3px rgba(13, 16, 45, 0.05), 0 6px 24px rgba(13, 16, 45, 0.05);
+  --card-shadow-hover: 0 4px 12px rgba(13, 16, 45, 0.07), 0 16px 40px rgba(79, 70, 229, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --spot-color: rgba(79, 70, 229, 0.08);
+  --aurora-1: rgba(96, 165, 250, 0.5);
+  --aurora-2: rgba(167, 139, 250, 0.42);
+  --aurora-3: rgba(45, 212, 191, 0.34);
+  --aurora-opacity: 0.5;
+  --noise-opacity: 0.3;
 }
 
 /* ============================================================
    Dark Mode — class-based (.dark on <html>), no OS auto-switch
    ============================================================ */
 html.dark {
-  --background: #07080f;
-  --surface: #0f1117;
-  --surface-hover: #181c28;
-  --border: #1e2235;
-  --border-hover: #2d3352;
-  --text-primary: #f0f2ff;
-  --text-secondary: #8b91b0;
-  --text-muted: #555c7a;
-  --accent: #60a5fa;
-  --accent-hover: #93c5fd;
-  --accent-text: #07080f;
-  --accent-glow: rgba(96, 165, 250, 0.20);
+  --background: #06070f;
+  --surface: #0c0e1b;
+  --surface-hover: #14172a;
+  --border: #1d2139;
+  --border-hover: #2f3559;
+  --text-primary: #eef0ff;
+  --text-secondary: #969cbe;
+  --text-muted: #5c6385;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-text: #06070f;
+  --accent-2: #2dd4bf;
+  --accent-glow: rgba(129, 140, 248, 0.2);
   --gradient-start: #60a5fa;
-  --gradient-end: #a78bfa;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4), 0 12px 32px rgba(96,165,250,0.12);
+  --gradient-mid: #a78bfa;
+  --gradient-end: #2dd4bf;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 6px 24px rgba(0, 0, 0, 0.25);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 40px rgba(129, 140, 248, 0.14);
+  --glass-bg: rgba(12, 14, 27, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --spot-color: rgba(129, 140, 248, 0.12);
+  --aurora-1: rgba(37, 99, 235, 0.4);
+  --aurora-2: rgba(124, 58, 237, 0.34);
+  --aurora-3: rgba(20, 184, 166, 0.25);
+  --aurora-opacity: 0.55;
+  --noise-opacity: 0.5;
 }
 
 /* ============================================================
@@ -67,29 +90,127 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+h1, h2, h3 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
 /* ============================================================
-   Background mesh pattern
+   Aurora background — fixed, behind everything.
+   Three blurred blobs drifting on transform-only keyframes
+   (GPU-cheap), frozen entirely under prefers-reduced-motion.
    ============================================================ */
-.bg-mesh {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -5%, var(--accent-glow), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(124,58,237,0.08), transparent);
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--aurora-opacity);
 }
 
-html.dark .bg-mesh {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -5%, rgba(96,165,250,0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(167,139,250,0.08), transparent);
+.aurora span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+.aurora span:nth-child(1) {
+  width: 52vw;
+  height: 52vw;
+  min-width: 420px;
+  min-height: 420px;
+  left: -12vw;
+  top: -18vh;
+  background: radial-gradient(circle, var(--aurora-1), transparent 68%);
+  animation: aurora-drift-1 42s ease-in-out infinite alternate;
+}
+
+.aurora span:nth-child(2) {
+  width: 44vw;
+  height: 44vw;
+  min-width: 380px;
+  min-height: 380px;
+  right: -10vw;
+  top: -6vh;
+  background: radial-gradient(circle, var(--aurora-2), transparent 68%);
+  animation: aurora-drift-2 56s ease-in-out infinite alternate;
+}
+
+.aurora span:nth-child(3) {
+  width: 40vw;
+  height: 40vw;
+  min-width: 340px;
+  min-height: 340px;
+  left: 28vw;
+  bottom: -28vh;
+  background: radial-gradient(circle, var(--aurora-3), transparent 68%);
+  animation: aurora-drift-3 68s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(16vw, 12vh, 0) scale(1.15); }
+  to   { transform: translate3d(6vw, 26vh, 0) scale(0.95); }
+}
+
+@keyframes aurora-drift-2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-18vw, 16vh, 0) scale(0.9); }
+  to   { transform: translate3d(-8vw, 4vh, 0) scale(1.2); }
+}
+
+@keyframes aurora-drift-3 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-14vw, -14vh, 0) scale(1.18); }
+  to   { transform: translate3d(12vw, -6vh, 0) scale(1); }
+}
+
+/* Film grain over the aurora — kills the "flat gradient" look */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.55 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora span {
+    animation: none;
+  }
 }
 
 /* ============================================================
-   Gradient text utility
+   Gradient text utility (3-stop aurora sweep)
    ============================================================ */
 .gradient-text {
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(120deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Animated variant — slow shimmer across the 3 stops */
+.gradient-text-animated {
+  background: linear-gradient(120deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end), var(--gradient-mid), var(--gradient-start));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-sweep 9s ease-in-out infinite;
+}
+
+@keyframes gradient-sweep {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text-animated {
+    animation: none;
+  }
 }
 
 /* ============================================================
@@ -109,14 +230,32 @@ html.dark .bg-mesh {
    Glass card (frosted effect)
    ============================================================ */
 .glass-card {
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--card-shadow);
 }
-html.dark .glass-card {
-  background: rgba(15,17,23,0.7);
-  border: 1px solid rgba(255,255,255,0.06);
+
+/* ============================================================
+   Cursor spotlight — JS in BaseLayout sets --spot-x/--spot-y
+   on pointermove over any .spotlight-card
+   ============================================================ */
+.spotlight-card {
+  position: relative;
+}
+.spotlight-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(340px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--spot-color), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-card:hover::after {
+  opacity: 1;
 }
 
 /* ============================================================
@@ -131,7 +270,7 @@ html.dark .glass-card {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -148,8 +287,49 @@ html.dark .glass-card {
   height: 3px;
   width: 32px;
   border-radius: 99px;
-  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
   margin-bottom: 0.75rem;
+}
+
+/* ============================================================
+   Scroll reveal — IntersectionObserver in BaseLayout adds
+   .is-revealed. Gated on html.js so content is never hidden
+   when JS is unavailable. --reveal-delay staggers children.
+   ============================================================ */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+}
+html.js [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Reading progress bar (blog posts)
+   ============================================================ */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progress, 0));
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end));
+  z-index: 60;
+  pointer-events: none;
 }
 
 /* ============================================================
@@ -184,19 +364,6 @@ html.dark * {
 /* ============================================================
    Animations
    ============================================================ */
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-.avatar-ring {
-  animation: spin-slow 8s linear infinite;
-}
-
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.6; transform: scale(1.4); }
@@ -239,58 +406,46 @@ html.dark * {
   animation: skill-fill 1s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-/* Fade in */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* Slow float (404 page) */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
 }
-.animate-fade-in {
-  animation: fade-in 0.5s ease both;
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
 }
-
-/* Slide in from left */
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow {
+    animation: none;
   }
 }
-.animate-slide-in-left {
-  animation: slide-in-left 0.5s ease both;
-}
 
-/* Scale in */
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
+/* Avatar glow ring — conic gradient rotating behind the hero avatar */
+.glow-ring {
+  position: relative;
+}
+.glow-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from var(--ring-angle, 0deg), var(--gradient-start), var(--gradient-mid), var(--gradient-end), var(--gradient-start));
+  animation: ring-spin 6s linear infinite;
+  filter: blur(6px);
+  opacity: 0.8;
+}
+@property --ring-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes ring-spin {
+  to { --ring-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-ring::before {
+    animation: none;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.animate-scale-in {
-  animation: scale-in 0.4s ease both;
-}
-
-/* Glow pulse for accent elements */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
-  50%       { box-shadow: 0 0 0 8px transparent; }
-}
-.glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-/* Timeline dot draw */
-@keyframes timeline-dot {
-  from { transform: scale(0) rotate(-45deg); opacity: 0; }
-  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
 }
 
 /* ============================================================
@@ -317,10 +472,16 @@ html.dark * {
 /* ============================================================
    Prose (Blog Content) Overrides
    ============================================================ */
+.prose h2, .prose h3, .prose h4 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: -0.01em;
+}
+
 .prose pre {
   background-color: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
+  position: relative;
 }
 
 .prose code {
@@ -337,11 +498,45 @@ html.dark * {
   padding: 0;
 }
 
+/* Copy button injected onto every <pre> by the blog post page script */
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.prose pre:hover .code-copy-btn,
+.code-copy-btn:focus-visible {
+  opacity: 1;
+}
+.code-copy-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+.code-copy-btn.copied {
+  color: var(--accent-2);
+  border-color: var(--accent-2);
+  opacity: 1;
+}
+
 /* ============================================================
    Resume page print styles
    ============================================================ */
 @media print {
-  nav, .no-print {
+  nav, .no-print, .aurora, .noise {
     display: none !important;
   }
   .print-break {

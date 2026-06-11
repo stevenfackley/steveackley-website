@@ -1,5 +1,5 @@
 ---
-import { TabsDashboard } from './TabsDashboard';
+import { HomeDashboard } from './HomeDashboard';
 import type { PostSummary } from '@/types';
 import type { EnrichedRepo } from '@/lib/github';
 import type { FeaturedProjectContent, HomeContent } from '@/content/types';
@@ -14,7 +14,7 @@ interface Props {
 const { blogPosts, githubRepos, homeContent, featuredProjects } = Astro.props;
 ---
 
-<TabsDashboard
+<HomeDashboard
   client:load
   blogPosts={blogPosts}
   githubRepos={githubRepos}

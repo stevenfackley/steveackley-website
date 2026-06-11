@@ -100,9 +100,11 @@ try {
       <script type="application/ld+json" set:html={JSON.stringify(schema)} />
     ))}
     
-    <!-- Theme init: runs before paint to prevent flash -->
+    <!-- Theme init: runs before paint to prevent flash. Also tags <html> with
+         .js so scroll-reveal styles only hide content when JS can reveal it. -->
     <script is:inline define:vars={{ siteTheme }}>
       (function () {
+        document.documentElement.classList.add('js');
         const stored = localStorage.getItem('theme');
         const theme = stored || siteTheme || 'light';
         if (theme === 'dark') {
@@ -129,7 +131,7 @@ try {
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     
     <style is:global>
       :root {
@@ -137,11 +139,73 @@ try {
       }
     </style>
   </head>
-  <body class="min-h-screen flex flex-col bg-mesh selection:bg-blue-500/30">
+  <body class="min-h-screen flex flex-col">
+    <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="noise" aria-hidden="true"></div>
     <Nav />
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <slot />
     </main>
     <Footer />
+
+    <script>
+      // ── Cursor spotlight ────────────────────────────────────────────────────
+      // Delegated: only the card actually under the pointer gets its CSS vars
+      // updated, so hundreds of cards cost nothing.
+      const finePointer = window.matchMedia('(pointer: fine)');
+      if (finePointer.matches) {
+        document.addEventListener(
+          'pointermove',
+          (e) => {
+            const card = (e.target as Element | null)?.closest?.('.spotlight-card');
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            (card as HTMLElement).style.setProperty('--spot-x', `${e.clientX - rect.left}px`);
+            (card as HTMLElement).style.setProperty('--spot-y', `${e.clientY - rect.top}px`);
+          },
+          { passive: true }
+        );
+      }
+
+      // ── Scroll reveal ───────────────────────────────────────────────────────
+      // MutationObserver catches [data-reveal] nodes added later by hydrating
+      // React islands — a load-time querySelectorAll would miss them.
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-revealed');
+              io.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      );
+
+      function watch(el: Element) {
+        // React islands reveal their own [data-reveal] children after hydration —
+        // mutating their class here mid-hydration triggers React mismatch errors.
+        if (el.closest('astro-island')) return;
+        if (reduceMotion.matches) {
+          el.classList.add('is-revealed');
+        } else {
+          io.observe(el);
+        }
+      }
+
+      document.querySelectorAll('[data-reveal]').forEach(watch);
+
+      const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (!(node instanceof Element)) continue;
+            if (node.hasAttribute('data-reveal')) watch(node);
+            node.querySelectorAll?.('[data-reveal]').forEach(watch);
+          }
+        }
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    </script>
   </body>
 </html>

@@ -3,25 +3,37 @@ import { cn, formatDateShort } from '@/lib/utils';
 import type { PostSummary } from '@/types';
 
 interface Props {
-  post: PostSummary;
+  post: PostSummary & { readMinutes?: number };
   class?: string;
+  delay?: number;
 }
 
-const { post, class: className } = Astro.props;
+const { post, class: className, delay } = Astro.props;
 ---
 
-<article class={cn('group bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-[var(--border-hover)] hover:-translate-y-0.5 transition-all duration-200', className)}>
-  {post.coverImage && (
-    <div class="relative h-48 overflow-hidden">
-      <img src={post.coverImage} alt={post.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+<article
+  data-reveal
+  style={delay ? `--reveal-delay: ${delay}s` : undefined}
+  class={cn('group glass-card spotlight-card card-glow rounded-2xl overflow-hidden', className)}
+>
+  <a href={`/blog/${post.slug}`} class="block h-full">
+    {post.coverImage && (
+      <div class="relative h-44 overflow-hidden">
+        <img src={post.coverImage} alt={post.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+      </div>
+    )}
+    <div class="p-5">
+      <p class="font-mono text-xs text-[var(--text-muted)]">
+        {formatDateShort(post.createdAt)}{post.readMinutes ? ` · ${post.readMinutes} min` : ''}
+      </p>
+      <h2 class="mt-2 font-display text-lg font-semibold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-2 leading-snug">
+        {post.title}
+      </h2>
+      {post.excerpt && <p class="mt-2 text-sm text-[var(--text-secondary)] line-clamp-3 leading-relaxed">{post.excerpt}</p>}
+      <span class="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
+        Read more
+        <span class="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+      </span>
     </div>
-  )}
-  <div class="p-5">
-    <time class="text-xs text-[var(--text-muted)]">{formatDateShort(post.createdAt)}</time>
-    <h2 class="mt-1.5 text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-      <a href={`/blog/${post.slug}`}>{post.title}</a>
-    </h2>
-    {post.excerpt && <p class="mt-2 text-sm text-[var(--text-secondary)] line-clamp-3 leading-relaxed">{post.excerpt}</p>}
-    <a href={`/blog/${post.slug}`} class="mt-4 inline-flex text-xs font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">Read more →</a>
-  </div>
+  </a>
 </article>

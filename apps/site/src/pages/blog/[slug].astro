@@ -3,7 +3,7 @@ import PublicLayout from '@/layouts/PublicLayout.astro';
 import PostContent from '@/components/blog/PostContent.astro';
 import { formatDate } from '@/lib/utils';
 import { db, posts as postsTable } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, ne, and, lt, gt, desc, asc } from 'drizzle-orm';
 import { blogPostingSchema, breadcrumbSchema } from '@/lib/seo';
 
 const { slug } = Astro.params;
@@ -22,6 +22,34 @@ const [post] = await db
 if (!post || !post.published) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
+
+// Adjacent published posts for prev/next footer nav.
+// ne(id) guards against timestamp precision: Postgres keeps microseconds,
+// JS Date truncates to ms, so gt(createdAt, post.createdAt) can match the
+// post itself.
+const adjacentCols = {
+  title: postsTable.title,
+  slug: postsTable.slug,
+};
+const [[prevPost], [nextPost]] = await Promise.all([
+  db
+    .select(adjacentCols)
+    .from(postsTable)
+    .where(and(eq(postsTable.published, true), ne(postsTable.id, post.id), lt(postsTable.createdAt, post.createdAt)))
+    .orderBy(desc(postsTable.createdAt))
+    .limit(1),
+  db
+    .select(adjacentCols)
+    .from(postsTable)
+    .where(and(eq(postsTable.published, true), ne(postsTable.id, post.id), gt(postsTable.createdAt, post.createdAt)))
+    .orderBy(asc(postsTable.createdAt))
+    .limit(1),
+]);
+
+const readMinutes = Math.max(
+  1,
+  Math.round(post.content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length / 220)
+);
 
 const postSchema = blogPostingSchema({
   title: post.title,
@@ -47,33 +75,112 @@ const crumbs = breadcrumbSchema([
   ogArticle={{ publishedTime: post.createdAt, modifiedTime: post.updatedAt }}
   jsonLd={[postSchema, crumbs]}
 >
+  <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
+
   <div class="mx-auto max-w-3xl px-4 sm:px-6 py-12">
-    <a href="/blog" class="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-8 transition-colors">
-      ← Back to Blog
+    <a href="/blog" class="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] hover:text-[var(--accent)] mb-10 transition-colors">
+      ← All posts
     </a>
 
     <article>
+      <header class="mb-10" data-reveal>
+        <p class="font-mono text-xs text-[var(--text-muted)]">
+          <time>{formatDate(post.createdAt)}</time> · {readMinutes} min read
+        </p>
+        <h1 class="mt-3 font-display text-3xl sm:text-4xl md:text-[2.75rem] font-bold tracking-tight text-[var(--text-primary)] leading-[1.1]">
+          {post.title}
+        </h1>
+        {post.excerpt && (
+          <p class="mt-4 text-lg text-[var(--text-secondary)] leading-relaxed">
+            {post.excerpt}
+          </p>
+        )}
+        <div class="accent-bar mt-6"></div>
+      </header>
+
       {post.coverImage && (
         <img
           src={post.coverImage}
           alt={post.title}
           loading="eager"
-          class="mb-8 aspect-[16/9] w-full rounded-2xl border border-[var(--border)] object-cover"
+          class="mb-10 aspect-[16/9] w-full rounded-2xl border border-[var(--glass-border)] object-cover shadow-lg"
+          data-reveal
         />
       )}
-      <header class="mb-8">
-        <time class="text-sm text-[var(--text-muted)]">{formatDate(post.createdAt)}</time>
-        <h1 class="mt-2 text-3xl font-bold text-[var(--text-primary)] leading-tight">
-          {post.title}
-        </h1>
-        {post.excerpt && (
-          <p class="mt-3 text-lg text-[var(--text-secondary)] leading-relaxed">
-            {post.excerpt}
-          </p>
-        )}
-      </header>
 
       <PostContent content={post.content} />
     </article>
+
+    {(prevPost || nextPost) && (
+      <nav aria-label="Adjacent posts" class="mt-16 grid gap-4 sm:grid-cols-2 border-t border-[var(--border)] pt-10">
+        {prevPost ? (
+          <a href={`/blog/${prevPost.slug}`} class="group glass-card spotlight-card card-glow rounded-2xl p-5">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">← Older</p>
+            <p class="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug">
+              {prevPost.title}
+            </p>
+          </a>
+        ) : (
+          <span></span>
+        )}
+        {nextPost && (
+          <a href={`/blog/${nextPost.slug}`} class="group glass-card spotlight-card card-glow rounded-2xl p-5 sm:text-right">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">Newer →</p>
+            <p class="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-snug">
+              {nextPost.title}
+            </p>
+          </a>
+        )}
+      </nav>
+    )}
   </div>
+
+  <script>
+    // ── Reading progress bar ──────────────────────────────────────────────────
+    const bar = document.getElementById('reading-progress');
+    if (bar) {
+      let ticking = false;
+      const update = () => {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        bar.style.setProperty('--progress', max > 0 ? String(doc.scrollTop / max) : '0');
+        ticking = false;
+      };
+      document.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        },
+        { passive: true }
+      );
+      update();
+    }
+
+    // ── Copy buttons on code blocks ───────────────────────────────────────────
+    for (const pre of document.querySelectorAll('.prose pre')) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-copy-btn';
+      btn.textContent = 'copy';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.addEventListener('click', async () => {
+        const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? '';
+        try {
+          await navigator.clipboard.writeText(code);
+          btn.textContent = 'copied ✓';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'copy';
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch {
+          btn.textContent = 'failed';
+        }
+      });
+      pre.appendChild(btn);
+    }
+  </script>
 </PublicLayout>
