@@ -13,6 +13,11 @@ COPY . .
 # CI test runs exactly. --no-package-lock previously allowed dep drift that
 # silently switched the JSX transform from automatic to classic in prod.
 RUN npm ci --no-audit --no-fund
+# npm nests version-skewed deps under each workspace's own node_modules
+# (e.g. better-auth 1.6.14 put @better-auth/* under apps/site and
+# packages/shared, not root). Guarantee the dirs exist so the runner-stage
+# COPYs below never fail when a future lockfile hoists everything to root.
+RUN mkdir -p apps/site/node_modules packages/shared/node_modules
 ENV NODE_ENV=production
 RUN npm run build:site
 
@@ -29,7 +34,16 @@ RUN adduser --system --uid 1001 astrojs
 # Copy build output
 COPY --from=builder /app/apps/site/dist ./dist
 COPY --from=builder /app/apps/site/package.json ./package.json
+
+# The server bundle externalizes some packages (better-auth, @better-auth/*)
+# and resolves them from /app/node_modules at runtime. npm workspaces nest
+# version-skewed deps under apps/site/node_modules and
+# packages/shared/node_modules, so overlay all three into one tree.
+# Order matters: site last, so its resolutions win — the same precedence
+# Node used when the bundle was built from apps/site.
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/shared/node_modules ./node_modules
+COPY --from=builder /app/apps/site/node_modules ./node_modules
 
 # Copy Drizzle config and database files for runtime setup
 COPY --from=builder /app/apps/site/drizzle.config.ts ./drizzle.config.ts
