@@ -1,87 +1,86 @@
 import { test, expect } from "@playwright/test";
 
-// The TabsDashboard now SSRs (client:load) and uses ARIA tabs pattern:
-// the tab bar is a div[role="tablist"], not a <nav>.
+// The HomeDashboard island (client:load) renders a hero plus anchored sections
+// with a sticky scrollspy nav (nav[aria-label="Page sections"]).
 const waitForDashboard = async (page: import("@playwright/test").Page) => {
-  await page.waitForSelector('[role="tablist"][aria-label="Dashboard sections"]');
+  await page.waitForSelector("#hero-name");
 };
 
-test.describe("Homepage / BentoDashboard", () => {
+const sectionNav = (page: import("@playwright/test").Page) =>
+  page.locator('nav[aria-label="Page sections"]');
+
+test.describe("Homepage / HomeDashboard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await waitForDashboard(page);
   });
 
-  test.describe("Tab bar", () => {
-    test("all 6 tabs are visible", async ({ page }) => {
-      const tabs = ["Overview", "About", "Skills", "Projects", "Blog", "Connect"];
-      for (const label of tabs) {
-        await expect(page.getByRole("tab", { name: label })).toBeVisible();
-      }
-    });
-
-    test("Overview is the default active tab", async ({ page }) => {
-      // Overview panel: hero name is visible
-      await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible();
-    });
-
-    test("switching to About tab shows about content", async ({ page }) => {
-      await page.getByRole("tab", { name: "About" }).click();
-      // About panel has "About" section label
-      await expect(page.getByText(/about/i).first()).toBeVisible();
-    });
-
-    test("switching to Skills tab shows skills content", async ({ page }) => {
-      await page.getByRole("tab", { name: "Skills" }).click();
-      await expect(page.getByText(/skills/i).first()).toBeVisible();
-    });
-
-    test("switching to Projects tab shows projects content", async ({ page }) => {
-      await page.getByRole("tab", { name: "Projects" }).click();
-      await expect(page.getByText(/projects/i).first()).toBeVisible();
-    });
-
-    test("switching to Blog tab shows blog content", async ({ page }) => {
-      await page.getByRole("tab", { name: "Blog" }).click();
-      await expect(page.getByText(/blog/i).first()).toBeVisible();
-    });
-
-    test("switching to Connect tab shows connect content", async ({ page }) => {
-      await page.getByRole("tab", { name: "Connect" }).click();
-      await expect(page.getByText(/connect/i).first()).toBeVisible();
-    });
-
-    test("switching tabs only shows one panel at a time", async ({ page }) => {
-      // Click About — Overview hero heading should disappear
-      await page.getByRole("tab", { name: "About" }).click();
-      await expect(page.getByRole("heading", { name: "Steve Ackley" })).not.toBeVisible();
-      // Back to Overview
-      await page.getByRole("tab", { name: "Overview" }).click();
-      await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible();
-    });
-  });
-
-  test.describe("Overview panel content", () => {
+  // Assertions on island-prop-derived text are scoped to <main>: the Astro dev
+  // toolbar mirrors island props into a <code> element, which would otherwise
+  // trip strict mode when running against `astro dev`.
+  test.describe("Hero", () => {
     test("shows hero name and title", async ({ page }) => {
-      await expect(page.getByRole("heading", { name: "Steve Ackley" })).toBeVisible();
-      await expect(page.getByText("Software Engineer · .NET · AWS · Full-Stack")).toBeVisible();
+      const main = page.locator("main");
+      await expect(main.getByRole("heading", { name: "Steve Ackley" })).toBeVisible();
+      await expect(main.getByText("Software Engineer · .NET · AWS · Full-Stack")).toBeVisible();
     });
 
     test("shows location badge", async ({ page }) => {
-      await expect(page.getByText(/United States/)).toBeVisible();
+      await expect(page.locator("main").getByText(/United States/)).toBeVisible();
     });
 
     test("shows availability label", async ({ page }) => {
-      await expect(page.getByText(/Available for opportunities/)).toBeVisible();
+      await expect(page.locator("main").getByText(/Available for opportunities/)).toBeVisible();
     });
 
-    test("shows skills overview section", async ({ page }) => {
-      await expect(page.getByText(/Skills & Stack/)).toBeVisible();
-      await expect(page.getByText("C# / .NET", { exact: true })).toBeVisible();
+    test("shows resume and contact CTAs", async ({ page }) => {
+      await expect(page.getByRole("link", { name: "View Resume" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Get in Touch" })).toBeVisible();
+    });
+  });
+
+  test.describe("Section anchor nav", () => {
+    test("all 5 section links are visible", async ({ page }) => {
+      const labels = ["About", "Skills", "Projects", "Blog", "Connect"];
+      for (const label of labels) {
+        await expect(sectionNav(page).getByRole("link", { name: label })).toBeVisible();
+      }
     });
 
-    test("shows about section with interests", async ({ page }) => {
-      await expect(page.getByText(/Tinkering & Tech/)).toBeVisible();
+    test("clicking a section link navigates to its anchor", async ({ page }) => {
+      await sectionNav(page).getByRole("link", { name: "Skills" }).click();
+      await expect(page).toHaveURL(/#skills$/);
+      await expect(page.locator("#skills")).toBeInViewport();
+    });
+  });
+
+  test.describe("Section content", () => {
+    test("all sections render with headings", async ({ page }) => {
+      for (const id of ["about", "skills", "projects", "blog", "connect"]) {
+        await expect(page.locator(`section#${id}`)).toHaveCount(1);
+      }
+      await expect(page.getByRole("heading", { name: "About", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Skills", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Writing", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Connect", exact: true })).toBeVisible();
+    });
+
+    test("about section shows interests", async ({ page }) => {
+      await expect(page.locator("section#about").getByText(/Tinkering & Tech/)).toBeVisible();
+    });
+
+    test("skills section shows core categories", async ({ page }) => {
+      const skills = page.locator("section#skills");
+      await expect(skills.getByText(/Microsoft Backend/)).toBeVisible();
+      await expect(skills.getByText("C# / .NET 10", { exact: true })).toBeVisible();
+    });
+
+    test("connect section shows contact channels", async ({ page }) => {
+      const connect = page.locator("section#connect");
+      await expect(connect.getByRole("heading", { name: "Connect", exact: true })).toBeVisible();
+      await expect(connect.getByText("LinkedIn", { exact: true })).toBeVisible();
+      await expect(connect.getByText("GitHub", { exact: true })).toBeVisible();
     });
   });
 });

@@ -1,0 +1,54 @@
+---
+import { formatDate } from '@/lib/utils';
+import type { PostSummary } from '@/types';
+
+interface Props {
+  post: PostSummary & { readMinutes?: number };
+}
+
+const { post } = Astro.props;
+---
+
+<article
+  data-reveal
+  class="group glass-card spotlight-card gradient-border rounded-3xl overflow-hidden card-glow"
+>
+  <a href={`/blog/${post.slug}`} class="grid md:grid-cols-2">
+    {post.coverImage ? (
+      <div class="relative h-56 md:h-full min-h-56 overflow-hidden">
+        <img
+          src={post.coverImage}
+          alt={post.title}
+          class="absolute inset-0 h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+        />
+      </div>
+    ) : (
+      <div
+        class="relative h-56 md:h-full min-h-56 flex items-center justify-center"
+        style="background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid), var(--gradient-end)); opacity: 0.85;"
+      >
+        <span class="font-display text-6xl font-extrabold text-white/80">{post.title[0]}</span>
+      </div>
+    )}
+    <div class="p-7 md:p-10 flex flex-col justify-center">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-[var(--accent-2)] mb-3">
+        Latest post
+      </p>
+      <h2 class="font-display text-2xl md:text-3xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-tight">
+        {post.title}
+      </h2>
+      {post.excerpt && (
+        <p class="mt-3 text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+          {post.excerpt}
+        </p>
+      )}
+      <p class="mt-5 font-mono text-xs text-[var(--text-muted)]">
+        {formatDate(post.createdAt)}{post.readMinutes ? ` · ${post.readMinutes} min read` : ''}
+      </p>
+      <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)]">
+        Read the post
+        <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
+      </span>
+    </div>
+  </a>
+</article>

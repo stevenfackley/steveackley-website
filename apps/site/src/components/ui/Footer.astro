@@ -6,13 +6,16 @@ const year = new Date().getFullYear();
 const isLoggedIn = !!Astro.locals.user;
 ---
 
-<footer class="border-t border-[var(--border)] py-8 mt-auto">
+<footer class="relative mt-auto py-10 before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[var(--gradient-mid)] before:to-transparent before:opacity-40">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p class="text-sm text-[var(--text-muted)]">
-        &copy; {year} Steve Ackley. All rights reserved.
-      </p>
-      <div class="flex items-center gap-4">
+      <div class="text-center sm:text-left">
+        <p class="font-display text-sm font-semibold text-[var(--text-primary)]">Steve Ackley</p>
+        <p class="mt-1 text-xs text-[var(--text-muted)]">
+          &copy; {year} · All rights reserved
+        </p>
+      </div>
+      <div class="flex items-center gap-5">
         <a
           href={linkedin}
           target="_blank"

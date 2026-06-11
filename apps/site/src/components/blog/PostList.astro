@@ -1,12 +1,17 @@
 ---
 import PostCard from './PostCard.astro';
+import FeaturedPostCard from './FeaturedPostCard.astro';
 import type { PostSummary } from '@/types';
 
 interface Props {
-  posts: PostSummary[];
+  posts: (PostSummary & { readMinutes?: number })[];
+  featureFirst?: boolean;
 }
 
-const { posts } = Astro.props;
+const { posts, featureFirst = false } = Astro.props;
+
+const [first, ...rest] = posts;
+const gridPosts = featureFirst ? rest : posts;
 ---
 
 {posts.length === 0 ? (
@@ -14,9 +19,14 @@ const { posts } = Astro.props;
     <p class="text-[var(--text-muted)] text-lg">No posts yet. Check back soon!</p>
   </div>
 ) : (
-  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {posts.map((post) => (
-      <PostCard post={post} />
-    ))}
-  </div>
+  <>
+    {featureFirst && first && <FeaturedPostCard post={first} />}
+    {gridPosts.length > 0 && (
+      <div class:list={['grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3', featureFirst && 'mt-6']}>
+        {gridPosts.map((post, idx) => (
+          <PostCard post={post} delay={(idx % 3) * 0.08} />
+        ))}
+      </div>
+    )}
+  </>
 )}
