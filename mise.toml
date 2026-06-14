@@ -1,0 +1,12 @@
+[tasks]
+"dev:site" = "npm run dev:site"
+"build:site" = "npm run build:site"
+"test:site" = "npm run test:site"
+"test:site:health" = "npm run test:site:health"
+"lint:site" = "npm run lint:site"
+"typecheck:site" = "npm run typecheck:site"
+build = "npm run build"
+test = "npm run test"
+lint = "npm run lint"
+typecheck = "npm run typecheck"
+setup = "npm ci"
