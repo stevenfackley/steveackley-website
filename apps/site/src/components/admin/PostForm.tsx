@@ -15,6 +15,8 @@ interface Props {
     content?: string;
     excerpt?: string | null;
     coverImage?: string | null;
+    category?: string | null;
+    tags?: string[] | null;
     published?: boolean;
     scheduledAt?: Date | null;
   };
@@ -25,6 +27,8 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
   const [content, setContent]     = useState(defaultValues.content     ?? "");
   const [excerpt, setExcerpt]     = useState(defaultValues.excerpt     ?? "");
   const [coverImage, setCoverImage] = useState(defaultValues.coverImage ?? "");
+  const [category, setCategory]   = useState(defaultValues.category    ?? "");
+  const [tags, setTags]           = useState((defaultValues.tags ?? []).join(", "));
   const [published, setPublished] = useState(defaultValues.published   ?? false);
   const [scheduledAt, setScheduledAt] = useState(
     defaultValues.scheduledAt
@@ -47,6 +51,8 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       fd.set("content",     content);
       fd.set("excerpt",     excerpt);
       fd.set("coverImage",  coverImage);
+      fd.set("category",    category);
+      fd.set("tags",        tags);
       fd.set("published",   String(published));
       fd.set("scheduledAt", scheduledAt);
 
@@ -141,6 +147,34 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
                   Will auto-publish on {new Date(scheduledAt).toLocaleString()}
                 </p>
               )}
+            </div>
+          </div>
+
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Metadata</h3>
+            <div>
+              <label htmlFor="post-category" className={lbl}>Category</label>
+              <input
+                id="post-category"
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={inp}
+                placeholder="e.g. Engineering"
+              />
+            </div>
+            <div>
+              <label htmlFor="post-tags" className={lbl}>
+                Tags <span className="text-[var(--text-muted)]">(comma-separated)</span>
+              </label>
+              <input
+                id="post-tags"
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className={inp}
+                placeholder="dotnet, azure, architecture"
+              />
             </div>
           </div>
 

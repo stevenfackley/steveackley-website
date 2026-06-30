@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, pgEnum, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, pgEnum, index, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Enums
@@ -118,6 +118,11 @@ export const posts = pgTable("Post", {
   content: text("content").notNull(),
   excerpt: text("excerpt"),
   coverImage: text("coverImage"),
+  // Additive blog metadata. All nullable: existing rows backfill to NULL and
+  // render exactly as before (the post UI only surfaces these when present).
+  tags: text("tags").array(),
+  category: text("category"),
+  readingTimeMinutes: integer("readingTimeMinutes"),
   published: boolean("published").notNull().default(false),
   scheduledAt: timestamp("scheduledAt", { mode: "date" }),
   createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),

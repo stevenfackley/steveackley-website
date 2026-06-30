@@ -67,6 +67,7 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
           type="button"
           title="Toggle dark mode"
           aria-label="Toggle dark mode"
+          aria-pressed="false"
           class="ml-1 p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all duration-150"
         >
           <!-- Sun icon (shown in dark mode) -->
@@ -109,6 +110,7 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
           id="theme-toggle-mobile"
           type="button"
           aria-label="Toggle dark mode"
+          aria-pressed="false"
           class="p-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
         >
           <svg id="theme-icon-sun-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden">
@@ -166,43 +168,52 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
   });
 
   // ── Dark mode toggle ────────────────────────────────────────────────────────
-  function applyTheme(dark: boolean) {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
-    syncIcons(dark);
-  }
+  // The pre-paint script in BaseLayout has already applied the right theme; here
+  // we just wire the buttons and keep the UI (icons + aria-pressed) in sync.
+  // Resolution/persistence logic is shared + unit-tested in @/lib/theme.
+  import { THEME_STORAGE_KEY, nextTheme, type Theme } from '@/lib/theme';
 
-  function syncIcons(dark: boolean) {
+  const currentTheme = (): Theme =>
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
+  function syncUi(theme: Theme) {
+    const dark = theme === 'dark';
     const sunD = document.getElementById('theme-icon-sun');
     const moonD = document.getElementById('theme-icon-moon');
     const sunM = document.getElementById('theme-icon-sun-mobile');
     const moonM = document.getElementById('theme-icon-moon-mobile');
-    if (dark) {
-      sunD?.classList.remove('hidden');
-      moonD?.classList.add('hidden');
-      sunM?.classList.remove('hidden');
-      moonM?.classList.add('hidden');
-    } else {
-      sunD?.classList.add('hidden');
-      moonD?.classList.remove('hidden');
-      sunM?.classList.add('hidden');
-      moonM?.classList.remove('hidden');
+    sunD?.classList.toggle('hidden', !dark);
+    moonD?.classList.toggle('hidden', dark);
+    sunM?.classList.toggle('hidden', !dark);
+    moonM?.classList.toggle('hidden', dark);
+    for (const id of ['theme-toggle', 'theme-toggle-mobile']) {
+      document.getElementById(id)?.setAttribute('aria-pressed', String(dark));
     }
   }
 
-  // Sync icons on load
-  const isDark = document.documentElement.classList.contains('dark');
-  syncIcons(isDark);
+  function applyTheme(theme: Theme, persist: boolean) {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.style.colorScheme = theme;
+    if (persist) {
+      try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* storage blocked */ }
+    }
+    syncUi(theme);
+  }
 
-  document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    applyTheme(!document.documentElement.classList.contains('dark'));
-  });
-  document.getElementById('theme-toggle-mobile')?.addEventListener('click', () => {
-    applyTheme(!document.documentElement.classList.contains('dark'));
+  // Reflect the already-applied theme into the controls on load.
+  syncUi(currentTheme());
+
+  const onToggle = () => applyTheme(nextTheme(currentTheme()), true);
+  document.getElementById('theme-toggle')?.addEventListener('click', onToggle);
+  document.getElementById('theme-toggle-mobile')?.addEventListener('click', onToggle);
+
+  // When the visitor hasn't made an explicit choice, track live OS theme changes.
+  const osDark = window.matchMedia('(prefers-color-scheme: dark)');
+  osDark.addEventListener?.('change', (e) => {
+    let stored: string | null = null;
+    try { stored = localStorage.getItem(THEME_STORAGE_KEY); } catch { /* storage blocked */ }
+    if (stored === 'light' || stored === 'dark') return; // explicit choice wins
+    applyTheme(e.matches ? 'dark' : 'light', false);
   });
 
   // ── Reveal nav name on scroll ───────────────────────────────────────────────

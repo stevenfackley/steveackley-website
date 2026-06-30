@@ -4,6 +4,7 @@ import PostList from '@/components/blog/PostList.astro';
 import Pagination from '@/components/blog/Pagination.astro';
 import { db, posts as postsTable } from '@/db';
 import { eq, desc, count } from 'drizzle-orm';
+import { readingTimeMinutes } from '@/lib/reading-time';
 import type { PaginationInfo } from '@/types';
 
 const SITE_ORIGIN = 'https://steveackley.org';
@@ -30,10 +31,11 @@ const rows = await db
   .limit(PER_PAGE)
   .offset((currentPage - 1) * PER_PAGE);
 
-// ~220 wpm on the tag-stripped HTML body
+// Prefer the reading time stored at save time; fall back to computing it for
+// posts that predate the column (NULL).
 const posts = rows.map((p) => ({
   ...p,
-  readMinutes: Math.max(1, Math.round(p.content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length / 220)),
+  readMinutes: p.readingTimeMinutes ?? readingTimeMinutes(p.content),
 }));
 
 const pagination: PaginationInfo = {

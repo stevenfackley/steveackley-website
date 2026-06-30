@@ -23,6 +23,9 @@ const { post, class: className, delay } = Astro.props;
       </div>
     )}
     <div class="p-5">
+      {post.category && (
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[var(--accent-2)] mb-1.5">{post.category}</p>
+      )}
       <p class="font-mono text-xs text-[var(--text-muted)]">
         {formatDateShort(post.createdAt)}{post.readMinutes ? ` · ${post.readMinutes} min` : ''}
       </p>
@@ -30,6 +33,13 @@ const { post, class: className, delay } = Astro.props;
         {post.title}
       </h2>
       {post.excerpt && <p class="mt-2 text-sm text-[var(--text-secondary)] line-clamp-3 leading-relaxed">{post.excerpt}</p>}
+      {post.tags && post.tags.length > 0 && (
+        <ul class="mt-3 flex flex-wrap gap-1.5" aria-label="Tags">
+          {post.tags.slice(0, 3).map((tag) => (
+            <li class="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 font-mono text-[0.65rem] text-[var(--text-muted)]">#{tag}</li>
+          ))}
+        </ul>
+      )}
       <span class="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
         Read more
         <span class="transition-transform duration-200 group-hover:translate-x-0.5">→</span>

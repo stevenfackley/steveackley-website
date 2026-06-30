@@ -5,6 +5,23 @@ import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
+import { readingTimeMinutes } from '@/lib/reading-time';
+
+/** Parse a comma-separated tag string into a clean string[], or null if empty. */
+function parseTags(raw: string | undefined): string[] | null {
+  if (!raw) return null;
+  const tags = raw
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+  return tags.length > 0 ? tags : null;
+}
+
+/** Trim a category string, collapsing blank input to null. */
+function cleanCategory(raw: string | undefined): string | null {
+  const value = raw?.trim();
+  return value ? value : null;
+}
 
 export const server = {
   saveSettings: defineAction({
@@ -59,6 +76,8 @@ export const server = {
       content: z.string().min(1),
       excerpt: z.string().optional(),
       coverImage: z.string().optional(),
+      category: z.string().optional(),
+      tags: z.string().optional(),
       published: z.string().transform((v) => v === 'true'),
       scheduledAt: z.string().optional(),
     }),
@@ -79,6 +98,9 @@ export const server = {
         content: input.content,
         excerpt: input.excerpt,
         coverImage: input.coverImage,
+        category: cleanCategory(input.category),
+        tags: parseTags(input.tags),
+        readingTimeMinutes: readingTimeMinutes(input.content),
         published: input.published,
         scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       });
@@ -94,6 +116,8 @@ export const server = {
       content: z.string().min(1),
       excerpt: z.string().optional(),
       coverImage: z.string().optional(),
+      category: z.string().optional(),
+      tags: z.string().optional(),
       published: z.string().transform((v) => v === 'true'),
       scheduledAt: z.string().optional(),
     }),
@@ -115,6 +139,9 @@ export const server = {
           content: input.content,
           excerpt: input.excerpt,
           coverImage: input.coverImage,
+          category: cleanCategory(input.category),
+          tags: parseTags(input.tags),
+          readingTimeMinutes: readingTimeMinutes(input.content),
           published: input.published,
           scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
           updatedAt: new Date(),

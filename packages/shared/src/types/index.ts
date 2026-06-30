@@ -13,6 +13,11 @@ export interface PostSummary {
   published: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Additive blog metadata (nullable; older posts predate these columns).
+  // Optional so call sites that build partial summaries keep type-checking.
+  tags?: string[] | null;
+  category?: string | null;
+  readingTimeMinutes?: number | null;
 }
 
 export interface PostFull extends PostSummary {

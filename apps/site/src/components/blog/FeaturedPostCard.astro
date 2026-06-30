@@ -32,7 +32,7 @@ const { post } = Astro.props;
     )}
     <div class="p-7 md:p-10 flex flex-col justify-center">
       <p class="font-mono text-xs uppercase tracking-[0.25em] text-[var(--accent-2)] mb-3">
-        Latest post
+        {post.category ?? 'Latest post'}
       </p>
       <h2 class="font-display text-2xl md:text-3xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors leading-tight">
         {post.title}
@@ -45,6 +45,13 @@ const { post } = Astro.props;
       <p class="mt-5 font-mono text-xs text-[var(--text-muted)]">
         {formatDate(post.createdAt)}{post.readMinutes ? ` · ${post.readMinutes} min read` : ''}
       </p>
+      {post.tags && post.tags.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-2" aria-label="Tags">
+          {post.tags.slice(0, 4).map((tag) => (
+            <li class="rounded-full border border-[var(--border)] bg-[var(--surface-hover)] px-2.5 py-1 font-mono text-[0.7rem] text-[var(--text-secondary)]">#{tag}</li>
+          ))}
+        </ul>
+      )}
       <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)]">
         Read the post
         <span class="transition-transform duration-200 group-hover:translate-x-1">→</span>
