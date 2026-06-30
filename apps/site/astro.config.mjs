@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import node from '@astrojs/node';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -29,6 +30,7 @@ export default defineConfig({
     port: 3000,
   },
   vite: {
+    plugins: [tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -47,7 +49,7 @@ export default defineConfig({
     },
     server: {
       headers: {
-        // Allow 'unsafe-eval' in dev mode — Vite 7's module transform pipeline
+        // Allow 'unsafe-eval' in dev mode — Vite 8's module transform pipeline
         // uses eval-based source maps for HMR; the TipTap/ProseMirror editor
         // also uses new Function() for schema accessors.
         'Content-Security-Policy': [
