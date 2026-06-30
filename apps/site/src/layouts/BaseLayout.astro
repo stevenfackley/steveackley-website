@@ -47,13 +47,15 @@ if (jsonLd) {
   else pageSchemas.push(jsonLd);
 }
 
-// Read site default theme from DB
-let siteTheme = 'light';
+// Read the site default theme from the DB. "system" (the default) means the
+// pre-paint script below follows the visitor's OS prefers-color-scheme; an
+// explicit "light"/"dark" admin setting overrides that.
+let siteTheme = 'system';
 try {
   const settings = await getSiteSettings([SETTING_KEYS.SITE_THEME]);
-  siteTheme = settings[SETTING_KEYS.SITE_THEME] || 'light';
+  siteTheme = settings[SETTING_KEYS.SITE_THEME] || 'system';
 } catch {
-  // If DB not available, default to light
+  // If the DB is unavailable, fall back to following the OS preference.
 }
 ---
 
@@ -100,18 +102,26 @@ try {
       <script type="application/ld+json" set:html={JSON.stringify(schema)} />
     ))}
     
-    <!-- Theme init: runs before paint to prevent flash. Also tags <html> with
-         .js so scroll-reveal styles only hide content when JS can reveal it. -->
+    <!-- Theme init: runs before paint to prevent a flash of the wrong theme.
+         Also tags <html> with .js so scroll-reveal styles only hide content
+         when JS can reveal it. Resolution mirrors resolveTheme() in
+         src/lib/theme.ts (kept inline here so it can run before the bundle):
+           persisted choice > explicit admin light/dark > OS prefers-color-scheme. -->
     <script is:inline define:vars={{ siteTheme }}>
       (function () {
         document.documentElement.classList.add('js');
-        const stored = localStorage.getItem('theme');
-        const theme = stored || siteTheme || 'light';
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
+        var stored = null;
+        try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
+        var theme;
+        if (stored === 'light' || stored === 'dark') {
+          theme = stored;
+        } else if (siteTheme === 'light' || siteTheme === 'dark') {
+          theme = siteTheme;
         } else {
-          document.documentElement.classList.remove('dark');
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.style.colorScheme = theme;
       })();
     </script>
 
