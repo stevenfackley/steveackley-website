@@ -56,3 +56,10 @@ Regenerate `package-lock.json` so Dependabot sees the patched versions.
   - **Stroke width default:** unchanged at 2; visual diff should be zero.
   - Risk: low.
 **Why no review:** private/solo repo, deploy workflow is the real build, revert is cheap.
+
+## 2026-06-29 — Deferred: two front-end majors
+
+- @vitejs/plugin-react 5.2.0 → 6.0.3 (#190): needs Vite 6/7 + newer Node; Babel/fast-refresh changes. Bump with Vite.
+- astro group → 7.0.0 (#186): @astrojs/mdx + node + react + astro to 7. Breaking: getContainerRenderer() moved to the `container-renderer` entrypoint (Container API imports must change). E2E currently red on this.
+
+Both awareness-only; held until a coordinated upgrade.
