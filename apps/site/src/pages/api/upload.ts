@@ -1,10 +1,11 @@
 import type { APIRoute } from "astro";
-import { 
-  isAllowedMimeType, 
-  saveUploadedFile, 
+import {
+  isAllowedMimeType,
+  saveUploadedFile,
   sanitizeFilename,
   getMaxSizeBytes
 } from "@/lib/upload";
+import { logger } from "@/lib/logger";
 
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth
@@ -37,7 +38,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return new Response(JSON.stringify({ url }), { status: 200 });
   } catch (error) {
-    console.error("Upload error:", error);
+    logger.error("Upload error", error instanceof Error ? error : new Error(String(error)));
     return new Response(JSON.stringify({ error: "Upload failed" }), { status: 500 });
   }
 };

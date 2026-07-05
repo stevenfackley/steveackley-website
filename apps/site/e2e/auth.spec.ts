@@ -33,7 +33,7 @@ test.describe("Login page", () => {
     await page.locator('#password').fill("wrongpassword");
     await page.getByRole("button", { name: /sign in|log in|login/i }).click();
 
-    // Expect an error message to appear (exact text depends on NextAuth config)
+    // Expect an error message to appear (exact text depends on Better Auth config)
     const error = page.getByText(
       /invalid|incorrect|failed|error|credentials/i
     );

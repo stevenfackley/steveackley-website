@@ -47,7 +47,7 @@ export function SettingsUploadField({ name, defaultValue = '', placeholder, labe
   return (
     <div>
       {label && (
-        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+        <label htmlFor={`${name}-url`} className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
           {label}
         </label>
       )}
@@ -56,6 +56,7 @@ export function SettingsUploadField({ name, defaultValue = '', placeholder, labe
         <input type="hidden" name={name} value={url} />
         {/* Visible URL input (display + manual edit) */}
         <input
+          id={`${name}-url`}
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}

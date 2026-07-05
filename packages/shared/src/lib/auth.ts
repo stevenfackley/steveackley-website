@@ -5,6 +5,14 @@ import * as schema from "../db/schema";
 
 const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
+// Fail fast in production if the session-signing secret is missing: without it
+// Better Auth falls back to an ephemeral secret, silently invalidating every
+// session on each restart. Dev is allowed to run without one.
+const secret = process.env.BETTER_AUTH_SECRET;
+if (!secret && process.env.NODE_ENV === "production") {
+  throw new Error("BETTER_AUTH_SECRET must be set in production");
+}
+
 // Build trusted origins: always trust both localhost and 127.0.0.1 variants
 // so the dev server works regardless of how the browser resolves the hostname.
 function buildTrustedOrigins(base: string): string[] {
@@ -25,6 +33,7 @@ function buildTrustedOrigins(base: string): string[] {
 
 export const auth = betterAuth({
   baseURL: baseUrl,
+  secret,
   trustedOrigins: buildTrustedOrigins(baseUrl),
   database: drizzleAdapter(db, {
     provider: "pg",

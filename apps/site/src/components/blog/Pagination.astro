@@ -22,19 +22,19 @@ function cls(active?: boolean, disabled?: boolean) {
 ---
 
 {totalPages > 1 && (
-  <nav class="flex items-center justify-center gap-2 mt-12">
+  <nav class="flex items-center justify-center gap-2 mt-12" aria-label="Pagination">
     {hasPreviousPage ? (
-      <a href={`${basePath}?page=${currentPage - 1}`} class={cls()}>&#8249;</a>
+      <a href={`${basePath}?page=${currentPage - 1}`} class={cls()} aria-label="Previous page">&#8249;</a>
     ) : (
-      <span class={cls(false, true)}>&#8249;</span>
+      <span class={cls(false, true)} aria-hidden="true">&#8249;</span>
     )}
     {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-      <a href={`${basePath}?page=${p}`} class={cls(p === currentPage)} aria-current={p === currentPage ? 'page' : undefined}>{p}</a>
+      <a href={`${basePath}?page=${p}`} class={cls(p === currentPage)} aria-current={p === currentPage ? 'page' : undefined} aria-label={`Page ${p}`}>{p}</a>
     ))}
     {hasNextPage ? (
-      <a href={`${basePath}?page=${currentPage + 1}`} class={cls()}>&#8250;</a>
+      <a href={`${basePath}?page=${currentPage + 1}`} class={cls()} aria-label="Next page">&#8250;</a>
     ) : (
-      <span class={cls(false, true)}>&#8250;</span>
+      <span class={cls(false, true)} aria-hidden="true">&#8250;</span>
     )}
   </nav>
 )}

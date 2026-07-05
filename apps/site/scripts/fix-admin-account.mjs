@@ -92,7 +92,6 @@ async function main() {
 
     console.log(`\n✅  Done! Sign in at /admin/login`);
     console.log(`   Email   : ${email}`);
-    console.log(`   Password: ${password}`);
   } finally {
     await sql.end();
   }

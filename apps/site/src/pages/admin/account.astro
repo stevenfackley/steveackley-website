@@ -1,11 +1,11 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
+import { requireAdminPage } from '@/lib/auth-guards';
 
-if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
-  return Astro.redirect('/login');
-}
+const guard = requireAdminPage(Astro);
+if (guard) return guard;
 
-const user = Astro.locals.user;
+const user = Astro.locals.user!;
 ---
 
 <AdminLayout title="Account">

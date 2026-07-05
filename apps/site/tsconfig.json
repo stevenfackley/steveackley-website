@@ -14,5 +14,13 @@
     }
   },
   "include": ["src", "astro.config.mjs", "**/*.astro", "**/*.ts", "**/*.tsx", "**/*.mts"],
-  "exclude": ["node_modules", "src/__tests__/**", "e2e/**", "scripts/**"]
+  "exclude": [
+    "node_modules",
+    "src/__tests__/**",
+    "e2e/**",
+    "scripts/**",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "drizzle.config.ts"
+  ]
 }

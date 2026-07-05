@@ -1,10 +1,10 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import { getClientsSnapshot } from '@/lib/dashboard';
+import { requireAdminPage } from '@/lib/auth-guards';
 
-if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
-  return Astro.redirect('/login');
-}
+const guard = requireAdminPage(Astro);
+if (guard) return guard;
 
 const clients = await getClientsSnapshot();
 ---

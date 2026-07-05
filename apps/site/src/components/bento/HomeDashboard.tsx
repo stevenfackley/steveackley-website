@@ -394,6 +394,7 @@ function MasonIcon({ className }: { className?: string }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={cn("h-5 w-5 shrink-0", className)}
+      role="img"
       aria-label="Masonic square and compasses"
     >
       <path d="M12 2 L3 18 M12 2 L21 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -457,6 +458,8 @@ function AboutSection({ homeContent }: { homeContent: HomeContent }) {
               alt="Steve and Brooke"
               width={128}
               height={128}
+              loading="lazy"
+              decoding="async"
               className="relative rounded-full ring-2 ring-[var(--glass-border)] object-cover"
             />
           </div>
@@ -491,6 +494,7 @@ function AboutSection({ homeContent }: { homeContent: HomeContent }) {
               <span
                 className="absolute -left-[1.65rem] top-0.5 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-[var(--surface)]"
                 style={{ background: "linear-gradient(135deg, var(--gradient-start), var(--gradient-mid))" }}
+                aria-hidden="true"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-white" />
               </span>
@@ -645,6 +649,7 @@ function SkillsSection() {
               <div
                 className="h-10 w-10 rounded-xl flex items-center justify-center text-lg shrink-0"
                 style={{ background: `${cert.color}20`, border: `1px solid ${cert.color}40` }}
+                aria-hidden="true"
               >
                 {cert.icon}
               </div>
@@ -665,7 +670,7 @@ function SkillsSection() {
             delay={(idx % 2) * 0.08}
           >
             <h3 className="text-xs font-medium tracking-widest uppercase text-[var(--text-muted)] mb-2">
-              {cat.icon}  {cat.label}
+              <span aria-hidden="true">{cat.icon}</span>  {cat.label}
             </h3>
             {cat.highlight && (
               <p className="text-xs text-[var(--accent)] mb-3 font-medium">Core expertise</p>
@@ -762,7 +767,7 @@ function ProjectsSection({
                 {repo.badges.length > 0 ? (
                   <div className="mt-4 flex flex-wrap gap-1">
                     {repo.badges.map((b) => (
-                      <img key={b.imageUrl} src={b.imageUrl} alt={b.label} className="h-5" />
+                      <img key={b.imageUrl} src={b.imageUrl} alt={b.label} loading="lazy" className="h-5" />
                     ))}
                   </div>
                 ) : repo.tech.length > 0 ? (
@@ -849,7 +854,7 @@ function ConnectSection({ homeContent }: { homeContent: HomeContent }) {
         <div className="grid gap-3 sm:grid-cols-3">
           {homeContent.opportunities.map((item) => (
             <div key={item.title} className="rounded-xl bg-[var(--surface-hover)]/60 p-4">
-              <p className="text-lg mb-1">{item.icon}</p>
+              <p className="text-lg mb-1" aria-hidden="true">{item.icon}</p>
               <p className="text-sm font-semibold text-[var(--text-primary)]">{item.title}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{item.body}</p>
             </div>
@@ -868,19 +873,19 @@ function ConnectSection({ homeContent }: { homeContent: HomeContent }) {
             rel="noopener noreferrer"
             className="flex items-center gap-4 rounded-xl px-4 py-3.5 border border-[var(--border)] bg-[var(--surface-hover)]/60 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all duration-150 text-[var(--text-secondary)] text-sm font-medium"
           >
-            <span className="text-lg font-bold">in</span>
+            <span className="text-lg font-bold" aria-hidden="true">in</span>
             <div>
               <p className="font-semibold text-[var(--text-primary)]">LinkedIn</p>
               <p className="text-xs text-[var(--text-muted)]">Connect and follow my work</p>
             </div>
-            <span className="ml-auto">&#8599;</span>
+            <span className="ml-auto" aria-hidden="true">&#8599;</span>
           </a>
 
           <a
             href={`mailto:${homeContent.contact.email}`}
             className="flex items-center gap-4 rounded-xl px-4 py-3.5 border border-[var(--border)] bg-[var(--surface-hover)]/60 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all duration-150 text-[var(--text-secondary)] text-sm font-medium"
           >
-            <span className="text-lg">✉️</span>
+            <span className="text-lg" aria-hidden="true">✉️</span>
             <div>
               <p className="font-semibold text-[var(--text-primary)]">Email</p>
               <p className="text-xs text-[var(--text-muted)]">{homeContent.contact.email}</p>
@@ -893,12 +898,12 @@ function ConnectSection({ homeContent }: { homeContent: HomeContent }) {
             rel="noopener noreferrer"
             className="flex items-center gap-4 rounded-xl px-4 py-3.5 border border-[var(--border)] bg-[var(--surface-hover)]/60 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-all duration-150 text-[var(--text-secondary)] text-sm font-medium"
           >
-            <span className="text-lg">&#9661;</span>
+            <span className="text-lg" aria-hidden="true">&#9661;</span>
             <div>
               <p className="font-semibold text-[var(--text-primary)]">GitHub</p>
               <p className="text-xs text-[var(--text-muted)]">{homeContent.contact.github.replace("https://github.com/", "")}</p>
             </div>
-            <span className="ml-auto">&#8599;</span>
+            <span className="ml-auto" aria-hidden="true">&#8599;</span>
           </a>
         </div>
       </GlassCard>

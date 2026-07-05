@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db, posts } from '@/db';
 import { and, eq, lte, isNotNull } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 export const GET: APIRoute = async ({ request }) => {
   // Require a shared secret. Fail closed: if CRON_SECRET is not configured the
@@ -48,12 +49,9 @@ export const GET: APIRoute = async ({ request }) => {
       }
     );
   } catch (error) {
-    console.error('Error publishing scheduled posts:', error);
+    logger.error('Error publishing scheduled posts', error instanceof Error ? error : new Error(String(error)));
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to publish scheduled posts',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
+      JSON.stringify({ error: 'Failed to publish scheduled posts' }),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json' },

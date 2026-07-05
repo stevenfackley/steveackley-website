@@ -1,9 +1,15 @@
 ---
+import DOMPurify from 'isomorphic-dompurify';
+
 interface Props {
   content: string;
 }
 
 const { content } = Astro.props;
+// content is admin-authored HTML from the TipTap editor (stored as-is in the DB).
+// Sanitize before set:html so a compromised admin session / stored payload can't
+// inject script into every visitor's page.
+const safeContent = DOMPurify.sanitize(content);
 ---
 
 <!--
@@ -24,5 +30,5 @@ const { content } = Astro.props;
     prose-hr:border-[var(--border)]
     prose-img:rounded-xl
     prose-code:before:content-none prose-code:after:content-none"
-  set:html={content}
+  set:html={safeContent}
 />

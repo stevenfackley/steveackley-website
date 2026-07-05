@@ -4,15 +4,45 @@ const EMAIL = "stevenfackley@gmail.com";
 
 function EmailDialog({ onClose }: { onClose: () => void }) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && panelRef.current) {
+        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Focus management: move focus into the dialog on open, restore it to the
+  // trigger (or whatever was previously focused) when the dialog closes.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    closeBtnRef.current?.focus();
+    return () => {
+      previouslyFocused?.focus();
+    };
+  }, []);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -140,6 +170,7 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
       aria-labelledby="email-dialog-title"
     >
       <div
+        ref={panelRef}
         className="relative w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden"
         style={{
           background: "var(--surface, #1e1e2e)",
@@ -155,11 +186,12 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
             <p className="text-xs text-[var(--text-muted)] mt-0.5">Choose how you'd like to get in touch</p>
           </div>
           <button
+            ref={closeBtnRef}
             onClick={onClose}
             className="rounded-lg p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
             aria-label="Close"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -180,6 +212,7 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
               }}
             >
               <div
+                aria-hidden="true"
                 className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-110"
                 style={{ background: `${opt.color}18`, color: opt.color }}
               >
@@ -195,6 +228,7 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
+                aria-hidden="true"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>

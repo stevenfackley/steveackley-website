@@ -4,6 +4,7 @@ import * as schema from "./schema";
 import { config } from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { logger } from "../lib/logger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,12 +25,15 @@ const globalForDb = globalThis as unknown as {
 };
 
 // Create the postgres client
-const dbUrl = process.env.DATABASE_URL!;
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
 try {
   const parsedUrl = new URL(dbUrl);
-  console.log(`[Database] Initializing connection to ${parsedUrl.hostname}:${parsedUrl.port}/${parsedUrl.pathname.replace('/', '')}`);
+  logger.info(`Initializing database connection to ${parsedUrl.hostname}:${parsedUrl.port}/${parsedUrl.pathname.replace('/', '')}`);
 } catch {
-  console.log(`[Database] Initializing connection with custom URL format`);
+  logger.info("Initializing database connection with custom URL format");
 }
 
 export const queryClient =
