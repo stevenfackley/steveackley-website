@@ -1,5 +1,7 @@
 # 🚇 Cloudflare Tunnel Setup Summary
 
+> **ARCHIVED — describes a superseded setup.** This document was written when `cloudflared` ran as a **systemd service** in front of a **Next.js** container. The real, current setup runs `cloudflared` as a **Docker sidecar** (the `tunnel` service in `docker-compose.yml`) in front of an **Astro** app, with no systemd unit involved. Details below (systemd commands, `web.env`, bcrypt escaping, `CLOUDFLARE_ZONE_ID`/`CLOUDFLARE_API_TOKEN` cache-purge secrets, `aws.steveackley.org` domain) do not reflect production. See [../DEPLOYMENT_ARCHITECTURE.md](../DEPLOYMENT_ARCHITECTURE.md) for the current architecture and [SERVER_CONFIG.md](./SERVER_CONFIG.md#cloudflare-tunnel-docker-sidecar) for the current sidecar operational runbook. Kept for historical reference only.
+
 ## ✅ Current Setup (Working)
 
 Your site is successfully deployed using **Cloudflare Tunnel** on AWS EC2 with automated deployments.

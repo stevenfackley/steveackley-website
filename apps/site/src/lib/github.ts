@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 export interface GitHubRepo {
   name: string;
   description: string | null;
@@ -268,7 +270,10 @@ export async function getCachedRepos(): Promise<{ repos: EnrichedRepo[]; fetched
     const data = await repoInflight;
     return { repos: data, fetchedAt: repoCache?.fetchedAt ?? Date.now() };
   } catch (e) {
-    console.error("getCachedRepos: GitHub fetch failed; serving last good cache.", e);
+    logger.error(
+      "getCachedRepos: GitHub fetch failed; serving last good cache.",
+      e instanceof Error ? e : new Error(String(e)),
+    );
     if (repoCache) return { repos: repoCache.data, fetchedAt: repoCache.fetchedAt };
     return { repos: [], fetchedAt: Date.now() };
   }

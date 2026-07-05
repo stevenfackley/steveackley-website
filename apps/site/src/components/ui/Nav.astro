@@ -20,6 +20,15 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
 ---
 
 <nav class="sticky top-0 z-50 border-b border-[var(--border)]/70 bg-[var(--glass-bg)] backdrop-blur-xl backdrop-saturate-150">
+  <!-- Shared theme-icon path data (desktop + mobile toggles reference these via <use>) -->
+  <svg width="0" height="0" class="hidden" aria-hidden="true">
+    <symbol id="icon-theme-sun" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.061 1.06l1.061 1.061zM5.404 6.464a.75.75 0 001.06-1.06L5.404 4.343a.75.75 0 10-1.06 1.06l1.06 1.061z" />
+    </symbol>
+    <symbol id="icon-theme-moon" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+    </symbol>
+  </svg>
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-14 items-center justify-between gap-4">
       <!-- Logo / Name -->
@@ -72,11 +81,11 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
         >
           <!-- Sun icon (shown in dark mode) -->
           <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden">
-            <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.061 1.06l1.061 1.061zM5.404 6.464a.75.75 0 001.06-1.06L5.404 4.343a.75.75 0 10-1.06 1.06l1.06 1.061z" />
+            <use href="#icon-theme-sun" />
           </svg>
           <!-- Moon icon (shown in light mode) -->
           <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-            <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+            <use href="#icon-theme-moon" />
           </svg>
         </button>
 
@@ -114,16 +123,18 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
           class="p-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
         >
           <svg id="theme-icon-sun-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 hidden">
-            <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.061 1.06a.75.75 0 001.06 1.06l1.061-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.061a.75.75 0 10-1.061 1.06l1.061 1.061zM5.404 6.464a.75.75 0 001.06-1.06L5.404 4.343a.75.75 0 10-1.06 1.06l1.06 1.061z" />
+            <use href="#icon-theme-sun" />
           </svg>
           <svg id="theme-icon-moon-mobile" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-            <path fill-rule="evenodd" d="M7.455 2.004a.75.75 0 01.26.77 7 7 0 009.958 7.967.75.75 0 011.067.853A8.5 8.5 0 116.647 1.921a.75.75 0 01.808.083z" clip-rule="evenodd" />
+            <use href="#icon-theme-moon" />
           </svg>
         </button>
         <button
           id="mobile-menu-btn"
           class="p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
           aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
         >
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -164,7 +175,8 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
   const btn = document.getElementById('mobile-menu-btn');
   const menu = document.getElementById('mobile-menu');
   btn?.addEventListener('click', () => {
-    menu?.classList.toggle('hidden');
+    const nowHidden = menu?.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', String(nowHidden === false));
   });
 
   // ── Dark mode toggle ────────────────────────────────────────────────────────
@@ -189,6 +201,8 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
     for (const id of ['theme-toggle', 'theme-toggle-mobile']) {
       document.getElementById(id)?.setAttribute('aria-pressed', String(dark));
     }
+    document.getElementById('theme-toggle')?.setAttribute('aria-pressed', String(dark));
+    document.getElementById('theme-toggle-mobile')?.setAttribute('aria-pressed', String(dark));
   }
 
   function applyTheme(theme: Theme, persist: boolean) {

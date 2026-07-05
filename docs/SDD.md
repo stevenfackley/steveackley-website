@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart TB
-    root["Monorepo root (npm workspaces)"] --> site["apps/site<br/>(Astro 6 + React 19 SSR app)"]
+    root["Monorepo root (npm workspaces)"] --> site["apps/site<br/>(Astro 7 + React 19 SSR app)"]
     root --> shared["packages/shared<br/>(Drizzle schema, Better Auth config, types)"]
     site --> shared
 ```

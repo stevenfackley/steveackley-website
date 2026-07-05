@@ -92,10 +92,10 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
             />
           </div>
           <div>
-            <label className={lbl}>Content *</label>
+            <label id="post-content-label" className={lbl}>Content *</label>
             {isMounted && (
               <Suspense fallback={<div className="h-64 rounded-xl border border-[var(--border)] bg-[var(--background)] animate-pulse" />}>
-                <PostEditor value={content} onChange={setContent} />
+                <PostEditor value={content} onChange={setContent} ariaLabelledBy="post-content-label" />
               </Suspense>
             )}
           </div>
@@ -193,7 +193,6 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               </div>
             )}
             <ImageUploadButton onUpload={setCoverImage} />
-            {coverImage && <input type="hidden" name="coverImage" value={coverImage} />}
           </div>
         </div>
       </div>

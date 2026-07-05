@@ -1,8 +1,3 @@
-export interface HomeOverviewSkill {
-  name: string;
-  level: number;
-}
-
 export interface HomeInterest {
   icon: string | null;
   label: string;
@@ -24,11 +19,8 @@ export interface HomeContent {
   heroSummary: string;
   heroLocation: string;
   availabilityLabel: string;
-  aboutSummary: string;
   aboutBio: string;
-  overviewSkills: HomeOverviewSkill[];
   interests: HomeInterest[];
-  featuredProjects: string[];
   opportunities: HomeOpportunity[];
   contact: {
     email: string;

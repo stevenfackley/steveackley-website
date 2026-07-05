@@ -1,10 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * The middleware redirects /admin/* and /client/* to the Portal app
- * (http://localhost:3001 by default).  In CI the Portal is not running,
- * so we verify the redirect response itself rather than following it to
- * a live destination.
+ * The middleware redirects unauthenticated /admin/* and /client/* requests
+ * to /login (see src/middleware.ts). We verify the redirect response itself
+ * rather than following it, since no session is seeded for these requests.
  */
 
 async function assertRedirectsToLogin(

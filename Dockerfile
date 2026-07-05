@@ -1,5 +1,5 @@
 # =============================================================================
-# steveackley.org — Production Dockerfile for Astro 6
+# steveackley.org — Production Dockerfile for Astro 7
 # =============================================================================
 
 # Stage 1: Builder

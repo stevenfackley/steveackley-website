@@ -12,16 +12,23 @@ const getR2Config = () => ({
   PUBLIC_URL: process.env.R2_PUBLIC_URL,
 });
 
+// Singleton: reuse one S3Client (and its connection pool) across calls instead
+// of constructing a new client — and a new TCP/TLS connection — per upload/delete.
+let s3ClientSingleton: S3Client | undefined;
+
 const createS3Client = () => {
-  const config = getR2Config();
-  return new S3Client({
-    region: "auto",
-    endpoint: `https://${config.ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: config.ACCESS_KEY_ID || "",
-      secretAccessKey: config.SECRET_ACCESS_KEY || "",
-    },
-  });
+  if (!s3ClientSingleton) {
+    const config = getR2Config();
+    s3ClientSingleton = new S3Client({
+      region: "auto",
+      endpoint: `https://${config.ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: config.ACCESS_KEY_ID || "",
+        secretAccessKey: config.SECRET_ACCESS_KEY || "",
+      },
+    });
+  }
+  return s3ClientSingleton;
 };
 
 // Allowlisted MIME types — SVG intentionally excluded (XSS risk)
@@ -145,7 +152,13 @@ export async function deleteUploadedFile(url: string): Promise<void> {
         Key: filename,
       })
     );
-  } catch {
-    // Fail silently
+  } catch (err) {
+    // Fail silently (caller doesn't need delete to succeed), but still log so
+    // orphaned R2 objects are observable instead of vanishing without a trace.
+    logger.warn("deleteUploadedFile: R2 DeleteObjectCommand failed", {
+      filename,
+      bucket: config.BUCKET,
+      err: err instanceof Error ? err.message : String(err),
+    });
   }
 }

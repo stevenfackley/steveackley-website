@@ -13,8 +13,15 @@ export function AdminAccountMenu() {
         setOpen(false);
       }
     }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
   const itemCls = cn(
@@ -27,6 +34,8 @@ export function AdminAccountMenu() {
     <div ref={ref} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="true"
+        aria-expanded={open}
         className={cn(
           "flex items-center gap-1 text-sm",
           "text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-150"

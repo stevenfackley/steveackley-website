@@ -19,7 +19,7 @@ const { post, class: className, delay } = Astro.props;
   <a href={`/blog/${post.slug}`} class="block h-full">
     {post.coverImage && (
       <div class="relative h-44 overflow-hidden">
-        <img src={post.coverImage} alt={post.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={post.coverImage} alt={post.title} loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       </div>
     )}
     <div class="p-5">

@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
 import { readingTimeMinutes } from '@/lib/reading-time';
+import { requireAdminAction } from '@/lib/auth-guards';
 
 /** Parse a comma-separated tag string into a clean string[], or null if empty. */
 function parseTags(raw: string | undefined): string[] | null {
@@ -31,9 +32,7 @@ export const server = {
       couplePhotoUrl: z.string(),
     }),
     handler: async (input, context) => {
-      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
-        throw new Error('Unauthorized');
-      }
+      requireAdminAction(context);
       await Promise.all([
         setSiteSetting(SETTING_KEYS.AVATAR_URL, input.avatarUrl.trim()),
         setSiteSetting(SETTING_KEYS.COUPLE_PHOTO_URL, input.couplePhotoUrl.trim()),
@@ -47,9 +46,7 @@ export const server = {
       published: z.boolean(),
     }),
     handler: async (input, context) => {
-      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
-        throw new Error('Unauthorized');
-      }
+      requireAdminAction(context);
       await db
         .update(posts)
         .set({ published: input.published, updatedAt: new Date() })
@@ -62,9 +59,7 @@ export const server = {
       id: z.string(),
     }),
     handler: async (input, context) => {
-      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
-        throw new Error('Unauthorized');
-      }
+      requireAdminAction(context);
       await db.delete(posts).where(eq(posts.id, input.id));
       return { success: true };
     },
@@ -82,9 +77,7 @@ export const server = {
       scheduledAt: z.string().optional(),
     }),
     handler: async (input, context) => {
-      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
-        throw new Error('Unauthorized');
-      }
+      requireAdminAction(context);
 
       const slug = input.title
         .toLowerCase()
@@ -122,9 +115,7 @@ export const server = {
       scheduledAt: z.string().optional(),
     }),
     handler: async (input, context) => {
-      if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
-        throw new Error('Unauthorized');
-      }
+      requireAdminAction(context);
 
       const slug = input.title
         .toLowerCase()

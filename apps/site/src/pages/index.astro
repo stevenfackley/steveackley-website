@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { getCachedRepos, type EnrichedRepo } from '@/lib/github';
 import { getHomeContent, getFeaturedProjects } from '@/lib/content';
 import { personSchema } from '@/lib/seo';
+import { logger } from '@/lib/logger';
 
 // Fan out all four reads in parallel — the SSR waterfall used to be ~200–800ms.
 // Blog select is narrowed to only what the dashboard preview needs; the full
@@ -28,7 +29,7 @@ const blogPostsPromise = db
 const githubReposPromise = getCachedRepos()
   .then((r) => r.repos)
   .catch((e): EnrichedRepo[] => {
-    console.error("Failed to fetch GitHub repos:", e);
+    logger.error("Failed to fetch GitHub repos", e instanceof Error ? e : new Error(String(e)));
     return [];
   });
 

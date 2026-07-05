@@ -82,3 +82,23 @@ apps/*/dist/
 *.log
 *.lscache
 /apps/site/test-results
+
+# --- cleanup 2026-07: nested artifact + secret coverage ---
+**/coverage/
+/apps/site/coverage/
+**/playwright-report/
+/apps/site/playwright-report/
+/test-results/
+**/test-results/
+.playwright-mcp/
+# stray root-level QA screenshots
+/audit-*.png
+/final-*.png
+/wip-*.png
+/post-*.png
+/home-*.png
+/mobile-*.png
+# leaked origin cert/key + scratch scripts (untracked; never re-add)
+/temp_origin.*
+/fix-tunnel.sh
+.serena/

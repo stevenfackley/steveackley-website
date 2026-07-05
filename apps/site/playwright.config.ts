@@ -6,7 +6,7 @@ import { defineConfig, devices } from "@playwright/test";
  * In CI: expects the app to already be built and started externally
  *        (via `npm run build && npm run start`), and DATABASE_URL must
  *        point at a seeded test database.
- * Locally: `webServer` spins up `next dev` automatically.
+ * Locally: `webServer` spins up `astro dev` automatically.
  */
 export default defineConfig({
   testDir: "./e2e",

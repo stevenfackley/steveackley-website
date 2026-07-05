@@ -23,7 +23,7 @@ const baseLogger = pino(
   },
   isProduction
     ? pino.destination(1) // stdout, JSON
-    : (pino as any).transport({
+    : pino.transport({
         target: "pino-pretty",
         options: {
           colorize: true,

@@ -1,6 +1,7 @@
 import { db, siteSettings } from "../db/index";
 import { eq, inArray } from "drizzle-orm";
 import { SETTING_KEYS, DEFAULTS } from "./setting-keys";
+import { logger } from "./logger";
 
 export type SiteSettingKey = keyof typeof DEFAULTS;
 export type SiteSettingsMap<TKeys extends readonly SiteSettingKey[]> = Record<TKeys[number], string>;
@@ -13,7 +14,11 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<string> {
       .where(eq(siteSettings.key, key))
       .limit(1);
     return row?.value ?? DEFAULTS[key] ?? "";
-  } catch {
+  } catch (err) {
+    logger.warn("getSiteSetting: DB read failed, falling back to default", {
+      key,
+      err: err instanceof Error ? err.message : String(err),
+    });
     return DEFAULTS[key] ?? "";
   }
 }
@@ -32,7 +37,11 @@ export async function getSiteSettings<const TKeys extends readonly SiteSettingKe
       map[key] = row?.value ?? DEFAULTS[key] ?? "";
     }
     return map as SiteSettingsMap<TKeys>;
-  } catch {
+  } catch (err) {
+    logger.warn("getSiteSettings: DB read failed, falling back to defaults", {
+      keys,
+      err: err instanceof Error ? err.message : String(err),
+    });
     const map = {} as Record<SiteSettingKey, string>;
     for (const key of keys) {
       map[key] = DEFAULTS[key] ?? "";

@@ -6,7 +6,7 @@
 flowchart TB
     internet["Internet"] --> cf["Cloudflare<br/>(DNS + Tunnel)"]
     cf --> ec2["EC2 instance"]
-    ec2 --> web["steveackley-web<br/>(Astro 6 SSR, node)"]
+    ec2 --> web["steveackley-web<br/>(Astro 7 SSR, node)"]
     ec2 --> db["steveackley-db<br/>(Postgres 16, named volume)"]
     web --> db
     web --> github["GitHub API"]

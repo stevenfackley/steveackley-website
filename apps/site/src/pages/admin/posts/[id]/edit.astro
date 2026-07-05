@@ -3,10 +3,10 @@ import AdminLayout from '@/layouts/AdminLayout.astro';
 import { PostForm } from '@/components/admin/PostForm';
 import { db, posts as postsTable } from '@/db';
 import { eq } from 'drizzle-orm';
+import { requireAdminPage } from '@/lib/auth-guards';
 
-if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
-  return Astro.redirect('/login');
-}
+const guard = requireAdminPage(Astro);
+if (guard) return guard;
 
 const { id } = Astro.params;
 const [post] = id

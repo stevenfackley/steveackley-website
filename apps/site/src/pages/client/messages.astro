@@ -1,9 +1,9 @@
 ---
 import ClientLayout from '@/layouts/ClientLayout.astro';
+import { requireClientPage } from '@/lib/auth-guards';
 
-if (!Astro.locals.user || Astro.locals.user.role !== 'CLIENT') {
-  return Astro.redirect('/login');
-}
+const guard = requireClientPage(Astro);
+if (guard) return guard;
 ---
 
 <ClientLayout title="Messages">

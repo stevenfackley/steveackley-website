@@ -6,21 +6,7 @@ heroTitle: Software Engineer · .NET · AWS · Full-Stack
 heroSummary: 12+ years designing and shipping enterprise-grade software. Core stack is C# / .NET on AWS, with deep experience across full-stack, cloud architecture, and technical leadership.
 heroLocation: United States
 availabilityLabel: Available for opportunities
-aboutSummary: Staff Software Engineer at Lockheed Martin with 12+ years in the Microsoft ecosystem. C#, .NET, AWS, Angular, and SQL Server.
 aboutBio: I build pragmatic systems with a strong bias toward maintainability, delivery discipline, and clean architecture. Most of my professional work has lived in the Microsoft stack, but I am increasingly applying the same engineering bar to modern TypeScript and React-based products.
-overviewSkills:
-  - name: C# / .NET
-    level: 5
-  - name: AWS Cloud
-    level: 5
-  - name: SQL Server
-    level: 5
-  - name: ASP.NET / Web API
-    level: 5
-  - name: Angular
-    level: 4
-  - name: Docker / DevOps
-    level: 4
 interests:
   - icon: "🔧"
     label: Tinkering & Tech
@@ -50,13 +36,6 @@ interests:
   - icon: "🌿"
     label: Fragrances
     detail: Curating a personal collection of signature scents.
-featuredProjects:
-  - P1 Ops Hub
-  - OmniSift
-  - axon-main
-  - TrustLog
-  - steveackley-website
-  - SortCompare
 opportunities:
   - icon: "💼"
     title: Contract & Freelance

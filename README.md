@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-    U["Browser Users"] --> S["apps/site<br/>Astro 5 + MDX + content collections"]
+    U["Browser Users"] --> S["apps/site<br/>Astro 7 + MDX + content collections"]
     S --> C["File-authored content<br/>src/content/*"]
     S --> D["Shared Postgres / Drizzle schema"]
     S --> R["Cloudflare R2 media storage"]
@@ -28,7 +28,7 @@ flowchart LR
 
 | Area | Technology |
 |---|---|
-| Site / Portal | Astro 5, React islands, MDX, Astro content collections |
+| Site / Portal | Astro 7, React islands, MDX, Astro content collections |
 | Shared backend | PostgreSQL 16, Drizzle ORM, Better Auth |
 | Storage | Cloudflare R2 |
 | Styling | CSS/Tailwind-compatible tokens and app-local styling |

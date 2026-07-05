@@ -1,60 +1,27 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import { db, siteSettings } from '@/db';
+import { requireAdminPage } from '@/lib/auth-guards';
 
-if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
-  return Astro.redirect('/login');
-}
-
-let successMessage: string | null = null;
-let errorMessage: string | null = null;
-
-if (Astro.request.method === 'POST') {
-  try {
-    await Astro.request.formData();
-    successMessage = 'Settings saved.';
-  } catch {
-    errorMessage = 'Failed to save settings.';
-  }
-}
+const guard = requireAdminPage(Astro);
+if (guard) return guard;
 
 const allSettings = await db.select().from(siteSettings);
 ---
 
 <AdminLayout title="Settings">
   <div class="space-y-6">
-    <!-- Edit form -->
+    <!-- Read-only info -->
     <section class="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <div class="mb-5">
         <p class="text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Site Configuration</p>
         <h2 class="mt-0.5 text-xl font-semibold text-[var(--text-primary)]">Settings</h2>
       </div>
 
-      {successMessage && (
-        <div class="mb-4 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 text-sm text-green-400">
-          {successMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div class="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
-          {errorMessage}
-        </div>
-      )}
-
-      <form method="POST" class="space-y-5">
-        <p class="text-sm text-[var(--text-secondary)]">
-          Avatar and photo settings are currently locked to static assets. 
-          Use the configuration snapshot below to manage other keys.
-        </p>
-        <div class="pt-1">
-          <button
-            type="submit"
-            class="rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
-          >
-            Save Settings
-          </button>
-        </div>
-      </form>
+      <p class="text-sm text-[var(--text-secondary)]">
+        Avatar and photo settings are currently locked to static assets.
+        There is nothing editable on this page yet — see the configuration snapshot below for current keys.
+      </p>
     </section>
 
     <!-- All keys snapshot -->

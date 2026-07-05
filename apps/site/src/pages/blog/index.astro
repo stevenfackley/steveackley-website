@@ -11,7 +11,7 @@ const SITE_ORIGIN = 'https://steveackley.org';
 
 const PER_PAGE = 10;
 const page = Number(Astro.url.searchParams.get('page') ?? '1');
-const currentPage = Math.max(1, page);
+const currentPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
 
 // Get total count of published posts
 const [totalCountResult] = await db

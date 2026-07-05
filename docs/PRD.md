@@ -1,5 +1,7 @@
 # Product Requirements Snapshot
 
+> **Correction (2026-07-05):** Per [ADR-001](ADR-001-astro-site-next-portal.md), the Astro/Next split described below was accepted but never executed and is now frozen. The current architecture is a single Astro `apps/site` — "Portal" below refers to `admin/*` and `client/*` route groups within that app, not a separate Next.js app. Treat the goals as still-valid product intent, not a description of two codebases.
+
 ## Product Split
 
 ```mermaid

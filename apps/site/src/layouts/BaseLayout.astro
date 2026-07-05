@@ -110,9 +110,9 @@ try {
     <script is:inline define:vars={{ siteTheme }}>
       (function () {
         document.documentElement.classList.add('js');
-        var stored = null;
-        try { stored = localStorage.getItem('theme'); } catch (e) { /* storage blocked */ }
-        var theme;
+        let stored = null;
+        try { stored = localStorage.getItem('theme'); } catch { /* storage blocked */ }
+        let theme;
         if (stored === 'light' || stored === 'dark') {
           theme = stored;
         } else if (siteTheme === 'light' || siteTheme === 'dark') {
