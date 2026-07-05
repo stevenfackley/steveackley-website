@@ -48,37 +48,69 @@ const projects = defineCollection({
   }),
 });
 
+const resumeSkillItemSchema = z.object({
+  name: z.string(),
+  pct: z.number().int().min(0).max(100),
+});
+
+const resumeSummarySchema = z.object({
+  type: z.literal("summary"),
+  order: z.number().int().default(100),
+});
+
+const resumeSkillCategorySchema = z.object({
+  type: z.literal("skill-category"),
+  order: z.number().int().default(100),
+  category: z.string(),
+  items: z.array(resumeSkillItemSchema),
+});
+
+const resumeTechStackSchema = z.object({
+  type: z.literal("tech-stack"),
+  order: z.number().int().default(100),
+  items: z.array(z.string()),
+});
+
+const resumeExperienceSchema = z.object({
+  type: z.literal("experience"),
+  order: z.number().int().default(100),
+  company: z.string(),
+  location: z.string(),
+  period: z.string(),
+  role: z.string(),
+  tags: z.array(z.string()),
+});
+
+const resumeCertificationSchema = z.object({
+  type: z.literal("certification"),
+  order: z.number().int().default(100),
+  role: z.string(),
+  issuer: z.string(),
+  color: z.string(),
+  bg: z.string(),
+  icon: z.string(),
+});
+
+const resumeEducationSchema = z.object({
+  type: z.literal("education"),
+  order: z.number().int().default(100),
+  degree: z.string(),
+  school: z.string(),
+  year: z.string(),
+  location: z.string().optional(),
+  minor: z.string().optional(),
+});
+
 const resume = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/resume" }),
-  schema: z.object({
-    type: z.enum(["summary", "experience", "education", "certification", "skill-category", "tech-stack"]),
-    order: z.number().int().default(100),
-    company: z.string().optional(),
-    location: z.string().optional(),
-    period: z.string().optional(),
-    role: z.string().optional(),
-    degree: z.string().optional(),
-    school: z.string().optional(),
-    year: z.string().optional(),
-    minor: z.string().optional(),
-    issuer: z.string().optional(),
-    color: z.string().optional(),
-    bg: z.string().optional(),
-    icon: z.string().optional(),
-    category: z.string().optional(),
-    items: z
-      .array(
-        z.union([
-          z.string(),
-          z.object({
-            name: z.string(),
-            pct: z.number().int().min(0).max(100),
-          }),
-        ]),
-      )
-      .optional(),
-    tags: z.array(z.string()).optional(),
-  }),
+  schema: z.discriminatedUnion("type", [
+    resumeSummarySchema,
+    resumeSkillCategorySchema,
+    resumeTechStackSchema,
+    resumeExperienceSchema,
+    resumeCertificationSchema,
+    resumeEducationSchema,
+  ]),
 });
 
 export const collections = { pages, projects, resume };
