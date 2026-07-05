@@ -1,5 +1,5 @@
 # =============================================================================
-# steveackley.org — Production Docker Compose (Astro 5)
+# steveackley.org — Production Docker Compose (Astro 7)
 # =============================================================================
 
 services:

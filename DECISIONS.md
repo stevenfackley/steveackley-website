@@ -63,3 +63,15 @@ Regenerate `package-lock.json` so Dependabot sees the patched versions.
 - astro group → 7.0.0 (#186): @astrojs/mdx + node + react + astro to 7. Breaking: getContainerRenderer() moved to the `container-renderer` entrypoint (Container API imports must change). E2E currently red on this.
 
 Both awareness-only; held until a coordinated upgrade.
+
+---
+
+## 2026-07-05 — Closed: coordinated Astro 7 + Vite 8 + @vitejs/plugin-react 6 upgrade
+
+**Status:** accepted (resolves the 2026-06-29 "Deferred: two front-end majors" entry above)
+**Context:** The two deferred majors (@vitejs/plugin-react 5→6 / #190, astro group →7 / #186) required a coordinated bump — plugin-react 6 needs Vite 6/7+, and Astro 7 needs the `container-renderer` entrypoint change for `getContainerRenderer()`. E2E was red against Astro 7 alone at the time of deferral.
+**Decision:** Shipped the coordinated upgrade: Astro 7.0.4, Vite 8, `@vitejs/plugin-react` 6.0.3 (commit `9ef3069`, `feat(deps): migrate to Astro 7 + Vite 8 + plugin-react 6`).
+**Consequences:**
+- Both deferred-major watch items above are resolved — no outstanding action on plugin-react/astro from that entry.
+- Node runtime bumped to 26 in the same window (see `docs/ADR-002-bump-docker-node-22-to-26.md`, now Accepted/Implemented).
+- E2E green against the new stack; Container API imports updated for the `container-renderer` entrypoint move.

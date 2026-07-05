@@ -1,8 +1,8 @@
 # Cloudflare Tunnel Migration Guide
 
-> **ARCHIVED — migration is complete.**
-> The production deployment now uses Cloudflare Tunnel with `cloudflared` running as a systemd service on EC2. Caddy has been removed. This document is kept for historical reference.
-> See [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md) for the current configuration and [DEPLOYMENT_GUIDE.md](../../DEPLOYMENT_GUIDE.md) for the full deployment architecture.
+> **ARCHIVED — migration is complete, and has moved further since.**
+> Caddy + origin certs (described below as the "current" architecture at the time) are long gone. The tunnel did **not** end up running as a systemd service — production now runs `cloudflared` as a **Docker sidecar** (the `tunnel` service in `docker-compose.yml`), matching what this doc calls the "Recommended Architecture" below, but containerized rather than systemd-managed. The app stack is also Astro, not Next.js. This document is kept for historical reference only.
+> See [../DEPLOYMENT_ARCHITECTURE.md](../DEPLOYMENT_ARCHITECTURE.md) for the current architecture and [SERVER_CONFIG.md](./SERVER_CONFIG.md#cloudflare-tunnel-docker-sidecar) for the current operational runbook. [CLOUDFLARE_TUNNEL_SETUP.md](./CLOUDFLARE_TUNNEL_SETUP.md) is itself archived (also describes the superseded systemd setup).
 
 ## 📊 Architecture Comparison
 

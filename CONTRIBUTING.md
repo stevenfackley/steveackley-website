@@ -1,6 +1,6 @@
 # Contributing to steveackley.org
 
-Thank you for your interest in contributing! This is a personal website project, so contributions will primarily be from the owner. This document exists to document conventions, processes, and guidelines for working on the codebase.
+Personal website project — contributions are primarily from the owner. This document records conventions and workflow for working on the codebase.
 
 ---
 
@@ -13,9 +13,8 @@ Thank you for your interest in contributing! This is a personal website project,
 - [Code Style & Conventions](#code-style--conventions)
 - [Commit Message Format](#commit-message-format)
 - [Branch Naming](#branch-naming)
-- [Testing Guidelines](#testing-guidelines)
+- [Testing](#testing)
 - [Environment Variables](#environment-variables)
-- [Docker Development](#docker-development)
 - [Database Migrations](#database-migrations)
 - [Adding Blog Posts (Admin)](#adding-blog-posts-admin)
 
@@ -23,135 +22,123 @@ Thank you for your interest in contributing! This is a personal website project,
 
 ## Prerequisites
 
-Ensure the following tools are installed:
-
 | Tool | Version | Purpose |
 |---|---|---|
-| Node.js | 20.x LTS | JavaScript runtime |
-| npm | 10.x | Package manager |
-| Docker | 24.x+ | Container runtime |
+| Node.js | 26.x | JavaScript runtime (matches Dockerfile's `node:26-alpine`) |
+| npm | 10.x+ | Package manager / npm workspaces |
+| Docker | 24.x+ | Local Postgres (and prod image builds) |
 | Docker Compose | v2.x | Multi-container orchestration |
 | Git | 2.x+ | Version control |
 
-### Verify Installation
-
 ```bash
-node --version   # Should be v20.x.x
-npm --version    # Should be 10.x.x
-docker --version # Should be 24.x+
-docker compose version # Should be v2.x
-git --version    # Should be 2.x
+node --version
+npm --version
+docker --version
+docker compose version
+git --version
 ```
 
 ---
 
 ## Development Setup
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/steveackleyorg.git
+git clone https://github.com/stevenfackley/steveackleyorg.git
 cd steveackleyorg
 ```
 
-### 2. Install Dependencies
+### 2. Install dependencies (npm workspaces, from repo root)
 
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
+### 3. Configure environment variables
 
-```bash
-cp .env.example .env.local
-```
+Create `apps/site/.env.local` (no `.env.example` is committed — see [Environment Variables](#environment-variables) for the required list). This repo is a Postgres/Drizzle/Better Auth stack, not Next.js/Prisma/NextAuth.
 
-Edit `.env.local` with your local values. See the [Environment Variables](#environment-variables) section below.
-
-### 4. Start the Database
+### 4. Start the database
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d db
 ```
 
-### 5. Run Database Migrations
+### 5. Push the schema
 
 ```bash
-npx prisma migrate dev
+cd apps/site
+npm run db:push
 ```
 
-### 6. Seed the Admin User
+### 6. Start the dev server (from repo root)
 
 ```bash
-npm run setup:admin
+npm run dev:site
 ```
 
-Follow the prompts to create the admin email and password. This generates the bcrypt hash and saves it to your `.env.local`.
-
-### 7. Start the Development Server
-
-```bash
-npm run dev
-```
-
-The application will be available at [http://localhost:3000](http://localhost:3000).  
-The admin panel is at [http://localhost:3000/admin](http://localhost:3000/admin).
+The site runs at [http://localhost:3000](http://localhost:3000). Admin portal: `/admin`.
 
 ---
 
 ## Project Structure
 
+npm workspaces monorepo:
+
 ```
-src/
-├── app/                   # Next.js App Router pages
-│   ├── (public)/          # Public-facing pages
-│   ├── admin/             # Protected admin pages
-│   └── api/               # API routes
-├── components/
-│   ├── bento/             # Home dashboard cards
-│   ├── blog/              # Blog UI components
-│   ├── admin/             # Admin panel components
-│   └── ui/                # Shared primitive components
-├── lib/
-│   ├── prisma.ts          # Database client
-│   ├── auth.ts            # NextAuth configuration
-│   ├── utils.ts           # Shared utilities
-│   └── upload.ts          # File upload helpers
-└── types/
-    └── index.ts           # Shared TypeScript types
+apps/site/                  # Astro 7 SSR app
+├── src/
+│   ├── pages/               # File-based Astro routing (admin/*, client/*, api/*)
+│   ├── components/          # React 19 islands: bento/, admin/, blog/, ui/
+│   ├── content/              # Astro content collections: blog/, pages/, projects/, resume/
+│   ├── actions/               # Astro server actions (Zod-validated)
+│   ├── db/                     # Drizzle schema + DB instance
+│   ├── lib/                     # auth, github, settings, upload, dashboard, logger
+│   ├── layouts/                   # BaseLayout, PublicLayout, AdminLayout, ClientLayout
+│   └── __tests__/                  # unit/ (jsdom) and integration/
+packages/shared/             # Drizzle ORM schema, Better Auth config, shared types
 ```
 
-See `docs/SDD.md` for the complete project structure.
+See the root `CLAUDE.md` for the full directory reference.
 
 ---
 
 ## Development Workflow
 
-### Standard Feature Flow
-
 ```
 1. Create a feature branch from main
 2. Write code
-3. Test locally (npm run dev + docker compose)
-4. Run the linter and type checker
-5. Commit with conventional commit message
-6. Push and open PR (or merge directly if solo)
+3. Test locally (npm run dev:site + docker compose db)
+4. Run lint + typecheck
+5. Commit with a Conventional Commits message
+6. Push and open a PR — squash-merge via PR
 ```
 
-### Available Scripts
+### Available scripts
+
+Run from repo root:
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run setup:admin` | Interactive admin user setup |
-| `npm run db:generate` | Regenerate Prisma client after schema changes |
-| `npm run db:push` | Push schema changes to DB without a migration file |
-| `npm run db:migrate` | Apply pending migrations (production) |
-| `npm run db:studio` | Open Prisma database GUI |
-| `npx prisma migrate dev` | Create and apply a new migration (development) |
+| `npm run dev:site` | Start Astro dev server with hot reload |
+| `npm run build:site` | Build for production |
+| `npm run typecheck:site` | `astro check` |
+| `npm run lint:site` | ESLint |
+| `npm run test:site` | All vitest tests (unit + integration) |
+
+Run from `apps/site`:
+
+| Command | Description |
+|---|---|
+| `npm run test:unit` | Unit tests only (jsdom) |
+| `npm run test:integration` | Integration tests only |
+| `npm run test:e2e` | Playwright E2E (Chromium) |
+| `npm run test:e2e:ui` | Playwright with interactive UI |
+| `npm run db:generate` | Generate Drizzle migrations |
+| `npm run db:push` | Push schema directly to DB (dev) |
+| `npm run db:migrate` | Run pending Drizzle migrations |
+| `npm run db:studio` | Drizzle Studio GUI |
 
 ---
 
@@ -159,18 +146,16 @@ See `docs/SDD.md` for the complete project structure.
 
 ### TypeScript
 
-- **Strict mode** is enabled — no `any` types without justification
-- Prefer explicit type annotations on function parameters and return types
-- Use `interface` for object shapes, `type` for unions/aliases
-- Use `const` by default; `let` when reassignment is needed; never `var`
+- Strict mode enabled — no `any` without justification
+- Prefer explicit types on function parameters and return types
+- `interface` for object shapes, `type` for unions/aliases
+- `const` by default, `let` when reassigned, never `var`
 
-### React / Next.js
+### Astro / React
 
-- **Server Components by default** — add `"use client"` only when necessary (event handlers, browser APIs, hooks)
-- Keep components small and focused (single responsibility)
-- Co-locate component-specific styles with the component file
-- Use `next/image` for all `<img>` tags
-- Use `next/link` for all internal navigation
+- Astro pages/layouts by default; React islands (`.tsx`) only where interactivity is needed, hydrated with an explicit `client:*` directive
+- Keep components small and single-responsibility
+- Use Astro's built-in `<Image />`/asset handling for images where applicable
 
 ### File Naming
 
@@ -178,50 +163,20 @@ See `docs/SDD.md` for the complete project structure.
 |---|---|---|
 | React components | PascalCase | `HeroCard.tsx` |
 | Utility files | camelCase | `utils.ts` |
-| Route files | lowercase (Next.js convention) | `page.tsx`, `route.ts` |
-| Test files | `*.test.ts` / `*.spec.ts` | `utils.test.ts` |
+| Astro pages/routes | lowercase (file-based routing) | `index.astro`, `[slug].astro` |
+| Test files | `*.test.ts` / `*.test.tsx` | `utils.test.ts` |
 
 ### CSS / Tailwind
 
-- Use Tailwind utility classes directly in JSX
+- Tailwind 4 utility classes directly in markup
 - Apply `dark:` variants for every color-related class
-- For complex components, extract repeated class combinations into a local `cn()` helper
-- Keep class lists readable — break long class strings across multiple lines if needed
-
-### Example Component Pattern
-
-```tsx
-// ✅ Good component structure
-interface HeroCardProps {
-  name: string;
-  title: string;
-}
-
-export function HeroCard({ name, title }: HeroCardProps) {
-  return (
-    <div className={`
-      bg-white dark:bg-neutral-900
-      border border-neutral-200 dark:border-neutral-800
-      rounded-2xl p-8
-      hover:border-neutral-300 dark:hover:border-neutral-700
-      hover:-translate-y-0.5 transition-all duration-200
-    `}>
-      <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-        {name}
-      </h1>
-      <p className="text-neutral-600 dark:text-neutral-400 mt-2">
-        {title}
-      </p>
-    </div>
-  );
-}
-```
+- Extract repeated class combinations into a local `cn()` helper for complex components
 
 ---
 
 ## Commit Message Format
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
+[Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 <type>(<scope>): <short description>
@@ -231,168 +186,91 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 [optional footer]
 ```
 
-### Types
-
 | Type | Use For |
 |---|---|
 | `feat` | New feature |
 | `fix` | Bug fix |
-| `docs` | Documentation changes only |
-| `style` | Formatting, whitespace (no logic changes) |
-| `refactor` | Code restructuring (no feature/fix) |
+| `docs` | Documentation only |
+| `style` | Formatting/whitespace, no logic change |
+| `refactor` | Code restructuring, no feature/fix |
 | `chore` | Build process, dependency updates |
 | `perf` | Performance improvements |
 | `security` | Security fixes |
 
-### Examples
-
 ```
 feat(blog): add pagination to blog listing page
 fix(upload): handle MIME type validation for .webp files
-docs: update README with AWS deployment instructions
-chore: update prisma to v6.1.0
-security: rotate NEXTAUTH_SECRET, add rate limiting notes
+docs: update README with deployment instructions
+chore(deps): bump astro to 7.0.4
+security: rotate BETTER_AUTH_SECRET, add rate limiting notes
 ```
+
+**No AI/Claude/Co-Authored-By attribution trailers in commit messages.**
 
 ---
 
 ## Branch Naming
 
 ```
-feature/<description>    # New features
-fix/<description>        # Bug fixes
-docs/<description>       # Documentation
-chore/<description>      # Maintenance tasks
+feat/<description>
+fix/<description>
+docs/<description>
+chore/<description>
 ```
 
-Examples:
-```
-feature/bento-dashboard
-fix/upload-mime-validation
-docs/aws-deployment-guide
-chore/update-dependencies
-```
+**Never commit directly to `main`.** Always work on a feature branch, push it, and open a PR. Merge via squash-merge on the PR.
 
 ---
 
-## Testing Guidelines
+## Testing
 
-> Note: A formal test suite will be added in a future iteration. Until then, manual testing is the standard.
+Run from repo root: `npm run test:site` (all vitest tests). From `apps/site`: `npm run test:unit`, `npm run test:integration`, `npm run test:e2e` / `npm run test:e2e:ui` (Playwright, Chromium).
 
-### Manual Testing Checklist
+CI (`.github/workflows/deploy.yml`) runs unit → integration → E2E (against a live Postgres + built Astro app) before building and deploying the image — a red E2E run blocks build & deploy.
 
-Before committing significant changes:
+### Manual smoke checklist (public + admin)
 
-**Public Pages:**
-- [ ] Home page renders correctly on mobile (375px), tablet (768px), and desktop (1280px)
-- [ ] Dark mode and light mode look correct
-- [ ] Blog listing loads and paginates
-- [ ] Individual blog post renders with correct typography
-- [ ] All nav links work
-
-**Admin Panel:**
-- [ ] Login works with correct credentials
-- [ ] Login rejects incorrect credentials
-- [ ] Dashboard loads with post list
-- [ ] Creating a new post works
-- [ ] Editing an existing post works
-- [ ] Deleting a post works
-- [ ] Publishing/unpublishing a post works
-- [ ] Image upload inserts image into editor
-
-**Docker:**
-- [ ] `docker compose up` starts successfully
-- [ ] App is accessible at `http://localhost:3000`
-- [ ] Database persists after container restart
+- Home renders correctly on mobile (375px), tablet (768px), desktop (1280px); dark/light mode both correct
+- Blog listing loads and paginates; individual post renders with correct typography
+- Admin login accepts correct credentials, rejects incorrect ones
+- Post create/edit/delete/publish works; image upload inserts into the TipTap editor
+- `docker compose up` starts successfully; app reachable at `http://localhost:3000`; Postgres data persists across restart
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` for local development. **Never commit `.env.local`.**
+No `.env.example` is committed. Create `apps/site/.env.local` with:
 
-| Variable | Required | Description |
-|---|---|---|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `AUTH_SECRET` | ✅ | JWT signing secret (min 32 chars) |
-| `AUTH_URL` | ✅ | App base URL |
-| `ADMIN_EMAIL` | ✅ | Admin login email |
-| `ADMIN_PASSWORD_HASH` | ✅ | bcrypt hash of admin password |
-| `PUBLIC_LINKEDIN_URL` | ✅ | LinkedIn profile URL |
-| `PUBLIC_EMAIL` | ✅ | Contact email address |
-| `PUBLIC_P1_OPS_HUB_URL` | ✅ | P1 Ops Hub project URL |
-| `UPLOAD_DIR` | ✅ | Filesystem path for image uploads |
-| `MAX_UPLOAD_SIZE_MB` | ✅ | Max upload size (default: 5) |
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | Better Auth signing secret |
+| `BETTER_AUTH_URL` | App base URL used for auth redirects |
+| `GH_API_TOKEN` | GitHub API token for repo enrichment (`lib/github.ts`) |
+| `R2_ACCOUNT_ID` | Cloudflare R2 account ID |
+| `R2_ACCESS_KEY_ID` | Cloudflare R2 access key |
+| `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret key |
+| `R2_BUCKET` | Cloudflare R2 bucket name |
+| `R2_PUBLIC_URL` | Cloudflare R2 public URL |
+| `ADMIN_EMAIL` | Seed admin login email |
+| `ADMIN_PASSWORD_HASH` | Seed admin password hash |
 
----
-
-## Docker Development
-
-### Start all services:
-
-```bash
-docker compose -f docker-compose.dev.yml up
-```
-
-### Start only the database (run Next.js locally):
-
-```bash
-docker compose -f docker-compose.dev.yml up -d db
-npm run dev
-```
-
-### Rebuild after dependency changes:
-
-```bash
-docker compose build --no-cache
-docker compose up
-```
-
-### View logs:
-
-```bash
-docker compose logs -f web   # App logs
-docker compose logs -f db    # Database logs
-```
-
-### Access the database directly:
-
-```bash
-docker compose exec db psql -U steveackley -d steveackleydb
-```
+**Never commit `.env.local`.**
 
 ---
 
 ## Database Migrations
 
-### Create a new migration (after modifying `schema.prisma`):
+Drizzle ORM (no Prisma in this project).
 
 ```bash
-npx prisma migrate dev --name describe-your-change
-```
+cd apps/site
 
-### Apply migrations in production:
-
-```bash
-npx prisma migrate deploy
-```
-
-### Reset the database (⚠️ destroys all data — development only):
-
-```bash
-npx prisma migrate reset
-```
-
-### View current migration status:
-
-```bash
-npx prisma migrate status
-```
-
-### Open Prisma Studio (GUI for database):
-
-```bash
-npx prisma studio
+npm run db:generate        # generate a migration from schema changes
+npm run db:push            # push schema directly to DB (dev convenience)
+npm run db:migrate         # apply pending migrations
+npm run db:studio          # open Drizzle Studio (DB GUI)
 ```
 
 ---
@@ -401,16 +279,13 @@ npx prisma studio
 
 1. Navigate to `http://localhost:3000/admin/login`
 2. Log in with your admin credentials
-3. Click **"New Post"**
-4. Write content in the Tiptap editor:
-   - Use the toolbar for formatting
-   - Click the image icon to upload images (max 5MB, JPEG/PNG/WebP/GIF)
+3. Click **New Post**
+4. Write content in the TipTap editor (toolbar for formatting; image icon uploads to R2, max 5MB, JPEG/PNG/WebP/GIF)
 5. Add a title, optional excerpt, optional cover image
-6. Choose **Draft** to save without publishing, or toggle **Published** to publish immediately
-7. Click **Save**
+6. Save as **Draft** or toggle **Published**
 
 ---
 
 ## Getting Help
 
-This is a personal project. If you have questions or suggestions, open an issue on GitHub or email directly via the contact information on the site.
+Personal project — open an issue on GitHub or reach out via the contact info on the site.

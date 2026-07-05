@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart TB
-    user["Browser user"] --> site["apps/site<br/>Astro 6 SSR + React 19 islands"]
+    user["Browser user"] --> site["apps/site<br/>Astro 7 SSR + React 19 islands"]
     site --> content["Astro content collections<br/>(pages, projects, resume)"]
     site --> db["PostgreSQL + Drizzle ORM"]
     site --> github["GitHub API<br/>(30s in-process cache)"]

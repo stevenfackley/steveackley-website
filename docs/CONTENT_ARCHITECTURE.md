@@ -6,7 +6,7 @@
 flowchart LR
     devEditor["Author / developer"] --> mdx["Astro content collections<br/>(pages, projects, resume)"]
     admin["Admin in /admin"] --> db["PostgreSQL Post table"]
-    mdx --> site["apps/site (Astro 6 SSR)"]
+    mdx --> site["apps/site (Astro 7 SSR)"]
     db --> site
 ```
 

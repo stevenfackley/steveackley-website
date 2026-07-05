@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed (2026-05-19) — gates Dependabot PR #83
+Accepted (Implemented) (2026-05-19) — gated Dependabot PR #83
+
+> **Implemented** (2026-07-05): Dockerfile is on `node:26-alpine`, `.nvmrc` pins `26.3.0`. Landed alongside the Astro 7 / Vite 8 stack migration (commit 9ef3069).
 
 ## Context
 
@@ -10,7 +12,7 @@ The site image (`ghcr.io/stevenfackley/steveackley-web`) currently builds from `
 
 Dependabot opened PR #83 to bump the Dockerfile directly from 22 → 26, skipping Node 24. Per the workspace `feedback_dependabot_sweep_policy.md` rule, major bumps require an ADR stub before merge.
 
-PR #83's CI is CLEAN — Astro builds, unit + integration + E2E tests pass against the new image. The bump is empirically compatible with the current dependency tree (Astro 6 + React 19 + Drizzle + Better Auth + R2 SDK + TipTap).
+PR #83's CI is CLEAN — Astro builds, unit + integration + E2E tests pass against the new image. The bump is empirically compatible with the current dependency tree (Astro 7 + React 19 + Drizzle + Better Auth + R2 SDK + TipTap).
 
 ## Decision
 

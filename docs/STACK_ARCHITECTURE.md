@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
     subgraph App["apps/site"]
-      astro["Astro 6 SSR"]
+      astro["Astro 7 SSR"]
       react["React 19 islands"]
       collections["Astro content collections"]
       tiptap["TipTap rich-text editor (admin)"]
@@ -31,7 +31,7 @@ One application stack. The shared package supplies schema, auth config, and type
 
 | Layer | Tech | Version |
 |---|---|---|
-| Public site framework | Astro | 6.x |
+| Public site framework | Astro | 7.x |
 | React islands | React + React DOM | 19.2.x |
 | Auth | Better Auth (DB-persisted sessions) | latest |
 | Database | PostgreSQL | 16-alpine |
@@ -40,7 +40,7 @@ One application stack. The shared package supplies schema, auth config, and type
 | CSS | TailwindCSS | 4.x (CSS-first config) |
 | Object storage | Cloudflare R2 (S3-compatible) | — |
 | Node runtime | Node | 26-alpine |
-| Build pipeline | Vite | 7.x (pinned via overrides) |
+| Build pipeline | Vite | 8.x (pinned via overrides) |
 | Container runtime | Docker + Docker Compose | — |
 | Reverse tunnel | Cloudflared | latest |
 
@@ -57,7 +57,7 @@ The Dockerfile uses `npm ci` (lockfile-strict) so the prod container's dep tree 
 
 ## Why This Stack
 
-- **Astro 6 SSR** suits the workload — mostly-static public content, a handful of interactive React islands, full DB query access at request time.
+- **Astro 7 SSR** suits the workload — mostly-static public content, a handful of interactive React islands, full DB query access at request time.
 - **React 19 islands** confine framework cost to the components that need state (dashboard tabs, TipTap editor, admin forms).
 - **Drizzle** gives full TypeScript types over Postgres without a runtime ORM tax.
 - **TipTap + raw HTML in DB** keeps the read path simple — no markdown-to-HTML conversion on each render.

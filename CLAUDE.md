@@ -37,10 +37,10 @@ docker compose -f docker-compose.dev.yml up -d db
 ## Architecture
 
 Monorepo (npm workspaces):
-- `apps/site` — Astro 6 SSR app: public site, blog, resume, admin portal, client portal
+- `apps/site` — Astro 7 SSR app: public site, blog, resume, admin portal, client portal
 - `packages/shared` — Drizzle ORM schema, Better Auth config, shared types/utilities
 
-**Stack:** Astro 6 + React 19 islands · PostgreSQL 16 · Drizzle ORM · Better Auth · Cloudflare R2 · TailwindCSS 4 · TipTap rich text editor
+**Stack:** Astro 7 + React 19 islands · PostgreSQL 16 · Drizzle ORM · Better Auth · Cloudflare R2 · TailwindCSS 4 · TipTap rich text editor
 
 **Path aliases** (configured in `astro.config.mjs` and `tsconfig.json`):
 - `@/` → `apps/site/src/`
