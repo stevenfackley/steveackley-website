@@ -1,5 +1,18 @@
 import { getCollection, getEntry } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import type { FeaturedProjectContent, HomeContent, ResumeContent } from "@/content/types";
+
+type ResumeEntry = CollectionEntry<"resume">;
+type ResumeEntryData = ResumeEntry["data"];
+
+// `entry.data` is a discriminated union (astro:content infers it from the
+// Zod `discriminatedUnion` schema), so a plain `.filter((e) => e.data.type === x)`
+// does not narrow `entry.data` for TypeScript. This factory returns a proper
+// type-predicate filter so callers get the narrowed variant back.
+function isResumeType<T extends ResumeEntryData["type"]>(type: T) {
+  return (entry: ResumeEntry): entry is ResumeEntry & { data: Extract<ResumeEntryData, { type: T }> } =>
+    entry.data.type === type;
+}
 
 export async function getHomeContent(): Promise<HomeContent> {
   const entry = await getEntry("pages", "home");
@@ -22,42 +35,40 @@ export async function getResumeContent(): Promise<ResumeContent> {
   return {
     summary: summaryEntry.body?.trim() ?? "",
     coreSkills: byOrder
-      .filter((entry) => entry.data.type === "skill-category")
+      .filter(isResumeType("skill-category"))
       .flatMap((entry) =>
-        (entry.data.items ?? []).map((item) => ({
-          name: typeof item === "string" ? item : item.name,
-          pct: typeof item === "string" ? 0 : item.pct,
-          category: entry.data.category ?? "General",
+        entry.data.items.map((item) => ({
+          name: item.name,
+          pct: item.pct,
+          category: entry.data.category,
         })),
       ),
-    techTags: byOrder
-      .filter((entry) => entry.data.type === "tech-stack")
-      .flatMap((entry) => (entry.data.items ?? []).filter((item): item is string => typeof item === "string")),
+    techTags: byOrder.filter(isResumeType("tech-stack")).flatMap((entry) => entry.data.items),
     experience: byOrder
-      .filter((entry) => entry.data.type === "experience")
+      .filter(isResumeType("experience"))
       .map((entry) => ({
-        company: entry.data.company ?? "",
-        location: entry.data.location ?? "",
-        period: entry.data.period ?? "",
-        role: entry.data.role ?? "",
+        company: entry.data.company,
+        location: entry.data.location,
+        period: entry.data.period,
+        role: entry.data.role,
         body: entry.body?.trim() ?? "",
-        tags: entry.data.tags ?? [],
+        tags: entry.data.tags,
       })),
     certifications: byOrder
-      .filter((entry) => entry.data.type === "certification")
+      .filter(isResumeType("certification"))
       .map((entry) => ({
-        name: entry.data.role ?? entry.id,
-        issuer: entry.data.issuer ?? "",
-        color: entry.data.color ?? "#2563eb",
-        bg: entry.data.bg ?? "rgba(37,99,235,0.1)",
-        icon: entry.data.icon ?? "🏅",
+        name: entry.data.role,
+        issuer: entry.data.issuer,
+        color: entry.data.color,
+        bg: entry.data.bg,
+        icon: entry.data.icon,
       })),
     education: byOrder
-      .filter((entry) => entry.data.type === "education")
+      .filter(isResumeType("education"))
       .map((entry) => ({
-        degree: entry.data.degree ?? "",
-        school: entry.data.school ?? "",
-        year: entry.data.year ?? "",
+        degree: entry.data.degree,
+        school: entry.data.school,
+        year: entry.data.year,
         location: entry.data.location,
         minor: entry.data.minor,
       })),
