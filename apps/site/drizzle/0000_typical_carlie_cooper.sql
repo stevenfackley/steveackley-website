@@ -1,6 +1,6 @@
-CREATE TYPE "public"."Environment" AS ENUM('PRODUCTION', 'TEST', 'DEVELOPMENT');--> statement-breakpoint
-CREATE TYPE "public"."MessageType" AS ENUM('GENERAL', 'PROJECT_REQUEST');--> statement-breakpoint
-CREATE TYPE "public"."Role" AS ENUM('ADMIN', 'CLIENT');--> statement-breakpoint
+CREATE TYPE "Environment" AS ENUM('PRODUCTION', 'TEST', 'DEVELOPMENT');--> statement-breakpoint
+CREATE TYPE "MessageType" AS ENUM('GENERAL', 'PROJECT_REQUEST');--> statement-breakpoint
+CREATE TYPE "Role" AS ENUM('ADMIN', 'CLIENT');--> statement-breakpoint
 CREATE TABLE "ClientApp" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -70,10 +70,10 @@ CREATE TABLE "User" (
 	CONSTRAINT "User_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-ALTER TABLE "Message" ADD CONSTRAINT "Message_fromUserId_User_id_fk" FOREIGN KEY ("fromUserId") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Message" ADD CONSTRAINT "Message_toUserId_User_id_fk" FOREIGN KEY ("toUserId") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "UserApp" ADD CONSTRAINT "UserApp_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "UserApp" ADD CONSTRAINT "UserApp_appId_ClientApp_id_fk" FOREIGN KEY ("appId") REFERENCES "public"."ClientApp"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "Message" ADD CONSTRAINT "Message_fromUserId_User_id_fk" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "Message" ADD CONSTRAINT "Message_toUserId_User_id_fk" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "UserApp" ADD CONSTRAINT "UserApp_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "UserApp" ADD CONSTRAINT "UserApp_appId_ClientApp_id_fk" FOREIGN KEY ("appId") REFERENCES "ClientApp"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "Message_toUserId_read_createdAt_idx" ON "Message" USING btree ("toUserId","read","createdAt" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "Message_fromUserId_createdAt_idx" ON "Message" USING btree ("fromUserId","createdAt" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "Post_published_createdAt_idx" ON "Post" USING btree ("published","createdAt" DESC NULLS LAST);
