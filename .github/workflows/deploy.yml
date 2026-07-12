@@ -116,6 +116,8 @@ jobs:
               "${{ secrets.R2_BUCKET }}" \
               "${{ secrets.R2_PUBLIC_URL }}" >> .env
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" >> .env
+            # Schema is managed by qavren-db provisioning; never push on boot in prod
+            printf 'DB_PUSH_ON_BOOT=0\n' >> .env
 
 
             # Reclaim disk BEFORE pulling. Accumulated image tags + layers from
