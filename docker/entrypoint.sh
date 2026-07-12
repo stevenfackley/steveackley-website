@@ -26,8 +26,13 @@ for var in DATABASE_URL AUTH_SECRET BETTER_AUTH_SECRET ADMIN_PASSWORD_HASH ADMIN
   fi
 done
 
-# Push database schema (creates tables if they don't exist)
-if [ -n "$DATABASE_URL" ]; then
+# Push database schema (creates tables if they don't exist).
+# Set DB_PUSH_ON_BOOT=0 when the DB is managed externally (e.g. the shared
+# qavren-db project, where the schema is provisioned and push would only
+# fail against locked-down grants).
+if [ "${DB_PUSH_ON_BOOT:-1}" != "1" ]; then
+  echo "==> DB_PUSH_ON_BOOT disabled, skipping schema push"
+elif [ -n "$DATABASE_URL" ]; then
   # Print sanitized URL for debugging (hide password)
   echo "  DATABASE_URL host: $(echo "$DATABASE_URL" | sed 's|://[^@]*@|://***@|')"
   echo "==> Migrating database schema (Drizzle)..."
