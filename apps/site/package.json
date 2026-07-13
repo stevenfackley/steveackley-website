@@ -41,7 +41,7 @@
     "@tiptap/pm": "^3.23.4",
     "@tiptap/react": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
-    "astro": "^7.0.4",
+    "astro": "^7.0.7",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.23",
