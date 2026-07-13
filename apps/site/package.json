@@ -30,7 +30,7 @@
     "@astrojs/mdx": "^7.0.2",
     "@astrojs/node": "^11.0.2",
     "@astrojs/react": "^6.0.1",
-    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/client-s3": "^3.1085.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tiptap/extension-code-block-lowlight": "^3.27.3",
