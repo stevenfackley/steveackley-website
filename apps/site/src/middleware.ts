@@ -11,13 +11,30 @@ import { randomUUID } from "node:crypto";
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https:",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
 ].join('; ');
+
+const CANONICAL_HOST = 'steveackley.org';
+
+// Public SSR pages get a short browser-cache lifetime; portals, auth, and API
+// responses must never be cached. Hashed /_astro/* assets are served by the
+// node adapter before this middleware runs, so they are not handled here.
+function cacheControlFor(pathname: string): string {
+  if (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/client') ||
+    pathname.startsWith('/api') ||
+    pathname === '/login'
+  ) {
+    return 'no-store';
+  }
+  return 'public, max-age=300';
+}
 
 // ── Rate Limiter (in-memory sliding window) ─────────────────
 const rateBuckets = new Map<string, number[]>();
@@ -83,6 +100,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const url = new URL(context.request.url);
 
+  // ── Canonical-URL redirects ─────────────────────────────────
+  // The Cloudflare tunnel routes www.* to this same origin, and Astro serves
+  // both /path and /path/ — each self-canonicalizing. 301 both duplicates to
+  // the one canonical form (apex host, no trailing slash) so crawlers see a
+  // single URL per page.
+  const forwardedHost =
+    context.request.headers.get("x-forwarded-host") ?? url.host;
+  const wantsApex = forwardedHost === `www.${CANONICAL_HOST}`;
+  const wantsNoSlash = url.pathname.length > 1 && url.pathname.endsWith("/");
+  if (wantsApex || wantsNoSlash) {
+    const pathname = wantsNoSlash
+      ? url.pathname.replace(/\/+$/, "")
+      : url.pathname;
+    return context.redirect(
+      `https://${CANONICAL_HOST}${pathname}${url.search}`,
+      301,
+    );
+  }
+  // ────────────────────────────────────────────────────────────
+
   reqLogger.info("incoming request", {
     method: context.request.method,
     path: url.pathname,
@@ -138,5 +175,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   response.headers.set('Content-Security-Policy', CSP);
   response.headers.set('X-Request-Id', requestId);
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  if (!response.headers.has('Cache-Control')) {
+    response.headers.set('Cache-Control', cacheControlFor(url.pathname));
+  }
   return response;
 });

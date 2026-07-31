@@ -47,6 +47,18 @@ const [[prevPost], [nextPost]] = await Promise.all([
     .limit(1),
 ]);
 
+// Recent posts beyond the prev/next pair, so every post links out to more of
+// the blog than its two chronological neighbors.
+const recentPosts = await db
+  .select(adjacentCols)
+  .from(postsTable)
+  .where(and(eq(postsTable.published, true), ne(postsTable.id, post.id)))
+  .orderBy(desc(postsTable.createdAt))
+  .limit(5);
+const morePosts = recentPosts
+  .filter((p) => p.slug !== prevPost?.slug && p.slug !== nextPost?.slug)
+  .slice(0, 3);
+
 // Prefer the value stored at save time; fall back to computing it at render so
 // posts created before this column existed (NULL) still show a reading time.
 const readMinutes = post.readingTimeMinutes ?? readingTimeMinutes(post.content);
@@ -146,6 +158,21 @@ const crumbs = breadcrumbSchema([
           </a>
         )}
       </nav>
+    )}
+
+    {morePosts.length > 0 && (
+      <aside aria-label="More posts" class="mt-10">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3">More from the blog</p>
+        <ul class="space-y-2">
+          {morePosts.map((p) => (
+            <li>
+              <a href={`/blog/${p.slug}`} class="text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors leading-snug">
+                {p.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
     )}
   </div>
 

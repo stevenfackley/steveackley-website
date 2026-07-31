@@ -8,8 +8,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: 'Instrument Sans', system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --font-sans: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Instrument Sans Variable', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 

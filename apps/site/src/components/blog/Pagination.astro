@@ -24,7 +24,7 @@ function cls(active?: boolean, disabled?: boolean) {
 {totalPages > 1 && (
   <nav class="flex items-center justify-center gap-2 mt-12" aria-label="Pagination">
     {hasPreviousPage ? (
-      <a href={`${basePath}?page=${currentPage - 1}`} class={cls()} aria-label="Previous page">&#8249;</a>
+      <a href={`${basePath}?page=${currentPage - 1}`} class={cls()} aria-label="Previous page"><span aria-hidden="true">&#8249;</span></a>
     ) : (
       <span class={cls(false, true)} aria-hidden="true">&#8249;</span>
     )}
@@ -32,7 +32,7 @@ function cls(active?: boolean, disabled?: boolean) {
       <a href={`${basePath}?page=${p}`} class={cls(p === currentPage)} aria-current={p === currentPage ? 'page' : undefined} aria-label={`Page ${p}`}>{p}</a>
     ))}
     {hasNextPage ? (
-      <a href={`${basePath}?page=${currentPage + 1}`} class={cls()} aria-label="Next page">&#8250;</a>
+      <a href={`${basePath}?page=${currentPage + 1}`} class={cls()} aria-label="Next page"><span aria-hidden="true">&#8250;</span></a>
     ) : (
       <span class={cls(false, true)} aria-hidden="true">&#8250;</span>
     )}

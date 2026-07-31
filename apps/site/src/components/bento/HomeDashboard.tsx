@@ -287,7 +287,7 @@ function Hero({
       >
         <div className="glow-ring">
           <img
-            src="/images/brookeandme.png"
+            src="/images/brookeandme.webp"
             alt="Steve and Brooke"
             width={176}
             height={176}
@@ -454,11 +454,10 @@ function AboutSection({ homeContent }: { homeContent: HomeContent }) {
               aria-hidden
             />
             <img
-              src="/images/brookeandme.png"
+              src="/images/brookeandme.webp"
               alt="Steve and Brooke"
               width={128}
               height={128}
-              loading="lazy"
               decoding="async"
               className="relative rounded-full ring-2 ring-[var(--glass-border)] object-cover"
             />

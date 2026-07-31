@@ -153,7 +153,7 @@ describe("blogPostingSchema", () => {
     expect(result.dateModified).toBe(updatedAt.toISOString());
   });
 
-  it("falls back to the title and default avatar when excerpt/coverImage are missing", () => {
+  it("falls back to the title and the site social card when excerpt/coverImage are missing", () => {
     const result = blogPostingSchema({
       title: "No Extras",
       slug: "no-extras",
@@ -163,6 +163,6 @@ describe("blogPostingSchema", () => {
       updatedAt,
     });
     expect(result.description).toBe("No Extras");
-    expect(result.image).toBe("https://steveackley.org/avatar.png");
+    expect(result.image).toBe("https://steveackley.org/og-default.png");
   });
 });
