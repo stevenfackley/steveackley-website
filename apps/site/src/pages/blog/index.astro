@@ -51,7 +51,7 @@ const blogJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'Blog – Steve Ackley',
-  description: 'Writing on .NET, Azure, software architecture, and engineering practices.',
+  description: 'Writing on .NET, AWS, software architecture, and engineering practices.',
   url: `${SITE_ORIGIN}/blog`,
   author: { '@type': 'Person', name: 'Steve Ackley', url: SITE_ORIGIN },
   ...(posts.length > 0 && {
@@ -70,7 +70,7 @@ const blogJsonLd = {
 
 <PublicLayout
   title="Blog"
-  description="Writing on .NET, Azure, software architecture, and engineering practices."
+  description="Writing on .NET, AWS, software architecture, and engineering practices."
   jsonLd={blogJsonLd}
 >
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">

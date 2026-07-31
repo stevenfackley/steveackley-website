@@ -38,7 +38,6 @@ export function resumePersonSchema(
       : undefined,
     address: {
       '@type': 'PostalAddress',
-      addressLocality: 'Derby',
       addressRegion: 'CT',
       addressCountry: 'US',
     },
@@ -84,7 +83,8 @@ export function blogPostingSchema(args: {
   updatedAt: Date;
 }): Record<string, unknown> {
   const url = `${SITE_ORIGIN}/blog/${args.slug}`;
-  const image = args.coverImage ?? `${SITE_ORIGIN}/avatar.png`;
+  // Match og:image — posts without a cover share the site-wide social card.
+  const image = args.coverImage ?? `${SITE_ORIGIN}/og-default.png`;
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -100,10 +100,16 @@ export function blogPostingSchema(args: {
       name: 'Steve Ackley',
       url: SITE_ORIGIN,
     },
+    // Organization publisher with a logo — Google's Article rich-result
+    // validation requires publisher.logo, which a Person publisher can't carry.
     publisher: {
-      '@type': 'Person',
+      '@type': 'Organization',
       name: 'Steve Ackley',
       url: SITE_ORIGIN,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_ORIGIN}/avatar.png`,
+      },
     },
   };
 }

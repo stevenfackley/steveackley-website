@@ -2,6 +2,11 @@
 import Nav from '@/components/ui/Nav.astro';
 import Footer from '@/components/ui/Footer.astro';
 import '@/styles/globals.css';
+import '@fontsource-variable/bricolage-grotesque/opsz.css';
+import '@fontsource-variable/instrument-sans';
+import '@fontsource-variable/instrument-sans/wght-italic.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
 import { getSiteSettings } from '@/lib/settings';
 import { SETTING_KEYS } from '@/lib/setting-keys';
 
@@ -18,7 +23,7 @@ interface Props {
 
 const {
   title = 'Steve Ackley',
-  description = 'Staff Software Engineer - .NET, Azure, Full-Stack',
+  description = 'Software engineer and consultant specializing in .NET, AWS, and cloud architecture.',
   ogImage,
   ogType = 'website',
   ogProfile,
@@ -27,6 +32,13 @@ const {
   jsonLd,
 } = Astro.props;
 const fullTitle = title.includes('Steve Ackley') ? title : `${title} | Steve Ackley`;
+// SERP-safe meta description: DB excerpts can carry markdown backticks and run
+// well past what Google displays, so strip and cut at a word boundary.
+const rawDescription = description.replace(/`/g, '').replace(/\s+/g, ' ').trim();
+const metaDescription =
+  rawDescription.length <= 160
+    ? rawDescription
+    : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, '')}…`;
 const faviconUrl = '/avatar.png';
 const canonicalUrl = Astro.site
   ? new URL(Astro.url.pathname, Astro.site).toString()
@@ -64,7 +76,7 @@ try {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <meta name="description" content={description} />
+    <meta name="description" content={metaDescription} />
     <title>{fullTitle}</title>
 
     <link rel="canonical" href={canonicalUrl} />
@@ -72,7 +84,7 @@ try {
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
     <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={socialImage} />
@@ -95,7 +107,7 @@ try {
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:image" content={socialImage} />
 
     {pageSchemas.map((schema) => (
@@ -137,11 +149,6 @@ try {
     <!-- Favicon -->
     <link rel="icon" type="image/png" href={faviconUrl} />
     <link rel="apple-touch-icon" href={faviconUrl} />
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     
     <style is:global>
       :root {
