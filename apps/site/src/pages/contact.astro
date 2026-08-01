@@ -1,0 +1,45 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+import { breadcrumbSchema } from '@/lib/seo';
+
+const SITE_ORIGIN = 'https://steveackley.org';
+const EMAIL = 'stevenfackley@gmail.com';
+const LINKEDIN = 'https://www.linkedin.com/in/stevenackley';
+const GITHUB_URL = 'https://github.com/stevenfackley';
+
+const jsonLd = breadcrumbSchema([
+  { name: 'Home', url: SITE_ORIGIN },
+  { name: 'Contact', url: `${SITE_ORIGIN}/contact` },
+]);
+---
+
+<PublicLayout
+  title="Contact"
+  description="Get in touch with Steve Ackley for contract, consulting, or advisory work — or anything about the blog and side projects."
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 py-16">
+    <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">Contact</h1>
+    <div class="accent-bar mt-6"></div>
+
+    <p class="mt-8 text-[var(--text-secondary)] leading-relaxed">
+      Available for contract, consulting, and advisory work in .NET, AWS, and cloud architecture.
+      Email is the fastest way to reach me; LinkedIn works too.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-3">
+      <a href={`mailto:${EMAIL}`} class="glass-card spotlight-card card-glow rounded-2xl p-5 group">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">Email</p>
+        <p class="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors break-all">{EMAIL}</p>
+      </a>
+      <a href={LINKEDIN} rel="noopener noreferrer" class="glass-card spotlight-card card-glow rounded-2xl p-5 group">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">LinkedIn</p>
+        <p class="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">in/stevenackley</p>
+      </a>
+      <a href={GITHUB_URL} rel="noopener noreferrer" class="glass-card spotlight-card card-glow rounded-2xl p-5 group">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">GitHub</p>
+        <p class="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">stevenfackley</p>
+      </a>
+    </div>
+  </div>
+</PublicLayout>

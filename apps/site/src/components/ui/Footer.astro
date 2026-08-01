@@ -15,7 +15,25 @@ const isLoggedIn = !!Astro.locals.user;
           &copy; {year} · All rights reserved
         </p>
       </div>
-      <div class="flex items-center gap-5">
+      <div class="flex items-center gap-5 flex-wrap justify-center">
+        <a
+          href="/about"
+          class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+        >
+          About
+        </a>
+        <a
+          href="/contact"
+          class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+        >
+          Contact
+        </a>
+        <a
+          href="/privacy"
+          class="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+        >
+          Privacy
+        </a>
         <a
           href={linkedin}
           target="_blank"

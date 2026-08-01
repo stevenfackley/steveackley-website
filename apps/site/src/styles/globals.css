@@ -552,3 +552,12 @@ html.dark * {
     print-color-adjust: exact;
   }
 }
+
+/* shields.io badges in imported post bodies arrive without width/height; fix
+   their box so they cannot shift layout while loading (CLS). */
+.prose img[src*="img.shields.io"] {
+  height: 20px;
+  width: auto;
+  display: inline-block;
+  margin: 0 0.25rem 0 0;
+}
