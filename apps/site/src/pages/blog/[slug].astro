@@ -63,11 +63,15 @@ const morePosts = recentPosts
 // posts created before this column existed (NULL) still show a reading time.
 const readMinutes = post.readingTimeMinutes ?? readingTimeMinutes(post.content);
 
+// Per-post social card: an uploaded cover wins, otherwise the generated
+// /og/[slug].png. Absolute URL — og:image and BlogPosting.image require one.
+const socialImage = post.coverImage ?? `https://steveackley.org/og/${post.slug}.png`;
+
 const postSchema = blogPostingSchema({
   title: post.title,
   slug: post.slug,
   excerpt: post.excerpt,
-  coverImage: post.coverImage,
+  coverImage: socialImage,
   createdAt: post.createdAt,
   updatedAt: post.updatedAt,
 });
@@ -82,7 +86,7 @@ const crumbs = breadcrumbSchema([
 <PublicLayout
   title={post.title}
   description={post.excerpt || post.title}
-  ogImage={post.coverImage ?? undefined}
+  ogImage={socialImage}
   ogType="article"
   ogArticle={{ publishedTime: post.createdAt, modifiedTime: post.updatedAt }}
   jsonLd={[postSchema, crumbs]}

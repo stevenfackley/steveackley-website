@@ -1,0 +1,52 @@
+---
+import PublicLayout from '@/layouts/PublicLayout.astro';
+import { breadcrumbSchema } from '@/lib/seo';
+
+const SITE_ORIGIN = 'https://steveackley.org';
+
+const jsonLd = breadcrumbSchema([
+  { name: 'Home', url: SITE_ORIGIN },
+  { name: 'Privacy', url: `${SITE_ORIGIN}/privacy` },
+]);
+---
+
+<PublicLayout
+  title="Privacy"
+  description="What steveackley.org collects (very little), what it stores, and how to reach the site owner about it."
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 py-16 prose prose-invert">
+    <h1>Privacy</h1>
+    <p><em>Last updated 2026-07-31.</em></p>
+
+    <h2>The short version</h2>
+    <p>
+      This is a personal site. There are no ads, no third-party analytics, and no tracking pixels.
+      Reading the blog requires no account and sets no cookies.
+    </p>
+
+    <h2>What is collected</h2>
+    <ul>
+      <li><strong>Server logs.</strong> Standard request logs (path, timestamp, request ID) for debugging and abuse prevention. The site sits behind Cloudflare, which processes visitor traffic as a proxy/CDN.</li>
+      <li><strong>Portal accounts.</strong> The admin and client portals use session cookies for authentication only. Accounts exist solely for people I work with directly; nothing about them is shared or sold.</li>
+      <li><strong>Email.</strong> If you email me, I have your email. I use it to reply.</li>
+    </ul>
+
+    <h2>Where things are stored</h2>
+    <p>
+      Site data lives in a managed PostgreSQL database; uploaded images are stored on Cloudflare R2.
+      Both are access-controlled and used only to run this site.
+    </p>
+
+    <h2>Mobile apps</h2>
+    <p>
+      Privacy policies for my Android apps are separate — see the
+      <a href="/android/privacy">Android app privacy policy</a>.
+    </p>
+
+    <h2>Questions</h2>
+    <p>
+      Email <a href="mailto:stevenfackley@gmail.com">stevenfackley@gmail.com</a> and I'll answer.
+    </p>
+  </div>
+</PublicLayout>
