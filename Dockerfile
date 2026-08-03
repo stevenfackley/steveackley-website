@@ -5,7 +5,7 @@
 # Stage 1: Builder
 # Install with full source tree present so npm workspace hoisting is correct.
 # Base image pinned by digest for reproducible builds; bump deliberately.
-FROM node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66 AS builder
+FROM node:26-alpine@sha256:233761595746769ebfdb6090f44fc7cdf818ae0ce62d2b37e0367723b9823e36 AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 COPY . .
@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 RUN npm run build:site
 
 # Stage 2: Runner
-FROM node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66 AS runner
+FROM node:26-alpine@sha256:233761595746769ebfdb6090f44fc7cdf818ae0ce62d2b37e0367723b9823e36 AS runner
 WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 ENV NODE_ENV=production
