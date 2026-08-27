@@ -411,6 +411,11 @@ function MasonIcon({ className }: { className?: string }) {
 
 const timeline = [
   {
+    period: "May 2026 - Present",
+    title: "Founder & Head of Software @ Qavren Solutions LLC",
+    body: "Founded a Connecticut software company and run product and engineering as one of two Managing Members. Maintain a roster of 25 products and experiments, 8 of them live, on a shared auth, data, and release platform I built (Keycloak, Postgres, .NET 10, GitHub Actions).",
+  },
+  {
     period: "Dec 2020 - Present",
     title: "Staff / Senior Software Engineer @ Lockheed Martin",
     body: "Spearheaded IETM development for the F-16 fighter aircraft (web-based) and HH-60W Combat Rescue Helicopter (desktop, disconnected). Led teams of up to 10 engineers and authored coding standards adopted by 30+ engineers.",

@@ -23,7 +23,7 @@ const PORT = 4322; // use a spare port to avoid conflicts
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const PAGE_URL = `${BASE_URL}/resume/print`;
 
-async function waitForServer(url, timeoutMs = 30_000) {
+async function waitForServer(url, timeoutMs = 120_000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -54,7 +54,8 @@ async function main() {
   server.stderr.on('data', d => process.stderr.write(d));
 
   try {
-    await waitForServer(`${BASE_URL}/`);
+    // Wait on the print page itself: `/` needs a database, the print page does not.
+    await waitForServer(PAGE_URL);
     console.log('\n✅ Server ready. Generating PDF...');
 
     // Use system Chrome to avoid Playwright headless-shell ICU issues on Windows
@@ -80,7 +81,14 @@ async function main() {
     await browser.close();
     console.log(`\n✅ PDF saved to: ${outputPath}`);
   } finally {
+    // Astro 7 detaches `astro dev` into a background daemon, so killing the
+    // spawner is not enough; ask the daemon to stop.
     server.kill('SIGTERM');
+    await new Promise((resolve) => {
+      const stop = spawn('npx', ['astro', 'dev', 'stop'], { cwd: rootDir, stdio: 'ignore', shell: true });
+      stop.on('exit', resolve);
+      stop.on('error', resolve);
+    });
     console.log('🛑 Dev server stopped.');
   }
 }
