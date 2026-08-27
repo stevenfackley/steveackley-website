@@ -45,6 +45,9 @@ const projects = defineCollection({
     href: z.url().optional(),
     featured: z.boolean().default(false),
     order: z.number().int().default(100),
+  }).refine((p) => !p.featured || !!p.href, {
+    message: "featured projects are the ones in production and must have a live href",
+    path: ["href"],
   }),
 });
 
