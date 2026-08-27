@@ -21,8 +21,16 @@ export interface TechBadge {
   href: string;
 }
 
-// Repos to skip from the public listing
-const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
+// Repos to skip from the public listing: the site's own repo, the private P1
+// repos (P1 is shown as a Featured card instead), and proofs of concept.
+const SKIP_REPOS = new Set([
+  "public",
+  "public-website",
+  "steveackley-website",
+  "p1-opshub",
+  "P1-OpsHub",
+  "ios-embedded-krestel-poc",
+]);
 
 // Scaffolding and infrastructure are not projects. Matched three ways (GitHub's
 // template flag, name, topic) so a new template or infra repo stays off the site
