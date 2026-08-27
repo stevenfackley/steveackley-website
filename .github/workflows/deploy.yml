@@ -126,24 +126,48 @@ jobs:
             # cache. NO --volumes, so the Postgres data volume is never touched.
             docker system prune -af || true
 
+            # Remember the image that is serving right now so a failed deploy can
+            # roll back to it. (Images pulled by digest are untagged, so the old
+            # one must not be pruned until the new one is proven healthy.)
+            PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' steveackley-web 2>/dev/null || true)
+            echo "Previous image: ${PREV_IMAGE:-none}"
+
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose pull web
             IMAGE_REF="${{ needs.build-and-push.outputs.image_ref }}" docker compose up -d --remove-orphans
-            # Cleanup is best-effort; concurrent prunes (from prior overlapping deploy)
-            # return "a prune operation is already running" with exit 1 — don't fail the deploy.
-            docker image prune -f || true
 
-            # Wait for the web container to pass its health checks (up to 60s)
+            # Wait for the web container to answer on :3000 (up to 60s)
+            wait_healthy() {
+              for i in $(seq 1 30); do
+                STATUS=$(docker inspect --format='{{.State.Status}}' steveackley-web 2>/dev/null || echo "missing")
+                HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:3000/ 2>/dev/null || echo "000")
+                echo "  attempt $i/30: container=$STATUS http=$HTTP"
+                if [ "$HTTP" = "200" ] || [ "$HTTP" = "301" ] || [ "$HTTP" = "302" ]; then
+                  return 0
+                fi
+                sleep 2
+              done
+              return 1
+            }
+
             echo "Waiting for steveackley-web to become healthy..."
-            for i in $(seq 1 30); do
-              STATUS=$(docker inspect --format='{{.State.Status}}' steveackley-web 2>/dev/null || echo "missing")
-              HTTP=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:3000/ 2>/dev/null || echo "000")
-              echo "  attempt $i/30: container=$STATUS http=$HTTP"
-              if [ "$HTTP" = "200" ] || [ "$HTTP" = "301" ] || [ "$HTTP" = "302" ]; then
-                echo "✓ Deployment healthy"
-                exit 0
-              fi
-              sleep 2
-            done
+            if wait_healthy; then
+              echo "✓ Deployment healthy"
+              # Cleanup is best-effort; concurrent prunes (from prior overlapping deploy)
+              # return "a prune operation is already running" with exit 1 — don't fail the deploy.
+              docker image prune -f || true
+              exit 0
+            fi
+
             echo "✗ Deployment did not become healthy in time"
             docker logs steveackley-web --tail 50
+            if [ -n "$PREV_IMAGE" ]; then
+              echo "Rolling back to $PREV_IMAGE"
+              IMAGE_REF="$PREV_IMAGE" docker compose up -d --remove-orphans
+              if wait_healthy; then
+                echo "✓ Rolled back; previous image is serving again"
+              else
+                echo "✗ Rollback did not become healthy either"
+                docker logs steveackley-web --tail 50
+              fi
+            fi
             exit 1
