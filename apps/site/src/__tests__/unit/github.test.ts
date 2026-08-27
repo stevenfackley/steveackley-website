@@ -68,17 +68,17 @@ describe("getPublicRepos", () => {
     expect(repos[0].name).toBe("project-a");
   });
 
-  it("filters out repos in the SKIP_REPOS set (public, public-website)", async () => {
+  it("filters out repos in the SKIP_REPOS set (public, public-website, the site itself, POCs)", async () => {
     mockRepoFetch([
       makeRepo({ name: "public" }),
       makeRepo({ name: "public-website" }),
+      makeRepo({ name: "steveackley-website" }),
+      makeRepo({ name: "ios-embedded-krestel-poc" }),
       makeRepo({ name: "axon-main" }),
     ]);
     const repos = await getPublicRepos();
     const names = repos.map((r) => r.name);
-    expect(names).not.toContain("public");
-    expect(names).not.toContain("public-website");
-    expect(names).toContain("axon-main");
+    expect(names).toEqual(["axon-main"]);
   });
 
   it("throws on a non-ok status so callers can serve the last good cache", async () => {
