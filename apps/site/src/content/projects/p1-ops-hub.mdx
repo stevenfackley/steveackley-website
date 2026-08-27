@@ -1,14 +1,17 @@
 ---
 title: P1 Ops Hub
-summary: Operational management platform centralising processes, reporting, and automation for P1 workflows.
+summary: Internal operations platform for a physical-security assessment firm. Builds branded PDF and PPTX assessment reports from a drag-and-drop section editor, delivers them through a tokenized client portal, and ingests AR scan payloads for review.
 status: active
 stack:
-  - Python
-  - Django
+  - .NET 10
+  - ASP.NET Core
+  - Blazor WASM
+  - Next.js
   - PostgreSQL
   - Docker
+href: https://p1opshub.steveackley.org
 featured: true
 order: 1
 ---
 
-P1 Ops Hub is the kind of product work that benefits from the separate portal architecture. It is operational, authenticated, and workflow-heavy rather than content-first.
+Client work: an authenticated, workflow-heavy operations app rather than a content site. ASP.NET Core Identity with SMS and email OTP, QuestPDF and OpenXML document generation, EF Core on PostgreSQL, shipped as Docker Compose on EC2 behind a Cloudflare Tunnel. The repository is private; the app is live at p1opshub.steveackley.org.

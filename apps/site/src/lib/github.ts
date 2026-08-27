@@ -11,6 +11,8 @@ export interface GitHubRepo {
   topics: string[];
   fork: boolean;
   stargazers_count: number;
+  /** GitHub "template repository" flag. Templates are scaffolding, not projects. */
+  is_template?: boolean;
 }
 
 export interface TechBadge {
@@ -21,6 +23,21 @@ export interface TechBadge {
 
 // Repos to skip from the public listing
 const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
+
+// Scaffolding and infrastructure are not projects. Matched three ways (GitHub's
+// template flag, name, topic) so a new template or infra repo stays off the site
+// without a code change.
+const INFRA_REPOS = new Set(["gh-actions", "infra", "infrastructure", "_tooling", "dotfiles"]);
+const NON_PROJECT_NAME = /template|(^|-)infra(structure)?($|-)/i;
+const NON_PROJECT_TOPICS = new Set(["template", "repo-template", "infra", "infrastructure"]);
+
+export function isNonProjectRepo(
+  r: Pick<GitHubRepo, "name" | "topics"> & { is_template?: boolean },
+): boolean {
+  if (r.is_template) return true;
+  if (INFRA_REPOS.has(r.name) || NON_PROJECT_NAME.test(r.name)) return true;
+  return (r.topics ?? []).some((t) => NON_PROJECT_TOPICS.has(t.toLowerCase()));
+}
 
 // Badge overrides — bridge until each repo's README is updated with shields.io badges.
 // Once a repo's README has them, remove its entry here and they'll be parsed automatically.
@@ -168,8 +185,11 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
     if (!res.ok) throw new Error(`GitHub /repos request failed: ${res.status}`);
     const repos: (GitHubRepo & { archived: boolean })[] = await res.json();
 
-    // Filter out forks, archived projects, and explicitly skipped repos.
-    return repos.filter((r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name));
+    // Filter out forks, archived projects, explicitly skipped repos, and
+    // templates / infrastructure (see isNonProjectRepo).
+    return repos.filter(
+      (r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name) && !isNonProjectRepo(r),
+    );
   } finally {
     clearTimeout(timeout);
   }
