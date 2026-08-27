@@ -17,6 +17,7 @@ afterEach(() => {
 import {
   getPublicRepos,
   enrichRepos,
+  isNonProjectRepo,
   type GitHubRepo,
 } from "@/lib/github";
 
@@ -99,6 +100,41 @@ describe("getPublicRepos", () => {
     ]);
     const repos = await getPublicRepos();
     expect(repos).toHaveLength(2);
+  });
+
+  it("filters GitHub template repos (is_template) and repos named *template*", async () => {
+    mockRepoFetch([
+      makeRepo({ name: "repo-template-nextjs15", is_template: true }),
+      makeRepo({ name: "astro-template", is_template: false }),
+      makeRepo({ name: "undertow-engine" }),
+    ]);
+    const names = (await getPublicRepos()).map((r) => r.name);
+    expect(names).toEqual(["undertow-engine"]);
+  });
+
+  it("filters infrastructure repos by name and by topic", async () => {
+    mockRepoFetch([
+      makeRepo({ name: "gh-actions", topics: [] }),
+      makeRepo({ name: "infra", topics: [] }),
+      makeRepo({ name: "homelab-infra", topics: [] }),
+      makeRepo({ name: "dotfiles", topics: [] }),
+      makeRepo({ name: "cluster-ops", topics: ["infrastructure"] }),
+      makeRepo({ name: "OmniSift", topics: [] }),
+    ]);
+    const names = (await getPublicRepos()).map((r) => r.name);
+    expect(names).toEqual(["OmniSift"]);
+  });
+});
+
+describe("isNonProjectRepo", () => {
+  it("flags templates and infrastructure, leaves products alone", () => {
+    expect(isNonProjectRepo({ name: "repo-template-python-fastapi", topics: [], is_template: true })).toBe(true);
+    expect(isNonProjectRepo({ name: "my-template", topics: [] })).toBe(true);
+    expect(isNonProjectRepo({ name: "gh-actions", topics: [] })).toBe(true);
+    expect(isNonProjectRepo({ name: "k8s-infrastructure", topics: [] })).toBe(true);
+    expect(isNonProjectRepo({ name: "anything", topics: ["Template"] })).toBe(true);
+    expect(isNonProjectRepo({ name: "Qavren-Swarm", topics: ["mcp", "docker"] })).toBe(false);
+    expect(isNonProjectRepo({ name: "infrared-sensor", topics: [] })).toBe(false);
   });
 });
 

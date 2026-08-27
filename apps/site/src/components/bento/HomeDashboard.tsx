@@ -98,11 +98,6 @@ export function HomeDashboard({
     return () => window.clearInterval(id);
   }, []);
 
-  // featuredProjects is intentionally NOT consumed below: the user explicitly wants
-  // pure last-commit ordering with no manual pins. Keeping the prop in the interface
-  // lets callers continue to pass it without code churn — drop it later if it stays unused.
-  void featuredProjects;
-
   // Reveal-on-scroll for this island's [data-reveal] children. Runs post-hydration
   // so the class never lands mid-hydration (which trips React mismatch errors) —
   // the global BaseLayout observer deliberately skips astro-island content.
@@ -168,7 +163,7 @@ export function HomeDashboard({
       </SectionShell>
 
       <SectionShell id="projects" kicker="03" title="Projects">
-        <ProjectsSection repos={sortedRepos} lastSync={lastSync} now={now} />
+        <ProjectsSection repos={sortedRepos} featured={featuredProjects} lastSync={lastSync} now={now} />
       </SectionShell>
 
       <SectionShell id="blog" kicker="04" title="Writing">
@@ -703,19 +698,74 @@ function SkillsSection() {
 
 function ProjectsSection({
   repos,
+  featured,
   lastSync,
   now,
 }: {
   repos: EnrichedRepo[];
+  featured: FeaturedProjectContent[];
   lastSync: number | null;
   now: number;
 }) {
   return (
     <div className="space-y-4">
+      {/* Hand-picked work that is not a public GitHub repo (client apps, live products).
+          Sourced from src/content/projects with `featured: true`; the live repo grid
+          below stays in pure last-commit order. */}
+      {featured.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {featured.map((project, idx) => {
+            const card = (
+              <GlassCard className="p-6 card-glow h-full" delay={(idx % 2) * 0.06}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 text-white"
+                      style={{ background: "linear-gradient(135deg, var(--gradient-mid), var(--gradient-end, var(--gradient-start)))" }}
+                    >
+                      {project.title[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="font-mono text-xs text-[var(--text-muted)] mt-0.5">
+                        {project.status === "active" ? "Live" : "Coming soon"}
+                        {project.href ? ` · ${new URL(project.href).hostname}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] shrink-0">
+                    Featured
+                  </span>
+                </div>
+                <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">{project.summary}</p>
+                {project.stack.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {project.stack.map((t) => (
+                      <span key={t} className="text-xs px-2 py-0.5 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-secondary)]">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </GlassCard>
+            );
+            return project.href ? (
+              <a key={project.slug} href={project.href} target="_blank" rel="noopener noreferrer" className="block group">
+                {card}
+              </a>
+            ) : (
+              <div key={project.slug} className="block group">{card}</div>
+            );
+          })}
+        </div>
+      )}
+
       <div data-reveal className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <p className="text-sm text-[var(--text-muted)]">
-            {repos.length} project{repos.length !== 1 ? "s" : ""}, ordered by last commit
+            {repos.length} repo{repos.length !== 1 ? "s" : ""}, ordered by last commit
           </p>
           <LiveIndicator lastSync={lastSync} now={now} />
         </div>
