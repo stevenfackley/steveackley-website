@@ -48,7 +48,10 @@ fi
 # preferred; ADMIN_PASSWORD_HASH is accepted only if it is a scrypt hash.
 if [ -n "$ADMIN_EMAIL" ] && { [ -n "$ADMIN_PASSWORD" ] || [ -n "$ADMIN_PASSWORD_HASH" ]; }; then
   echo "==> Seeding admin user..."
-  node /app/docker/seed-admin.cjs || echo "⚠ Admin seed failed (non-fatal)"
+  # postgres-js retries an initial connection forever (connection.js: closed() ->
+  # reconnect() while `initial`), so an unreachable DB would otherwise hang here
+  # and the app would never start. Cap it; the seed is non-fatal either way.
+  timeout 30 node /app/docker/seed-admin.cjs || echo "⚠ Admin seed failed or timed out after 30s (non-fatal)"
 fi
 
 echo "==> Starting application..."
