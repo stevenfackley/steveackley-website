@@ -38,6 +38,13 @@ items:
   - NUnit
   - Playwright
   - PostgreSQL
+  - Supabase
+  - Keycloak
+  - Terraform
+  - Cloudflare
+  - Python
+  - FastAPI
+  - MCP
   - SQLite
   - Prisma
   - Node.js
