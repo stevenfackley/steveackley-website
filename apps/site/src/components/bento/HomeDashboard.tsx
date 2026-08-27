@@ -709,14 +709,21 @@ function ProjectsSection({
 }) {
   return (
     <div className="space-y-4">
-      {/* Hand-picked work that is not a public GitHub repo (client apps, live products).
-          Sourced from src/content/projects with `featured: true`; the live repo grid
+      {/* Products in production, from src/content/projects with `featured: true`
+          (mirrors the live-URL entries of the Qavren roster). The GitHub grid
           below stays in pure last-commit order. */}
       {featured.length > 0 && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div data-reveal className="flex items-center gap-3">
+          <p className="text-sm text-[var(--text-muted)]">
+            {featured.length} product{featured.length !== 1 ? "s" : ""} in production
+          </p>
+        </div>
+      )}
+      {featured.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((project, idx) => {
             const card = (
-              <GlassCard className="p-6 card-glow h-full" delay={(idx % 2) * 0.06}>
+              <GlassCard className="p-6 card-glow h-full" delay={(idx % 3) * 0.06}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div
@@ -736,7 +743,7 @@ function ProjectsSection({
                     </div>
                   </div>
                   <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] shrink-0">
-                    Featured
+                    Live
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">{project.summary}</p>

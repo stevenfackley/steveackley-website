@@ -1,0 +1,17 @@
+---
+title: HaulCall
+summary: "The backstage crew for Whatnot sellers: every sale captured live, sorted, matched to postage, and verified by QR scan before it ships."
+status: active
+stack:
+  - .NET 10
+  - Next.js 16
+  - Chrome Extension
+  - Flutter
+  - PostgreSQL
+  - SignalR
+href: https://haulcall.app
+featured: true
+order: 7
+---
+
+A Chrome MV3 extension rides the seller's live Whatnot session, a .NET 10 minimal API with SignalR ingests events into PostgreSQL, a Next.js 16 web app runs the dashboard and print queue, and a Flutter pack-station app does scan-to-pack. Web and API run on one EC2 host behind a Cloudflare Tunnel.
