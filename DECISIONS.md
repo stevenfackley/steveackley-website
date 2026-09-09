@@ -75,3 +75,13 @@ Both awareness-only; held until a coordinated upgrade.
 - Both deferred-major watch items above are resolved — no outstanding action on plugin-react/astro from that entry.
 - Node runtime bumped to 26 in the same window (see `docs/ADR-002-bump-docker-node-22-to-26.md`, now Accepted/Implemented).
 - E2E green against the new stack; Container API imports updated for the `container-renderer` entrypoint move.
+
+## 2026-09-08 — Dependabot sweep: isomorphic-dompurify 3 → 4 (major), satori 0.29 → 0.33, better-auth 1.7, plus minors
+
+**Status:** accepted (awareness-only stub per saved sweep policy)
+**Context:** Eight Dependabot PRs squash-merged in one wave (#317 better-auth 1.7.2, #330 client-s3, #329 lucide-react, #328 isomorphic-dompurify 4.1.0, #326 plugin-react, #321 satori, #315 @types/node, #313 lint group); each was green on its own head. `package-lock.json` was regenerated on the merged tree with zero drift, and `@better-auth/core` stays hoisted at the root of `node_modules` (the 2026-06 un-hoisting outage shape does not recur).
+**Decision:** Take the majors. `isomorphic-dompurify` 4.1.0 still resolves `dompurify` 3.4.x, so sanitizer output is unchanged.
+**Consequences:**
+- isomorphic-dompurify 4's breaking changes are packaging-level (ESM-first, higher Node floor), not sanitizer behaviour; the build proves the import path still resolves.
+- satori 0.33 is a 0.x jump with layout-engine changes — eyeball one OG image after the deploy.
+- better-auth 1.7 is a minor on a prod-critical surface; check the first sign-in after deploy.
