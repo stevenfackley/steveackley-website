@@ -61,7 +61,7 @@
     "postgres": "^3.4.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "satori": "^0.33.4",
+    "satori": "^0.33.5",
     "tailwind-merge": "^3.6.0",
     "uuid": "^14.0.2",
     "yaml": "^2.8.4",
