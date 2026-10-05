@@ -9,7 +9,7 @@
   },
   "types": "./src/index.ts",
   "dependencies": {
-    "better-auth": "^1.7.2",
+    "better-auth": "^1.7.7",
     "drizzle-orm": "^0.45.3",
     "dotenv": "^18.0.3",
     "pino": "^10.3.1",
