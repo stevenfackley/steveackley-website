@@ -21,7 +21,7 @@ Whatnot is a live-shopping marketplace. A seller goes live on video and sells it
 
 HaulCall has been live since 2026-07-12. The site says BETA on every page, and HaulCall is not affiliated with Whatnot. It costs $30 a month for a single tier, after a 7-day trial that needs no card ([pricing](https://haulcall.app/pricing)).
 
-Whatnot has no public API. The extension reads the realtime feed the seller's browser already receives, and the rules for reading it live in a remote manifest I can change without waiting on Web Store review.
+The extension reads the realtime feed the seller's browser already receives, and the rules for reading it live in a remote manifest I can change without waiting on Web Store review.
 
 ## 0.4.0: capture from the broadcast page
 
