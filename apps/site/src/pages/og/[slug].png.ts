@@ -59,6 +59,7 @@ export const GET: APIRoute = async ({ params }) => {
           flexDirection: 'column',
           justifyContent: 'space-between',
           padding: '72px 80px',
+          boxSizing: 'border-box',
           backgroundColor: '#0b1020',
           backgroundImage: 'linear-gradient(135deg, #0b1020 0%, #131b33 60%, #1b2330 100%)',
           color: '#f5f7fa',
