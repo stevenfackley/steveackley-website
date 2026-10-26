@@ -26,6 +26,9 @@ jobs:
     uses: stevenfackley/gh-actions/.github/workflows/ci-astro.yml@v1
     with:
       project-name: steveackley-web
+      # Match .nvmrc and the node:26-alpine image; the reusable workflow defaults to 22, and
+      # astro 7.4.2 refuses anything below 22.23.4, so CI and the shipped runtime must agree.
+      node-version: "26"
       workspace: apps/site
       build-cmd: npm run build:site
     secrets: inherit
