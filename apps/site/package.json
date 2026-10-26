@@ -57,7 +57,7 @@
     "drizzle-orm": "^0.45.4",
     "isomorphic-dompurify": "^4.4.0",
     "lowlight": "^3.3.0",
-    "lucide-react": "^1.57.0",
+    "lucide-react": "^1.61.0",
     "postgres": "^3.4.8",
     "react": "19.3.1",
     "react-dom": "19.3.1",
