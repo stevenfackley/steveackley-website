@@ -45,7 +45,7 @@ git --version
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/stevenfackley/steveackleyorg.git
+git clone https://github.com/stevenfackley/steveackley-website.git steveackleyorg
 cd steveackleyorg
 ```
 
@@ -57,7 +57,7 @@ npm install
 
 ### 3. Configure environment variables
 
-Create `apps/site/.env.local` (no `.env.example` is committed — see [Environment Variables](#environment-variables) for the required list). This repo is a Postgres/Drizzle/Better Auth stack, not Next.js/Prisma/NextAuth.
+Copy the committed root `.env.example` to `apps/site/.env.local` and fill it in (see [Environment Variables](#environment-variables) for the required list). This repo is a Postgres/Drizzle/Better Auth stack, not Next.js/Prisma/NextAuth.
 
 ### 4. Start the database
 
@@ -91,7 +91,7 @@ apps/site/                  # Astro 7 SSR app
 ├── src/
 │   ├── pages/               # File-based Astro routing (admin/*, client/*, api/*)
 │   ├── components/          # React 19 islands: bento/, admin/, blog/, ui/
-│   ├── content/              # Astro content collections: blog/, pages/, projects/, resume/
+│   ├── content/              # Astro content collections: pages/, projects/, resume/ (blog is DB-backed)
 │   ├── actions/               # Astro server actions (Zod-validated)
 │   ├── db/                     # Drizzle schema + DB instance
 │   ├── lib/                     # auth, github, settings, upload, dashboard, logger
@@ -240,7 +240,7 @@ CI (`.github/workflows/deploy.yml`) runs unit → integration → E2E (against a
 
 ## Environment Variables
 
-No `.env.example` is committed. Create `apps/site/.env.local` with:
+A template is committed at the repo root as `.env.example`. Copy it to `apps/site/.env.local` and set:
 
 | Variable | Description |
 |---|---|

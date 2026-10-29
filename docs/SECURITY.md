@@ -37,7 +37,7 @@ Single deployable. Authentication is enforced at the route level inside `apps/si
 
 | Tool | Mode | Languages / Scope |
 |---|---|---|
-| GitHub CodeQL | default-setup (managed) | `actions`, `javascript`, `javascript-typescript`, `typescript` — auto-detected |
+| GitHub CodeQL | default-setup (managed) | `actions`, `javascript`, `javascript-typescript`, `typescript`, `python` — auto-detected. Default setup also scans on push to `main` and weekly; this is a known exception to the fleet rule that scans run on `pull_request` only |
 | Dependabot | `.github/dependabot.yml` | npm dependency updates and security advisories |
 | Copilot Autofix | enabled on CodeQL findings | Posts suggested patch commits to `refs/pull/N/head` — reconcile before pushing follow-on commits |
 

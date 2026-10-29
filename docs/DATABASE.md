@@ -27,7 +27,8 @@ All tables use PascalCase names (legacy from a prior Prisma generation; mapped v
 ## Migrations
 
 - Drizzle Kit is used for schema diffing and migration generation.
-- Migrations apply at container startup via `docker/entrypoint.sh` → `npx drizzle-kit push --force` (or equivalent), against the `db` service in the same Docker network.
+- `docker/entrypoint.sh` runs `drizzle-kit push` at container startup only when `DB_PUSH_ON_BOOT` is `1` (the default). That is the local/dev path, against the `db` service in `docker-compose.dev.yml`.
+- Production sets `DB_PUSH_ON_BOOT=0` (written by `.github/workflows/deploy.yml` since #213): the schema is provisioned externally by qavren-db, so the container never pushes schema on boot.
 - The legacy `drizzle.__drizzle_migrations` ledger may be empty in older databases where tables were originally created by Prisma; new schema changes flow through Drizzle going forward.
 
 ## Design Rules

@@ -52,7 +52,8 @@ git push main ──▶ CI (gh-actions ci-astro@v1) ──▶ build & push GHCR 
 
 ## Data Persistence
 
-- Postgres data lives in the named Docker volume `postgres_data`. Survives container recreate.
+- The compose file still defines a `steveackley-db` Postgres container with the named volume `postgres_data`.
+- The deploy writes `DB_PUSH_ON_BOOT=0` to `.env` because the schema is managed by qavren-db provisioning (see `.github/workflows/deploy.yml` and `docker/entrypoint.sh`). Which database prod actually talks to is set by the `DATABASE_URL` secret.
 - Uploads bind-mount `./uploads:/app/uploads` (legacy; R2 is the long-term store).
 
 ## Cloudflare Tunnel

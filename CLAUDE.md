@@ -52,7 +52,7 @@ Monorepo (npm workspaces):
 |-----|---------|
 | `pages/` | File-based Astro routing. Portals: `admin/*`, `client/*`. API: `api/*` |
 | `components/` | React islands: `bento/` (dashboard), `admin/`, `blog/`, `ui/` (primitives) |
-| `content/` | Astro collections: `blog/`, `pages/`, `projects/`, `resume/` |
+| `content/` | Astro collections: `pages/`, `projects/`, `resume/` (blog is DB-backed) |
 | `actions/` | Astro server actions — Zod-validated, all admin-protected |
 | `db/` | Drizzle schema (`schema.ts`) + DB instance (`index.ts`) |
 | `lib/` | Core utils: auth, github, settings, upload, dashboard, logger |
