@@ -32,7 +32,7 @@ One application stack. The shared package supplies schema, auth config, and type
 | Layer | Tech | Version |
 |---|---|---|
 | Public site framework | Astro | 7.x |
-| React islands | React + React DOM | 19.2.x |
+| React islands | React + React DOM | 19.3.x |
 | Auth | Better Auth (DB-persisted sessions) | latest |
 | Database | PostgreSQL | 16-alpine |
 | ORM | Drizzle ORM + drizzle-kit | latest |

@@ -1,6 +1,6 @@
 # =============================================================================
 # steveackley.org — Local Development Docker Compose
-# Runs PostgreSQL only; Next.js runs locally with `npm run dev`
+# Runs PostgreSQL only; the Astro site runs locally with `npm run dev:site`
 # =============================================================================
 
 services:
