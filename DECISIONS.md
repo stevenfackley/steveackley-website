@@ -85,3 +85,12 @@ Both awareness-only; held until a coordinated upgrade.
 - isomorphic-dompurify 4's breaking changes are packaging-level (ESM-first, higher Node floor), not sanitizer behaviour; the build proves the import path still resolves.
 - satori 0.33 is a 0.x jump with layout-engine changes — eyeball one OG image after the deploy.
 - better-auth 1.7 is a minor on a prod-critical surface; check the first sign-in after deploy.
+
+## 2026-11-02 — Dependabot sweep: minimatch 10 → 11 via root `overrides` (transitive, dev-only), plus minors
+
+**Status:** accepted (awareness-only stub per saved sweep policy)
+**Context:** GHSA-g3hv-75wg-m249 (minimatch < 11.0.1, globparts amplification DoS). minimatch reaches this repo only through eslint, @eslint/config-array and @typescript-eslint/typescript-estree, all of which still declare `^10.x`; none has a release on 11, so `npm update minimatch` stays on 10.2.5. Consolidated PR #421 also carries #416 (isomorphic-dompurify 4.6.0) and #419 (@aws-sdk/client-s3 3.1159.0).
+**Decision:** Add `"minimatch": "^11.0.1"` to the root `overrides` (resolves 11.0.4) and drop the dead `minimatch@10.2.5` brace-expansion block. minimatch 11 removes `makeRe()`, `Minimatch#regexp`, the `AST` class, `matchOne()`, the `debug` and `maxExtglobRecursion` options; eslint uses only `new Minimatch()`, `.match()` and `.pattern`, the other two call `minimatch()`. Proven locally: eslint 10.13.0 + typescript-eslint 8.72.1 + eslint-plugin-astro 3.2.1 with minimatch 11.0.4 lint all 113 files of apps/site with 0 problems.
+**Consequences:**
+- devOptional only; the runtime image is unaffected. No CI lane runs eslint (ci-astro.yml@v1 is unit/integration/e2e), so lint breakage would surface only locally — watch `npm run lint` after the next eslint or typescript-eslint bump.
+- Drop the override once eslint, @eslint/config-array and @typescript-eslint/typescript-estree all require `^11`; until then Dependabot cannot bump minimatch on its own.
