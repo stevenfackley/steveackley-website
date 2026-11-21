@@ -165,4 +165,16 @@ describe("blogPostingSchema", () => {
     expect(result.description).toBe("No Extras");
     expect(result.image).toBe("https://steveackley.org/og-default.png");
   });
+
+  it("falls back to the title when the excerpt is an empty string", () => {
+    // The admin form submits a blank excerpt as "", not null.
+    const result = blogPostingSchema({
+      title: "Blank Excerpt",
+      slug: "blank-excerpt",
+      excerpt: "",
+      createdAt,
+      updatedAt,
+    });
+    expect(result.description).toBe("Blank Excerpt");
+  });
 });
