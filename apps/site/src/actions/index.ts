@@ -7,6 +7,7 @@ import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
 import { readingTimeMinutes } from '@/lib/reading-time';
 import { requireAdminAction } from '@/lib/auth-guards';
+import { generateExcerpt } from '@/lib/utils';
 
 /** Parse a comma-separated tag string into a clean string[], or null if empty. */
 function parseTags(raw: string | undefined): string[] | null {
@@ -22,6 +23,11 @@ function parseTags(raw: string | undefined): string[] | null {
 function cleanCategory(raw: string | undefined): string | null {
   const value = raw?.trim();
   return value ? value : null;
+}
+
+/** Keep a typed excerpt; derive one from the post body when it is blank. */
+function resolveExcerpt(raw: string | undefined, content: string): string {
+  return raw?.trim() ? raw : generateExcerpt(content);
 }
 
 export const server = {
@@ -89,7 +95,7 @@ export const server = {
         title: input.title,
         slug,
         content: input.content,
-        excerpt: input.excerpt,
+        excerpt: resolveExcerpt(input.excerpt, input.content),
         coverImage: input.coverImage,
         category: cleanCategory(input.category),
         tags: parseTags(input.tags),
@@ -128,7 +134,7 @@ export const server = {
           title: input.title,
           slug,
           content: input.content,
-          excerpt: input.excerpt,
+          excerpt: resolveExcerpt(input.excerpt, input.content),
           coverImage: input.coverImage,
           category: cleanCategory(input.category),
           tags: parseTags(input.tags),
