@@ -16,7 +16,11 @@ const h = vi.hoisted(() => {
   const updateSet = vi.fn(() => ({ where: updateWhere }));
   const update = vi.fn(() => ({ set: updateSet }));
 
-  return { insert, insertValues, update, updateSet, updateWhere };
+  const selectWhere = vi.fn();
+  const selectFrom = vi.fn(() => ({ where: selectWhere }));
+  const select = vi.fn(() => ({ from: selectFrom }));
+
+  return { insert, insertValues, update, updateSet, updateWhere, select, selectWhere };
 });
 
 vi.mock("astro:actions", () => ({
@@ -33,7 +37,7 @@ vi.mock("astro:actions", () => ({
 vi.mock("astro:schema", async () => ({ z: (await import("zod")).z }));
 
 vi.mock("@/db", () => ({
-  db: { insert: h.insert, update: h.update },
+  db: { insert: h.insert, update: h.update, select: h.select },
   posts: { id: "id", slug: "slug" },
 }));
 
@@ -61,6 +65,38 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.insertValues.mockResolvedValue(undefined);
   h.updateWhere.mockResolvedValue(undefined);
+  h.selectWhere.mockResolvedValue([]);
+});
+
+describe("createPost slug", () => {
+  it("derives the slug from the title", async () => {
+    await server.createPost.handler(postInput({ title: "Hello World" }) as any, adminContext);
+
+    expect(h.insertValues).toHaveBeenCalledWith(expect.objectContaining({ slug: "hello-world" }));
+  });
+
+  it("suffixes the slug when another post already has it", async () => {
+    h.selectWhere.mockResolvedValue([{ slug: "hello-world" }, { slug: "hello-world-2" }]);
+
+    await server.createPost.handler(postInput({ title: "Hello World" }) as any, adminContext);
+
+    expect(h.insertValues).toHaveBeenCalledWith(expect.objectContaining({ slug: "hello-world-3" }));
+  });
+
+  it("falls back to a non-empty slug for a title with no ASCII letters or digits", async () => {
+    await server.createPost.handler(postInput({ title: "日本語のタイトル" }) as any, adminContext);
+
+    expect(h.insertValues).toHaveBeenCalledWith(expect.objectContaining({ slug: "post" }));
+  });
+});
+
+describe("updatePost slug", () => {
+  it("leaves the slug alone when the title changes", async () => {
+    await server.updatePost.handler(postInput({ id: "p1", title: "A Brand New Title" }) as any, adminContext);
+
+    expect(h.updateSet).toHaveBeenCalledWith(expect.objectContaining({ title: "A Brand New Title" }));
+    expect(h.updateSet.mock.calls[0][0]).not.toHaveProperty("slug");
+  });
 });
 
 describe("createPost", () => {

@@ -1,13 +1,13 @@
 import { defineAction } from 'astro:actions';
 import { z } from 'astro:schema';
 import { db, posts } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, like, or } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
 import { readingTimeMinutes } from '@/lib/reading-time';
 import { requireAdminAction } from '@/lib/auth-guards';
-import { generateExcerpt } from '@/lib/utils';
+import { ensureUniqueSlug, generateExcerpt } from '@/lib/utils';
 
 /** Parse a comma-separated tag string into a clean string[], or null if empty. */
 function parseTags(raw: string | undefined): string[] | null {
@@ -85,10 +85,18 @@ export const server = {
     handler: async (input, context) => {
       requireAdminAction(context);
 
-      const slug = input.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
+      // A title with no ASCII letters or digits slugifies to '', so fall back
+      // to 'post'. posts.slug is unique: suffix -2, -3, ... on a clash.
+      const baseSlug =
+        input.title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '') || 'post';
+      const taken = await db
+        .select({ slug: posts.slug })
+        .from(posts)
+        .where(or(eq(posts.slug, baseSlug), like(posts.slug, `${baseSlug}-%`)));
+      const slug = ensureUniqueSlug(baseSlug, new Set(taken.map((p) => p.slug)));
 
       await db.insert(posts).values({
         id: randomUUID(),
@@ -123,16 +131,12 @@ export const server = {
     handler: async (input, context) => {
       requireAdminAction(context);
 
-      const slug = input.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
-
+      // The slug is fixed at creation: /blog/<slug> and /og/<slug>.png are
+      // public URLs, so editing the title must not move them.
       await db
         .update(posts)
         .set({
           title: input.title,
-          slug,
           content: input.content,
           excerpt: resolveExcerpt(input.excerpt, input.content),
           coverImage: input.coverImage,
