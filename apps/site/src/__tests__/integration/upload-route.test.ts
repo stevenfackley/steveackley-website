@@ -80,6 +80,23 @@ describe("POST /api/upload", () => {
       await POST(makeContext({ user: null }) as any);
       expect(mockSaveUploadedFile).not.toHaveBeenCalled();
     });
+
+    // Only the exact role "ADMIN" gets in; the check runs before the body is read.
+    it.each([
+      ["lowercase admin", { role: "admin" }],
+      ["an unknown role", { role: "EDITOR" }],
+      ["an empty role", { role: "" }],
+    ])("returns 401 for %s without reading the upload", async (_label, user) => {
+      const formData = new FormData();
+      formData.append("file", makeImageFile());
+
+      const res = await POST(makeContext({ user, formData }) as any);
+
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ error: "Unauthorized" });
+      expect(mockGetMaxSizeBytes).not.toHaveBeenCalled();
+      expect(mockSaveUploadedFile).not.toHaveBeenCalled();
+    });
   });
 
   // ── File validation ─────────────────────────────────────────────────────────

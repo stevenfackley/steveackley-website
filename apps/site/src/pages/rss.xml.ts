@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db, posts as postsTable } from '@/db';
-import { eq, desc } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
+import { isPublic } from '@/lib/posts';
 
 const SITE = 'https://steveackley.org';
 const FEED_TITLE = 'Steve Ackley';
@@ -25,7 +26,7 @@ export const GET: APIRoute = async () => {
       createdAt: postsTable.createdAt,
     })
     .from(postsTable)
-    .where(eq(postsTable.published, true))
+    .where(isPublic())
     .orderBy(desc(postsTable.createdAt))
     .limit(50);
 

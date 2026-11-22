@@ -6,12 +6,13 @@ import {
   getMaxSizeBytes
 } from "@/lib/upload";
 import { logger } from "@/lib/logger";
+import { isAdmin } from "@/lib/roles";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth
-  if (!locals.user || locals.user.role !== 'ADMIN') {
+  if (!isAdmin(locals.user)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: JSON_HEADERS });
   }
 

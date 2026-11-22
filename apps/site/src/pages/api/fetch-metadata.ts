@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { logger } from "@/lib/logger";
+import { isAdmin } from "@/lib/roles";
 
 // Block requests to private / reserved IPv4 ranges so this server-side fetch
 // can't be pivoted into the internal network or the cloud metadata endpoint.
@@ -119,7 +120,7 @@ const JSON_HEADERS = { "Content-Type": "application/json" };
 
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth - only admins should fetch metadata for client apps
-  if (!locals.user || locals.user.role !== 'ADMIN') {
+  if (!isAdmin(locals.user)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: JSON_HEADERS });
   }
 

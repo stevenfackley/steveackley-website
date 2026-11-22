@@ -49,6 +49,11 @@ function ActionErrorText({ error }: { error: string | null }) {
   return <p role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{error}</p>;
 }
 
+/** The post's status pill, shared by the table row and the mobile card. */
+function PostStatusBadge({ post }: { post: Pick<PostSummary, "published"> }) {
+  return <Badge variant={post.published ? "default" : "secondary"}>{post.published ? "Published" : "Draft"}</Badge>;
+}
+
 export function AdminPostTable({ posts }: { posts: PostSummary[] }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -140,7 +145,7 @@ function PostRow({ post }: { post: PostSummary }) {
         <p className="text-xs text-[var(--text-muted)] mt-0.5">/blog/{post.slug}</p>
       </td>
       <td className="px-4 py-3">
-        <Badge variant={post.published ? "default" : "secondary"}>{post.published ? "Published" : "Draft"}</Badge>
+        <PostStatusBadge post={post} />
       </td>
       <td className="px-4 py-3 hidden md:table-cell text-[var(--text-muted)] whitespace-nowrap">{formatDateShort(post.updatedAt)}</td>
       <td className="px-4 py-3 text-right">
@@ -165,7 +170,7 @@ function PostCard({ post }: { post: PostSummary }) {
         <p className="text-xs text-[var(--text-muted)] mt-1 break-all">/blog/{post.slug}</p>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <Badge variant={post.published ? "default" : "secondary"}>{post.published ? "Published" : "Draft"}</Badge>
+        <PostStatusBadge post={post} />
         <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{formatDateShort(post.updatedAt)}</span>
       </div>
       <div className="flex flex-wrap gap-2">

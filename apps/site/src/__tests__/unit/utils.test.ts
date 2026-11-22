@@ -72,6 +72,17 @@ describe("slugify", () => {
     const result = slugify("café");
     expect(result).toMatch(/^[a-z0-9-]*$/);
   });
+
+  // createPost uses slugify, so these pin the slugs new posts get.
+  it("turns punctuation inside a word into a hyphen", () => {
+    expect(slugify("Don't Stop")).toBe("don-t-stop");
+    expect(slugify("v1.2 release")).toBe("v1-2-release");
+  });
+
+  it("returns an empty string when no ASCII letters or digits are left", () => {
+    expect(slugify("日本語")).toBe("");
+    expect(slugify("---")).toBe("");
+  });
 });
 
 // ---------------------------------------------------------------------------

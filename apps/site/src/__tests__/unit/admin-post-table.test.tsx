@@ -42,6 +42,37 @@ afterEach(() => {
   cleanup();
 });
 
+describe("AdminPostTable status badge", () => {
+  // Each post is rendered twice: the mobile card and the desktop table row.
+  it("shows Published or Draft from the published flag in both layouts", () => {
+    render(
+      <AdminPostTable
+        posts={[
+          { ...post, id: "d", title: "A Draft", slug: "a-draft", published: false },
+          { ...post, id: "p", title: "A Live One", slug: "a-live-one", published: true },
+        ]}
+      />,
+    );
+
+    const drafts = screen.getAllByText("Draft", { exact: true });
+    const live = screen.getAllByText("Published", { exact: true });
+    expect(drafts).toHaveLength(2);
+    expect(live).toHaveLength(2);
+    for (const badge of drafts) expect(badge).toHaveClass("bg-secondary");
+    for (const badge of live) expect(badge).toHaveClass("bg-primary");
+  });
+
+  it("shows a post waiting for its scheduled time as Draft", () => {
+    // Today's behaviour: the badge reads only `published`. Whether a scheduled
+    // post should say "Scheduled" instead is open with the owner.
+    const scheduled = { ...post, published: false, scheduledAt: new Date("2099-01-01T09:00:00Z") };
+    render(<AdminPostTable posts={[scheduled]} />);
+
+    expect(screen.getAllByText("Draft", { exact: true })).toHaveLength(2);
+    expect(screen.queryByText("Published", { exact: true })).not.toBeInTheDocument();
+  });
+});
+
 describe("AdminPostTable action errors", () => {
   it("shows the error when publishing fails", async () => {
     h.togglePublished.mockResolvedValue(failure);

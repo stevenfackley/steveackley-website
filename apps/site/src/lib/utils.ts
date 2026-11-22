@@ -9,18 +9,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Convert a string to a URL-safe slug.
- * e.g. "Hello World!" → "hello-world"
+ * Convert a string to a URL-safe slug: lower-case, every run of characters
+ * outside a-z0-9 becomes one hyphen, hyphens trimmed from both ends.
+ * e.g. "Hello World!" → "hello-world", "Don't Stop" → "don-t-stop".
+ * Returns "" when nothing is left (createPost falls back to "post").
  */
 export function slugify(text: string): string {
   return text
-    .toString()
     .toLowerCase()
-    .trim()
-    .replace(/[\s_]+/g, "-") // spaces/underscores → hyphens
-    .replace(/[^\w-]+/g, "") // remove non-word chars
-    .replace(/--+/g, "-") // collapse multiple hyphens
-    .replace(/^-+|-+$/g, ""); // trim leading/trailing hyphens
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 }
 
 /**
