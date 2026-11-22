@@ -68,11 +68,13 @@ describe("getPublicRepos", () => {
     expect(repos[0].name).toBe("project-a");
   });
 
-  it("filters out repos in the SKIP_REPOS set (public, public-website, the site itself, POCs)", async () => {
+  it("filters out repos in the SKIP_REPOS set (public, public-website, the site itself, P1, POCs)", async () => {
     mockRepoFetch([
       makeRepo({ name: "public" }),
       makeRepo({ name: "public-website" }),
       makeRepo({ name: "steveackley-website" }),
+      makeRepo({ name: "p1-opshub" }),
+      makeRepo({ name: "P1-OpsHub" }),
       makeRepo({ name: "ios-embedded-krestel-poc" }),
       makeRepo({ name: "axon-main" }),
     ]);

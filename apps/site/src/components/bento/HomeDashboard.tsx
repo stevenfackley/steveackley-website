@@ -49,8 +49,6 @@ const SECTIONS = [
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
-const SKIP_REPOS = new Set(["public", "public-website", "p1-opshub", "P1-OpsHub"]);
-
 interface HomeDashboardProps {
   blogPosts: Pick<PostSummary, "id" | "title" | "slug" | "excerpt" | "createdAt">[];
   githubRepos: EnrichedRepo[];
@@ -145,9 +143,11 @@ export function HomeDashboard({
     return () => observer.disconnect();
   }, []);
 
-  const sortedRepos = [...repos]
-    .filter((r) => !SKIP_REPOS.has(r.name))
-    .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime());
+  // Both sources (the SSR props and /api/github/repos) come from getCachedRepos,
+  // which already drops skipped, forked, archived and non-project repos.
+  const sortedRepos = [...repos].sort(
+    (a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime(),
+  );
 
   return (
     <div ref={rootRef} className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -788,8 +788,7 @@ function ProjectsSection({
 
       <div className="grid gap-4 lg:grid-cols-2">
         {repos.map((repo, idx) => {
-          // @ts-expect-error - isPrivate added dynamically during repo enrichment
-          const isPrivate = repo.private || repo.isPrivate;
+          const isPrivate = repo.private;
 
           return (
             <a key={repo.name} href={repo.html_url} target="_blank" rel="noopener noreferrer" className="block group">

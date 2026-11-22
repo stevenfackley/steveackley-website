@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, within, cleanup } from "@testing-library/react";
 import { HomeDashboard } from "@/components/bento/HomeDashboard";
 import type { FeaturedProjectContent, HomeContent } from "@/content/types";
+import type { EnrichedRepo } from "@/lib/github";
 
 const homeContent: HomeContent = {
   title: "Home",
@@ -76,5 +77,58 @@ describe("HomeDashboard featured projects", () => {
     expect(within(liveCard).getByText("Live", { exact: true })).toBeInTheDocument();
     expect(within(soonCard).queryByText("Live", { exact: true })).not.toBeInTheDocument();
     expect(within(soonCard).getByText("Coming soon", { exact: true })).toBeInTheDocument();
+  });
+});
+
+function repo(overrides: Partial<EnrichedRepo>): EnrichedRepo {
+  return {
+    name: "repo",
+    description: null,
+    html_url: "https://github.com/stevenfackley/repo",
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    pushed_at: "2025-01-01T00:00:00Z",
+    language: "TypeScript",
+    topics: [],
+    fork: false,
+    stargazers_count: 0,
+    badges: [],
+    tech: [],
+    status: "active",
+    ...overrides,
+  };
+}
+
+function renderWithRepos(githubRepos: EnrichedRepo[]) {
+  render(
+    <HomeDashboard blogPosts={[]} githubRepos={githubRepos} homeContent={homeContent} featuredProjects={[]} />,
+  );
+}
+
+const repoCard = (name: string) => screen.getByRole("heading", { name }).closest("a") as HTMLElement;
+
+describe("HomeDashboard GitHub repos", () => {
+  it("lists the repos it is given, most recent push first", () => {
+    renderWithRepos([
+      repo({ name: "older", pushed_at: "2025-01-01T00:00:00Z" }),
+      repo({ name: "newest", pushed_at: "2025-03-01T00:00:00Z" }),
+      repo({ name: "middle", pushed_at: "2025-02-01T00:00:00Z" }),
+    ]);
+
+    const names = Array.from(document.querySelectorAll("#projects h3")).map((h) => h.textContent);
+    expect(names).toEqual(["newest", "middle", "older"]);
+    expect(screen.getByText("3 repos, ordered by last commit")).toBeInTheDocument();
+  });
+
+  it("tags only repos GitHub marks private", () => {
+    renderWithRepos([
+      repo({ name: "secret", private: true }),
+      repo({ name: "open", private: false }),
+      repo({ name: "unset" }),
+    ]);
+
+    expect(within(repoCard("secret")).getByText("Private")).toBeInTheDocument();
+    expect(within(repoCard("open")).queryByText("Private")).not.toBeInTheDocument();
+    expect(within(repoCard("unset")).queryByText("Private")).not.toBeInTheDocument();
   });
 });
