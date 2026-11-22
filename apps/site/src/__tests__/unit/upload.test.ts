@@ -26,6 +26,10 @@ import {
   ALLOWED_MIME_TYPES,
   MIME_TO_EXT
 } from "../../lib/upload";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+} from "../../lib/upload-client";
 
 describe("upload utilities (R2)", () => {
   const originalEnv = process.env;
@@ -135,6 +139,19 @@ describe("upload utilities (R2)", () => {
       expect(MIME_TO_EXT["image/jpeg"]).toBe("jpg");
       expect(MIME_TO_EXT["image/png"]).toBe("png");
       expect(MIME_TO_EXT["image/webp"]).toBe("webp");
+      expect(MIME_TO_EXT["image/gif"]).toBe("gif");
+      expect(Object.keys(MIME_TO_EXT)).toEqual([...ALLOWED_MIME_TYPES]);
+    });
+  });
+
+  describe("allowlist shared by the server and the browser picker", () => {
+    it("is exactly jpeg, png, webp and gif on the server", () => {
+      expect([...ALLOWED_MIME_TYPES]).toEqual(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+    });
+
+    it("offers the browser picker the same list the server accepts", () => {
+      expect([...IMAGE_UPLOAD_ACCEPT]).toEqual([...ALLOWED_MIME_TYPES]);
+      expect(IMAGE_UPLOAD_ACCEPT_ATTRIBUTE).toBe("image/jpeg,image/png,image/webp,image/gif");
     });
   });
 });

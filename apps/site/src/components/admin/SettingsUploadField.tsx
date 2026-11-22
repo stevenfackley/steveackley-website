@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState, type ChangeEvent } from "react";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { IMAGE_UPLOAD_ACCEPT_ATTRIBUTE } from "@/lib/upload-client";
 
 interface Props {
   name: string;
@@ -67,7 +68,7 @@ export function SettingsUploadField({ name, defaultValue = '', placeholder, labe
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
           className="hidden"
           onChange={handleFile}
         />

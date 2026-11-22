@@ -1,6 +1,7 @@
 import type { AstroGlobal } from 'astro';
 import { ActionError } from 'astro:actions';
 import type { ActionAPIContext } from 'astro:actions';
+import { canUseClientPortal, isAdmin } from '@/lib/roles';
 
 /**
  * Page guard for `.astro` frontmatter. Redirects to /login unless the
@@ -11,7 +12,7 @@ import type { ActionAPIContext } from 'astro:actions';
  *   if (guard) return guard;
  */
 export function requireAdminPage(Astro: Pick<AstroGlobal, 'locals' | 'redirect'>): Response | null {
-  if (!Astro.locals.user || Astro.locals.user.role !== 'ADMIN') {
+  if (!isAdmin(Astro.locals.user)) {
     return Astro.redirect('/login');
   }
   return null;
@@ -27,7 +28,7 @@ export function requireAdminPage(Astro: Pick<AstroGlobal, 'locals' | 'redirect'>
  *   if (guard) return guard;
  */
 export function requireClientPage(Astro: Pick<AstroGlobal, 'locals' | 'redirect'>): Response | null {
-  if (!Astro.locals.user || (Astro.locals.user.role !== 'CLIENT' && Astro.locals.user.role !== 'ADMIN')) {
+  if (!canUseClientPortal(Astro.locals.user)) {
     return Astro.redirect('/login');
   }
   return null;
@@ -42,7 +43,7 @@ export function requireClientPage(Astro: Pick<AstroGlobal, 'locals' | 'redirect'
  *   requireAdminAction(context);
  */
 export function requireAdminAction(context: Pick<ActionAPIContext, 'locals'>): void {
-  if (!context.locals.user || context.locals.user.role !== 'ADMIN') {
+  if (!isAdmin(context.locals.user)) {
     throw new ActionError({ code: 'UNAUTHORIZED', message: 'Unauthorized' });
   }
 }

@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { LoginForm } from '@/components/admin/LoginForm';
+import { isAdmin } from '@/lib/roles';
 
 if (Astro.locals.user) {
-  if (Astro.locals.user.role === 'ADMIN') {
+  if (isAdmin(Astro.locals.user)) {
     return Astro.redirect('/admin/dashboard');
   } else {
     return Astro.redirect('/client/dashboard');

@@ -13,6 +13,8 @@ export interface GitHubRepo {
   stargazers_count: number;
   /** GitHub "template repository" flag. Templates are scaffolding, not projects. */
   is_template?: boolean;
+  /** Set by GitHub; true for the owner's private repos listed via /user/repos. */
+  private?: boolean;
 }
 
 export interface TechBadge {
@@ -72,7 +74,12 @@ interface GitHubFileContent {
   content: string; // base64-encoded
 }
 
-async function fetchJSON<T>(url: string): Promise<T | null> {
+/**
+ * GET a GitHub API URL with the v3 Accept header (plus the token when one is
+ * set) and an 8s abort. The abort timer stays armed until `read` settles, so a
+ * body read inside `read` is covered by it.
+ */
+async function githubFetch<T>(url: string, read: (res: Response) => Promise<T>): Promise<T> {
   const controller = new AbortController();
   /* c8 ignore next */
   const timeout = setTimeout(() => controller.abort(), 8_000);
@@ -89,13 +96,21 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
       signal: controller.signal,
       headers,
     });
-    if (!res.ok) return null;
-    return res.json() as Promise<T>;
-  } catch {
-    return null;
+    return await read(res);
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchJSON<T>(url: string): Promise<T | null> {
+  let res: Response;
+  try {
+    res = await githubFetch(url, async (r) => r);
+  } catch {
+    return null;
+  }
+  if (!res.ok) return null;
+  return res.json() as Promise<T>;
 }
 
 // ---------------------------------------------------------------------------
@@ -165,29 +180,13 @@ function inferTech(repo: GitHubRepo): string[] {
 // ---------------------------------------------------------------------------
 
 export async function getPublicRepos(): Promise<GitHubRepo[]> {
-  const controller = new AbortController();
-  /* c8 ignore next */
-  const timeout = setTimeout(() => controller.abort(), 8_000);
-  try {
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github.v3+json",
-    };
+  // If we have a token, use /user/repos to get both public and private repos we own.
+  // Otherwise, use /users/stevenfackley/repos for public only.
+  const url = import.meta.env.GH_API_TOKEN
+    ? "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100"
+    : "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
 
-    const hasToken = !!import.meta.env.GH_API_TOKEN;
-    if (hasToken) {
-      headers["Authorization"] = `token ${import.meta.env.GH_API_TOKEN}`;
-    }
-
-    // If we have a token, use /user/repos to get both public and private repos we own.
-    // Otherwise, use /users/stevenfackley/repos for public only.
-    const url = hasToken
-      ? "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100"
-      : "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
-
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers,
-    });
+  return githubFetch(url, async (res) => {
     // Throw (don't return []) so callers can tell a transient failure apart from a
     // genuinely empty list and avoid caching the failure over the last good data.
     if (!res.ok) throw new Error(`GitHub /repos request failed: ${res.status}`);
@@ -198,9 +197,7 @@ export async function getPublicRepos(): Promise<GitHubRepo[]> {
     return repos.filter(
       (r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name) && !isNonProjectRepo(r),
     );
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
 export type EnrichedRepo = GitHubRepo & {
@@ -209,15 +206,20 @@ export type EnrichedRepo = GitHubRepo & {
   status: "active" | "coming-soon";
 };
 
-export async function enrichRepos(repos: GitHubRepo[]): Promise<EnrichedRepo[]> {
-  const badgeResults = await Promise.all(
-    repos.map((r) =>
-      // Curated override takes priority while README hasn't been updated yet
-      REPO_BADGE_OVERRIDES[r.name]
-        ? Promise.resolve(REPO_BADGE_OVERRIDES[r.name])
-        : detectBadgesFromReadme(r.name)
-    )
-  );
+// Curated override takes priority while README hasn't been updated yet.
+async function uncachedBadges(name: string): Promise<TechBadge[]> {
+  return REPO_BADGE_OVERRIDES[name] ? REPO_BADGE_OVERRIDES[name] : detectBadgesFromReadme(name);
+}
+
+/**
+ * Attach badges, tech tags and status to each repo. `getBadges` defaults to an
+ * uncached lookup; getCachedRepos passes the 6h badge cache below.
+ */
+export async function enrichRepos(
+  repos: GitHubRepo[],
+  getBadges: (name: string) => Promise<TechBadge[]> = uncachedBadges,
+): Promise<EnrichedRepo[]> {
+  const badgeResults = await Promise.all(repos.map((r) => getBadges(r.name)));
 
   return repos.map((r, i) => ({
     ...r,
@@ -251,16 +253,6 @@ async function cachedBadges(name: string): Promise<TechBadge[]> {
   return badges;
 }
 
-async function enrichReposCached(repos: GitHubRepo[]): Promise<EnrichedRepo[]> {
-  const badgeResults = await Promise.all(repos.map((r) => cachedBadges(r.name)));
-  return repos.map((r, i) => ({
-    ...r,
-    badges: badgeResults[i],
-    tech: badgeResults[i].length > 0 ? badgeResults[i].map((b) => b.label) : inferTech(r),
-    status: "active" as const,
-  }));
-}
-
 // ---------------------------------------------------------------------------
 // Shared cache: SSR pages AND the /api/github/repos endpoint both call this so
 // they never burn duplicate GitHub round-trips. 30s TTL + in-flight de-dupe.
@@ -281,7 +273,7 @@ export async function getCachedRepos(): Promise<{ repos: EnrichedRepo[]; fetched
   if (!repoInflight) {
     repoInflight = (async () => {
       const repos = await getPublicRepos();
-      const enriched = await enrichReposCached(repos);
+      const enriched = await enrichRepos(repos, cachedBadges);
       repoCache = { data: enriched, fetchedAt: Date.now() };
       return enriched;
     })();

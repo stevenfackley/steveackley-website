@@ -406,5 +406,101 @@ describe("getCachedRepos", () => {
     await mod.getCachedRepos();
     expect(readmeCalls).toBe(1); // badges reused — no second README burst
   });
+
+  it("enriches repos the same way enrichRepos does (badges, fallback tech, overrides)", async () => {
+    const readmeContent = Buffer.from(
+      "[![Astro](https://img.shields.io/badge/Astro-7-orange)](https://astro.build/)",
+    ).toString("base64");
+    const list = [
+      makeRepo({ name: "with-badges" }),
+      makeRepo({ name: "no-readme", language: "csharp", topics: ["dotnet"] }),
+      makeRepo({ name: "axon-main" }),
+    ];
+    const respond = (url: unknown) => {
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(new Response(JSON.stringify(list), { status: 200 }));
+      }
+      if (s.endsWith("/with-badges/readme")) {
+        return Promise.resolve(new Response(JSON.stringify({ content: readmeContent }), { status: 200 }));
+      }
+      return Promise.resolve(new Response("Not Found", { status: 404 }));
+    };
+
+    vi.resetModules();
+    const mod = await import("@/lib/github");
+    vi.spyOn(global, "fetch").mockImplementation(respond);
+
+    const { repos } = await mod.getCachedRepos();
+    const direct = await mod.enrichRepos(list);
+
+    expect(repos).toEqual(direct);
+    expect(repos.map((r) => r.tech)).toEqual([
+      ["Astro"],
+      ["C#", "dotnet"],
+      direct[2].badges.map((b) => b.label),
+    ]);
+    expect(repos.every((r) => r.status === "active")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GitHub request shape: headers, token and timeout signal on every call
+// ---------------------------------------------------------------------------
+describe("GitHub requests", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function headersOf(init: RequestInit | undefined): Record<string, string> {
+    return (init?.headers ?? {}) as Record<string, string>;
+  }
+
+  it("sends only the v3 Accept header and uses the public list URL without a token", async () => {
+    vi.stubEnv("GH_API_TOKEN", "");
+    const fetchSpy = mockRepoFetch([makeRepo({ name: "a" })]);
+
+    const repos = await getPublicRepos();
+    await enrichRepos(repos);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const [listUrl, listInit] = fetchSpy.mock.calls[0];
+    const [readmeUrl, readmeInit] = fetchSpy.mock.calls[1];
+    expect(String(listUrl)).toBe(
+      "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100",
+    );
+    expect(String(readmeUrl)).toBe("https://api.github.com/repos/stevenfackley/a/readme");
+    for (const init of [listInit, readmeInit]) {
+      expect(headersOf(init)).toEqual({ Accept: "application/vnd.github.v3+json" });
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+    }
+  });
+
+  it("adds the token header to every call and lists owned repos when a token is set", async () => {
+    vi.stubEnv("GH_API_TOKEN", "placeholder");
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation((url) => {
+      if (String(url).includes("/user/repos")) {
+        return Promise.resolve(new Response(JSON.stringify([makeRepo({ name: "a" })]), { status: 200 }));
+      }
+      return Promise.resolve(new Response("Not Found", { status: 404 }));
+    });
+
+    const repos = await getPublicRepos();
+    await enrichRepos(repos);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const [listUrl, listInit] = fetchSpy.mock.calls[0];
+    const [, readmeInit] = fetchSpy.mock.calls[1];
+    expect(String(listUrl)).toBe(
+      "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100",
+    );
+    for (const init of [listInit, readmeInit]) {
+      expect(headersOf(init)).toEqual({
+        Accept: "application/vnd.github.v3+json",
+        Authorization: "token placeholder",
+      });
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+    }
+  });
 });
 

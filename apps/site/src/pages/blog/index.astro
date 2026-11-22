@@ -3,8 +3,8 @@ import PublicLayout from '@/layouts/PublicLayout.astro';
 import PostList from '@/components/blog/PostList.astro';
 import Pagination from '@/components/blog/Pagination.astro';
 import { db, posts as postsTable } from '@/db';
-import { eq, desc, count } from 'drizzle-orm';
-import { readingTimeMinutes } from '@/lib/reading-time';
+import { desc, count } from 'drizzle-orm';
+import { isPublic, withReadMinutes } from '@/lib/posts';
 import type { PaginationInfo } from '@/types';
 
 const SITE_ORIGIN = 'https://steveackley.org';
@@ -17,7 +17,7 @@ const currentPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
 const [totalCountResult] = await db
   .select({ value: count() })
   .from(postsTable)
-  .where(eq(postsTable.published, true));
+  .where(isPublic());
 
 const totalItems = totalCountResult?.value || 0;
 const totalPages = Math.ceil(totalItems / PER_PAGE);
@@ -26,17 +26,12 @@ const totalPages = Math.ceil(totalItems / PER_PAGE);
 const rows = await db
   .select()
   .from(postsTable)
-  .where(eq(postsTable.published, true))
+  .where(isPublic())
   .orderBy(desc(postsTable.createdAt))
   .limit(PER_PAGE)
   .offset((currentPage - 1) * PER_PAGE);
 
-// Prefer the reading time stored at save time; fall back to computing it for
-// posts that predate the column (NULL).
-const posts = rows.map((p) => ({
-  ...p,
-  readMinutes: p.readingTimeMinutes ?? readingTimeMinutes(p.content),
-}));
+const posts = rows.map(withReadMinutes);
 
 const pagination: PaginationInfo = {
   currentPage,
