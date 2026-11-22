@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { canUseClientPortal, isAdmin } from "@/lib/roles";
 import { withRequestId } from "@shared/lib/logger";
 import { defineMiddleware } from "astro:middleware";
 import { randomUUID } from "node:crypto";
@@ -159,13 +160,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isClientPath = url.pathname === "/client" || url.pathname.startsWith("/client/");
 
   if (isAdminPath) {
-    if (!context.locals.user || context.locals.user.role !== "ADMIN") {
+    if (!isAdmin(context.locals.user)) {
       return context.redirect("/login");
     }
   }
 
   if (isClientPath) {
-    if (!context.locals.user || (context.locals.user.role !== "CLIENT" && context.locals.user.role !== "ADMIN")) {
+    if (!canUseClientPortal(context.locals.user)) {
       // Admins are allowed to see client portal for support
       return context.redirect("/login");
     }
