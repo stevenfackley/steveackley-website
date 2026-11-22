@@ -238,4 +238,26 @@ describe("POST /api/fetch-metadata", () => {
       expect(res.status).toBe(200);
     });
   });
+
+  // ── Response format ─────────────────────────────────────────────────────────
+  describe("response format", () => {
+    it("labels success and error responses as JSON", async () => {
+      const unauthorized = await POST(makeContext({ user: null }) as any);
+      const missingUrl = await POST(makeContext({ user: { role: "ADMIN" }, body: {} }) as any);
+
+      vi.spyOn(global, "fetch").mockResolvedValueOnce(new Response(SAMPLE_HTML, { status: 200 }));
+      const ok = await POST(
+        makeContext({ user: { role: "ADMIN" }, body: { url: "https://example.com" } }) as any
+      );
+
+      vi.spyOn(global, "fetch").mockRejectedValueOnce(new Error("Network error"));
+      const failed = await POST(
+        makeContext({ user: { role: "ADMIN" }, body: { url: "https://example.com" } }) as any
+      );
+
+      for (const res of [unauthorized, missingUrl, ok, failed]) {
+        expect(res.headers.get("content-type")).toBe("application/json");
+      }
+    });
+  });
 });

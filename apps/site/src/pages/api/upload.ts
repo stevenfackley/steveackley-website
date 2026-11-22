@@ -7,10 +7,12 @@ import {
 } from "@/lib/upload";
 import { logger } from "@/lib/logger";
 
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth
   if (!locals.user || locals.user.role !== 'ADMIN') {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: JSON_HEADERS });
   }
 
   try {
@@ -18,17 +20,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const file = formData.get("file") as File;
 
     if (!file) {
-      return new Response(JSON.stringify({ error: "No file provided" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "No file provided" }), { status: 400, headers: JSON_HEADERS });
     }
 
     // Validate size
     if (file.size > getMaxSizeBytes()) {
-      return new Response(JSON.stringify({ error: "File too large" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "File too large" }), { status: 400, headers: JSON_HEADERS });
     }
 
     // Validate type
     if (!isAllowedMimeType(file.type)) {
-      return new Response(JSON.stringify({ error: "Invalid file type" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Invalid file type" }), { status: 400, headers: JSON_HEADERS });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -36,9 +38,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     
     const url = await saveUploadedFile(buffer, safeFilename, file.type);
 
-    return new Response(JSON.stringify({ url }), { status: 200 });
+    return new Response(JSON.stringify({ url }), { status: 200, headers: JSON_HEADERS });
   } catch (error) {
     logger.error("Upload error", error instanceof Error ? error : new Error(String(error)));
-    return new Response(JSON.stringify({ error: "Upload failed" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Upload failed" }), { status: 500, headers: JSON_HEADERS });
   }
 };

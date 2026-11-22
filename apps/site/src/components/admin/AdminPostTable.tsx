@@ -11,10 +11,16 @@ const PAGE_SIZE = 20;
 function usePostActions(post: PostSummary) {
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleToggle = () =>
     startTransition(async () => {
-      await actions.togglePublished({ id: post.id, published: !post.published });
+      setError(null);
+      const result = await actions.togglePublished({ id: post.id, published: !post.published });
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
       window.location.reload();
     });
 
@@ -25,12 +31,22 @@ function usePostActions(post: PostSummary) {
       return;
     }
     startTransition(async () => {
-      await actions.deletePost({ id: post.id });
+      setError(null);
+      const result = await actions.deletePost({ id: post.id });
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
       window.location.reload();
     });
   };
 
-  return { isPending, confirmDelete, handleToggle, handleDelete };
+  return { isPending, confirmDelete, error, handleToggle, handleDelete };
+}
+
+function ActionErrorText({ error }: { error: string | null }) {
+  if (!error) return null;
+  return <p role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{error}</p>;
 }
 
 export function AdminPostTable({ posts }: { posts: PostSummary[] }) {
@@ -115,7 +131,7 @@ export function AdminPostTable({ posts }: { posts: PostSummary[] }) {
 }
 
 function PostRow({ post }: { post: PostSummary }) {
-  const { isPending, confirmDelete, handleToggle, handleDelete } = usePostActions(post);
+  const { isPending, confirmDelete, error, handleToggle, handleDelete } = usePostActions(post);
 
   return (
     <tr className="hover:bg-[var(--surface-hover)] transition-colors">
@@ -133,13 +149,14 @@ function PostRow({ post }: { post: PostSummary }) {
           <a href={`/admin/posts/${post.id}/edit`}><Button variant="secondary" size="sm">Edit</Button></a>
           <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending} aria-label={`Delete post: ${post.title}`}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
         </div>
+        <ActionErrorText error={error} />
       </td>
     </tr>
   );
 }
 
 function PostCard({ post }: { post: PostSummary }) {
-  const { isPending, confirmDelete, handleToggle, handleDelete } = usePostActions(post);
+  const { isPending, confirmDelete, error, handleToggle, handleDelete } = usePostActions(post);
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
@@ -156,6 +173,7 @@ function PostCard({ post }: { post: PostSummary }) {
         <a href={`/admin/posts/${post.id}/edit`} className="flex-1 min-w-[5rem]"><Button variant="secondary" size="sm" className="w-full">Edit</Button></a>
         <Button variant={confirmDelete ? "destructive" : "ghost"} size="sm" onClick={handleDelete} disabled={isPending} aria-label={`Delete post: ${post.title}`}>{confirmDelete ? "Confirm?" : "Delete"}</Button>
       </div>
+      <ActionErrorText error={error} />
     </div>
   );
 }

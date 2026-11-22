@@ -115,10 +115,12 @@ async function safeFetch(startUrl: string, maxRedirects = 5): Promise<Response> 
   throw new Error("Too many redirects");
 }
 
+const JSON_HEADERS = { "Content-Type": "application/json" };
+
 export const POST: APIRoute = async ({ request, locals }) => {
   // Check auth - only admins should fetch metadata for client apps
   if (!locals.user || locals.user.role !== 'ADMIN') {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: JSON_HEADERS });
   }
 
   let targetUrl = "";
@@ -127,20 +129,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
     targetUrl = typeof url === "string" ? url : "";
 
     if (!targetUrl) {
-      return new Response(JSON.stringify({ error: "URL is required" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "URL is required" }), { status: 400, headers: JSON_HEADERS });
     }
 
     let parsed: URL;
     try {
       parsed = new URL(targetUrl);
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid URL" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Invalid URL" }), { status: 400, headers: JSON_HEADERS });
     }
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return new Response(JSON.stringify({ error: "Invalid URL" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Invalid URL" }), { status: 400, headers: JSON_HEADERS });
     }
     if (isBlockedHost(parsed.hostname)) {
-      return new Response(JSON.stringify({ error: "URL not allowed" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "URL not allowed" }), { status: 400, headers: JSON_HEADERS });
     }
 
     const response = await safeFetch(targetUrl);
@@ -171,7 +173,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       description,
       ogImage,
       favicon,
-    }), { status: 200 });
+    }), { status: 200, headers: JSON_HEADERS });
 
   } catch (error) {
     logger.error(
@@ -179,6 +181,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       error instanceof Error ? error : new Error(String(error)),
       { url: targetUrl }
     );
-    return new Response(JSON.stringify({ error: "Failed to fetch metadata" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Failed to fetch metadata" }), { status: 500, headers: JSON_HEADERS });
   }
 };

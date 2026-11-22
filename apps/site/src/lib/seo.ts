@@ -89,7 +89,7 @@ export function blogPostingSchema(args: {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: args.title,
-    description: args.excerpt ?? args.title,
+    description: args.excerpt || args.title,
     url,
     mainEntityOfPage: url,
     image,
