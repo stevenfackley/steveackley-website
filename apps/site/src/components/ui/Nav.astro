@@ -1,4 +1,6 @@
 ---
+import { isAdmin } from '@/lib/roles';
+
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/resume', label: 'Resume' },
@@ -15,7 +17,7 @@ const placeholderAvatar = 'https://github.com/stevenfackley.png';
 const user = Astro.locals.user;
 const isLoggedIn = !!user;
 const userName = user?.name || user?.email?.split('@')[0] || 'User';
-const accountHref = user?.role === 'ADMIN' ? '/admin/account' : '/client/account';
+const accountHref = isAdmin(user) ? '/admin/account' : '/client/account';
 const greeting = `Hello, ${userName.split(' ')[0]}`;
 ---
 

@@ -71,6 +71,21 @@ describe("POST /api/fetch-metadata", () => {
       await POST(makeContext({ user: null }) as any);
       expect(fetchSpy).not.toHaveBeenCalled();
     });
+
+    // Only the exact role "ADMIN" gets in; the check runs before the body is read.
+    it.each([
+      ["lowercase admin", { role: "admin" }],
+      ["an unknown role", { role: "EDITOR" }],
+      ["an empty role", { role: "" }],
+    ])("returns 401 for %s without fetching", async (_label, user) => {
+      const fetchSpy = vi.spyOn(global, "fetch");
+
+      const res = await POST(makeContext({ user, body: { url: "https://example.com" } }) as any);
+
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ error: "Unauthorized" });
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
   });
 
   // ── Request validation ──────────────────────────────────────────────────────
