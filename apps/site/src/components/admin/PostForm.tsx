@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 // PostEditor is dynamic to avoid SSR issues with Tiptap
 const PostEditor = lazy(() => import("./PostEditor").then(m => ({ default: m.PostEditor })));
 
+/** A Date as a datetime-local value ("YYYY-MM-DDTHH:mm") in the browser's zone. */
+function toLocalDateTimeInput(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 interface Props {
   mode: "create" | "update";
   postId?: string;
@@ -30,16 +35,21 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
   const [category, setCategory]   = useState(defaultValues.category    ?? "");
   const [tags, setTags]           = useState((defaultValues.tags ?? []).join(", "));
   const [published, setPublished] = useState(defaultValues.published   ?? false);
-  const [scheduledAt, setScheduledAt] = useState(
-    defaultValues.scheduledAt
-      ? new Date(defaultValues.scheduledAt).toISOString().slice(0, 16)
-      : ""
-  );
+  const [scheduledAt, setScheduledAt] = useState("");
   const [error, setError]         = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  // datetime-local carries no timezone, so show the stored instant in the
+  // admin's own zone. Filled after mount: the server render runs in the
+  // server's zone, not the browser's.
+  useEffect(() => {
+    if (defaultValues.scheduledAt) {
+      setScheduledAt(toLocalDateTimeInput(new Date(defaultValues.scheduledAt)));
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +64,8 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       fd.set("category",    category);
       fd.set("tags",        tags);
       fd.set("published",   String(published));
-      fd.set("scheduledAt", scheduledAt);
+      // Send an absolute instant; the server would read a bare local time in its own zone.
+      fd.set("scheduledAt", scheduledAt ? new Date(scheduledAt).toISOString() : "");
 
       let result;
       if (mode === "update" && postId) {

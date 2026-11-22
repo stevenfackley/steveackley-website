@@ -37,7 +37,7 @@ export const GET: APIRoute = async () => {
     <link>${url}</link>
     <guid isPermaLink="true">${url}</guid>
     <pubDate>${post.createdAt.toUTCString()}</pubDate>
-    <description>${xmlEscape(post.excerpt ?? post.title)}</description>
+    <description>${xmlEscape(post.excerpt || post.title)}</description>
   </item>`;
     })
     .join('\n');

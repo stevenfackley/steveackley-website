@@ -743,7 +743,7 @@ function ProjectsSection({
                     </div>
                   </div>
                   <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] shrink-0">
-                    Live
+                    {project.status === "active" ? "Live" : "Coming soon"}
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-[var(--text-secondary)] leading-relaxed">{project.summary}</p>

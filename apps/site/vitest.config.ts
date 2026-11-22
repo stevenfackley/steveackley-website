@@ -7,6 +7,7 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "./src"),
       "@shared": resolve(__dirname, "../../packages/shared/src"),
+      "astro:actions": resolve(__dirname, "./src/__tests__/stubs/astro-actions.ts"),
     },
   },
   plugins: [react()],

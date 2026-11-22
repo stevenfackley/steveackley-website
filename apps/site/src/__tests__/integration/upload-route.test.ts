@@ -165,4 +165,25 @@ describe("POST /api/upload", () => {
       expect(body.error).toBe("Upload failed");
     });
   });
+
+  // ── Response format ─────────────────────────────────────────────────────────
+  describe("response format", () => {
+    it("labels success and error responses as JSON", async () => {
+      const unauthorized = await POST(makeContext({ user: null }) as any);
+      const noFile = await POST(makeContext({ user: { role: "ADMIN" } }) as any);
+
+      const okForm = new FormData();
+      okForm.append("file", makeImageFile());
+      const ok = await POST(makeContext({ user: { role: "ADMIN" }, formData: okForm }) as any);
+
+      mockSaveUploadedFile.mockRejectedValueOnce(new Error("R2 outage"));
+      const failForm = new FormData();
+      failForm.append("file", makeImageFile());
+      const failed = await POST(makeContext({ user: { role: "ADMIN" }, formData: failForm }) as any);
+
+      for (const res of [unauthorized, noFile, ok, failed]) {
+        expect(res.headers.get("content-type")).toBe("application/json");
+      }
+    });
+  });
 });

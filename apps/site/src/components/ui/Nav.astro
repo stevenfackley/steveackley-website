@@ -183,7 +183,7 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
   // The pre-paint script in BaseLayout has already applied the right theme; here
   // we just wire the buttons and keep the UI (icons + aria-pressed) in sync.
   // Resolution/persistence logic is shared + unit-tested in @/lib/theme.
-  import { THEME_STORAGE_KEY, nextTheme, type Theme } from '@/lib/theme';
+  import { THEME_STORAGE_KEY, nextTheme, resolveTheme, type Theme } from '@/lib/theme';
 
   const currentTheme = (): Theme =>
     document.documentElement.classList.contains('dark') ? 'dark' : 'light';
@@ -221,13 +221,14 @@ const greeting = `Hello, ${userName.split(' ')[0]}`;
   document.getElementById('theme-toggle')?.addEventListener('click', onToggle);
   document.getElementById('theme-toggle-mobile')?.addEventListener('click', onToggle);
 
-  // When the visitor hasn't made an explicit choice, track live OS theme changes.
+  // Track live OS theme changes, unless the visitor's choice or an explicit
+  // admin light/dark default (data-site-theme, set by BaseLayout) outranks the OS.
   const osDark = window.matchMedia('(prefers-color-scheme: dark)');
   osDark.addEventListener?.('change', (e) => {
     let stored: string | null = null;
     try { stored = localStorage.getItem(THEME_STORAGE_KEY); } catch { /* storage blocked */ }
-    if (stored === 'light' || stored === 'dark') return; // explicit choice wins
-    applyTheme(e.matches ? 'dark' : 'light', false);
+    const siteDefault = document.documentElement.dataset.siteTheme;
+    applyTheme(resolveTheme({ stored, siteDefault, prefersDark: e.matches }), false);
   });
 
   // ── Reveal nav name on scroll ───────────────────────────────────────────────
