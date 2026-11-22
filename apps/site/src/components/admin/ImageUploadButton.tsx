@@ -2,6 +2,7 @@
 import { useRef, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { IMAGE_UPLOAD_ACCEPT_ATTRIBUTE } from "@/lib/upload-client";
 interface Props { onUpload: (url: string) => void; }
 export function ImageUploadButton({ onUpload }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,7 +22,7 @@ export function ImageUploadButton({ onUpload }: Props) {
   };
   return (
     <div>
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={handleFile} />
+      <input ref={inputRef} type="file" accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE} className="hidden" onChange={handleFile} />
       <Button type="button" variant="secondary" size="sm" isLoading={uploading} onClick={() => inputRef.current?.click()}>
         Upload Image
       </Button>

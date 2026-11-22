@@ -1,15 +1,11 @@
 import type { UploadResponse } from "../types/index";
+import { ALLOWED_MIME_TYPES } from "./upload-types";
 
 interface UploadErrorResponse {
   error?: string;
 }
 
-export const IMAGE_UPLOAD_ACCEPT = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-] as const;
+export const IMAGE_UPLOAD_ACCEPT = ALLOWED_MIME_TYPES;
 
 export const IMAGE_UPLOAD_ACCEPT_ATTRIBUTE = IMAGE_UPLOAD_ACCEPT.join(",");
 

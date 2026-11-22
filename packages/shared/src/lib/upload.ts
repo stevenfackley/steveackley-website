@@ -2,6 +2,9 @@ import { randomUUID } from "crypto";
 import path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { logger } from "./logger";
+import { ALLOWED_MIME_TYPES, type AllowedMimeType } from "./upload-types";
+
+export { ALLOWED_MIME_TYPES, MIME_TO_EXT, type AllowedMimeType } from "./upload-types";
 
 // Cloudflare R2 Config from Env (wrapped in functions to allow test overrides)
 const getR2Config = () => ({
@@ -29,23 +32,6 @@ const createS3Client = () => {
     });
   }
   return s3ClientSingleton;
-};
-
-// Allowlisted MIME types — SVG intentionally excluded (XSS risk)
-export const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-] as const;
-
-export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
-
-export const MIME_TO_EXT: Record<AllowedMimeType, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
 };
 
 /**
