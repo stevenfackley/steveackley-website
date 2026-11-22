@@ -7,7 +7,7 @@ import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
 import { readingTimeMinutes } from '@/lib/reading-time';
 import { requireAdminAction } from '@/lib/auth-guards';
-import { ensureUniqueSlug, generateExcerpt } from '@/lib/utils';
+import { ensureUniqueSlug, generateExcerpt, slugify } from '@/lib/utils';
 
 /** Parse a comma-separated tag string into a clean string[], or null if empty. */
 function parseTags(raw: string | undefined): string[] | null {
@@ -28,6 +28,35 @@ function cleanCategory(raw: string | undefined): string | null {
 /** Keep a typed excerpt; derive one from the post body when it is blank. */
 function resolveExcerpt(raw: string | undefined, content: string): string {
   return raw?.trim() ? raw : generateExcerpt(content);
+}
+
+/** The post form fields createPost and updatePost both accept. */
+const postFields = z.object({
+  title: z.string().min(1),
+  content: z.string().min(1),
+  excerpt: z.string().optional(),
+  coverImage: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.string().optional(),
+  published: z.string().transform((v) => v === 'true'),
+  scheduledAt: z.string().optional(),
+});
+
+type PostFields = ReturnType<typeof postFields.parse>;
+
+/** Map the post form fields to the columns both actions write. */
+function toPostValues(input: PostFields) {
+  return {
+    title: input.title,
+    content: input.content,
+    excerpt: resolveExcerpt(input.excerpt, input.content),
+    coverImage: input.coverImage,
+    category: cleanCategory(input.category),
+    tags: parseTags(input.tags),
+    readingTimeMinutes: readingTimeMinutes(input.content),
+    published: input.published,
+    scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+  };
 }
 
 export const server = {
@@ -72,26 +101,13 @@ export const server = {
   }),
   createPost: defineAction({
     accept: 'form',
-    input: z.object({
-      title: z.string().min(1),
-      content: z.string().min(1),
-      excerpt: z.string().optional(),
-      coverImage: z.string().optional(),
-      category: z.string().optional(),
-      tags: z.string().optional(),
-      published: z.string().transform((v) => v === 'true'),
-      scheduledAt: z.string().optional(),
-    }),
+    input: postFields,
     handler: async (input, context) => {
       requireAdminAction(context);
 
       // A title with no ASCII letters or digits slugifies to '', so fall back
       // to 'post'. posts.slug is unique: suffix -2, -3, ... on a clash.
-      const baseSlug =
-        input.title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)+/g, '') || 'post';
+      const baseSlug = slugify(input.title) || 'post';
       const taken = await db
         .select({ slug: posts.slug })
         .from(posts)
@@ -100,16 +116,8 @@ export const server = {
 
       await db.insert(posts).values({
         id: randomUUID(),
-        title: input.title,
         slug,
-        content: input.content,
-        excerpt: resolveExcerpt(input.excerpt, input.content),
-        coverImage: input.coverImage,
-        category: cleanCategory(input.category),
-        tags: parseTags(input.tags),
-        readingTimeMinutes: readingTimeMinutes(input.content),
-        published: input.published,
-        scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+        ...toPostValues(input),
       });
 
       return { success: true };
@@ -117,16 +125,11 @@ export const server = {
   }),
   updatePost: defineAction({
     accept: 'form',
+    // id first, then the shared fields: keeps the field order (and so the
+    // order of validation issues) the action has always had.
     input: z.object({
       id: z.string(),
-      title: z.string().min(1),
-      content: z.string().min(1),
-      excerpt: z.string().optional(),
-      coverImage: z.string().optional(),
-      category: z.string().optional(),
-      tags: z.string().optional(),
-      published: z.string().transform((v) => v === 'true'),
-      scheduledAt: z.string().optional(),
+      ...postFields.shape,
     }),
     handler: async (input, context) => {
       requireAdminAction(context);
@@ -136,15 +139,7 @@ export const server = {
       await db
         .update(posts)
         .set({
-          title: input.title,
-          content: input.content,
-          excerpt: resolveExcerpt(input.excerpt, input.content),
-          coverImage: input.coverImage,
-          category: cleanCategory(input.category),
-          tags: parseTags(input.tags),
-          readingTimeMinutes: readingTimeMinutes(input.content),
-          published: input.published,
-          scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+          ...toPostValues(input),
           updatedAt: new Date(),
         })
         .where(eq(posts.id, input.id));
