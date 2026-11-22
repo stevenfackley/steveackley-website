@@ -2,7 +2,8 @@
 import PublicLayout from '@/layouts/PublicLayout.astro';
 import BentoDashboard from '@/components/bento/BentoDashboard.astro';
 import { db, posts as postsTable } from '@/db';
-import { eq, desc } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
+import { isPublic } from '@/lib/posts';
 import { getCachedRepos, type EnrichedRepo } from '@/lib/github';
 import { getHomeContent, getFeaturedProjects } from '@/lib/content';
 import { personSchema } from '@/lib/seo';
@@ -20,7 +21,7 @@ const blogPostsPromise = db
     createdAt: postsTable.createdAt,
   })
   .from(postsTable)
-  .where(eq(postsTable.published, true))
+  .where(isPublic())
   .orderBy(desc(postsTable.createdAt))
   .limit(3);
 

@@ -7,6 +7,7 @@ import { Resvg } from '@resvg/resvg-js';
 import { db, posts as postsTable } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { formatDate } from '@/lib/utils';
+import { isPublic } from '@/lib/posts';
 
 const require = createRequire(import.meta.url);
 
@@ -32,7 +33,7 @@ export const GET: APIRoute = async ({ params }) => {
       readingTimeMinutes: postsTable.readingTimeMinutes,
     })
     .from(postsTable)
-    .where(and(eq(postsTable.slug, slug), eq(postsTable.published, true)))
+    .where(and(eq(postsTable.slug, slug), isPublic()))
     .limit(1);
 
   if (!post) return new Response(null, { status: 404 });

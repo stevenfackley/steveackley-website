@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db, posts as postsTable } from '@/db';
-import { eq, desc } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
+import { isPublic } from '@/lib/posts';
 
 const SITE = 'https://steveackley.org';
 
@@ -30,7 +31,7 @@ export const GET: APIRoute = async () => {
       updatedAt: postsTable.updatedAt,
     })
     .from(postsTable)
-    .where(eq(postsTable.published, true))
+    .where(isPublic())
     .orderBy(desc(postsTable.updatedAt));
 
   const staticEntries = STATIC_ROUTES.map(({ path, changefreq, priority }) => `  <url>

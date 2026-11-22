@@ -1,5 +1,6 @@
 import { count, desc, eq } from "drizzle-orm";
 import { clientApps, db, messages, posts, siteSettings, users } from "@/db";
+import { isPublic } from "@/lib/posts";
 
 export async function getAdminOverview() {
   const [
@@ -11,7 +12,7 @@ export async function getAdminOverview() {
     [messageCount],
   ] = await Promise.all([
     db.select({ value: count() }).from(posts),
-    db.select({ value: count() }).from(posts).where(eq(posts.published, true)),
+    db.select({ value: count() }).from(posts).where(isPublic()),
     db.select({ value: count() }).from(users),
     db.select({ value: count() }).from(users).where(eq(users.role, "CLIENT")),
     db.select({ value: count() }).from(clientApps),
