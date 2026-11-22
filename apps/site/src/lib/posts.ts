@@ -15,6 +15,14 @@ export function isPublicPost(post: { published: boolean }): boolean {
   return post.published;
 }
 
+/**
+ * A post's cover image, or null when it has none. A blank or whitespace-only
+ * value counts as none: the column can hold "" as well as NULL.
+ */
+export function coverImageOf(post: { coverImage?: string | null }): string | null {
+  return post.coverImage?.trim() ? post.coverImage : null;
+}
+
 type ReadingTimeFields = { readingTimeMinutes: number | null; content: string };
 
 /**

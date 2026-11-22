@@ -1,4 +1,5 @@
 import type { ResumeContent } from '@/content/types';
+import { coverImageOf } from '@/lib/posts';
 
 const SITE_ORIGIN = 'https://steveackley.org';
 
@@ -74,6 +75,14 @@ export function breadcrumbSchema(
   };
 }
 
+/**
+ * A post's social card: an uploaded cover wins, otherwise the generated
+ * /og/[slug].png. Absolute URL — og:image and BlogPosting.image require one.
+ */
+export function postSocialImage(post: { slug: string; coverImage?: string | null }): string {
+  return coverImageOf(post) ?? `${SITE_ORIGIN}/og/${post.slug}.png`;
+}
+
 export function blogPostingSchema(args: {
   title: string;
   slug: string;
@@ -84,7 +93,7 @@ export function blogPostingSchema(args: {
 }): Record<string, unknown> {
   const url = `${SITE_ORIGIN}/blog/${args.slug}`;
   // Match og:image — posts without a cover share the site-wide social card.
-  const image = args.coverImage ?? `${SITE_ORIGIN}/og-default.png`;
+  const image = coverImageOf(args) ?? `${SITE_ORIGIN}/og-default.png`;
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',

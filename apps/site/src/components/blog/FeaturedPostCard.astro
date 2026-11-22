@@ -1,5 +1,6 @@
 ---
 import { formatDate } from '@/lib/utils';
+import { coverImageOf } from '@/lib/posts';
 import type { PostSummary } from '@/types';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
+const cover = coverImageOf(post);
 ---
 
 <article
@@ -14,10 +16,10 @@ const { post } = Astro.props;
   class="group glass-card spotlight-card gradient-border rounded-3xl overflow-hidden card-glow"
 >
   <a href={`/blog/${post.slug}`} class="grid md:grid-cols-2">
-    {post.coverImage ? (
+    {cover ? (
       <div class="relative h-56 md:h-full min-h-56 overflow-hidden">
         <img
-          src={post.coverImage}
+          src={cover}
           alt={post.title}
           class="absolute inset-0 h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
         />

@@ -8,6 +8,7 @@ import {
   resumePersonSchema,
   breadcrumbSchema,
   blogPostingSchema,
+  postSocialImage,
 } from "@/lib/seo";
 import type { ResumeContent } from "@/content/types";
 
@@ -177,4 +178,47 @@ describe("blogPostingSchema", () => {
     });
     expect(result.description).toBe("Blank Excerpt");
   });
+
+  it.each(["", "   ", "\n\t"])(
+    "falls back to the site social card when the cover is blank (%j)",
+    (coverImage) => {
+      // A cover cleared outside the admin form can be stored as "", not NULL.
+      const result = blogPostingSchema({
+        title: "Blank Cover",
+        slug: "blank-cover",
+        coverImage,
+        createdAt,
+        updatedAt,
+      });
+      expect(result.image).toBe("https://steveackley.org/og-default.png");
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// postSocialImage
+// ---------------------------------------------------------------------------
+describe("postSocialImage", () => {
+  it("uses the post's cover when it has one", () => {
+    expect(postSocialImage({ slug: "my-post", coverImage: "https://cdn.example.com/cover.jpg" })).toBe(
+      "https://cdn.example.com/cover.jpg",
+    );
+  });
+
+  it("uses the generated per-post card when there is no cover", () => {
+    expect(postSocialImage({ slug: "my-post", coverImage: null })).toBe(
+      "https://steveackley.org/og/my-post.png",
+    );
+    expect(postSocialImage({ slug: "my-post" })).toBe("https://steveackley.org/og/my-post.png");
+  });
+
+  it.each(["", "   ", "\n\t"])(
+    "uses the generated per-post card when the cover is blank (%j)",
+    (coverImage) => {
+      // og:image and twitter:image must never be emitted empty.
+      expect(postSocialImage({ slug: "my-post", coverImage })).toBe(
+        "https://steveackley.org/og/my-post.png",
+      );
+    },
+  );
 });
