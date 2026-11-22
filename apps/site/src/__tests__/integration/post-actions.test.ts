@@ -138,6 +138,36 @@ describe("updatePost", () => {
   });
 });
 
+// Astro's form parser hands a blank optional field to the handler as
+// undefined, so that is how "no cover" arrives from the admin form. "" and
+// whitespace can only come from a hand-built request.
+describe("post cover image", () => {
+  const noCover = [undefined, "", "   "];
+
+  it.each(noCover)("createPost stores NULL when the cover is %j", async (coverImage) => {
+    await server.createPost.handler(postInput({ coverImage }) as any, adminContext);
+
+    expect(h.insertValues.mock.calls[0][0]).toHaveProperty("coverImage", null);
+  });
+
+  it.each(noCover)("updatePost clears the stored cover when the cover is %j", async (coverImage) => {
+    await server.updatePost.handler(postInput({ id: "p1", coverImage }) as any, adminContext);
+
+    // undefined would make Drizzle skip the column and keep the old cover.
+    expect(h.updateSet.mock.calls[0][0]).toHaveProperty("coverImage", null);
+  });
+
+  it("keeps a cover that is set, exactly as sent", async () => {
+    const coverImage = "https://cdn.example.com/cover.webp";
+
+    await server.createPost.handler(postInput({ coverImage }) as any, adminContext);
+    await server.updatePost.handler(postInput({ id: "p1", coverImage }) as any, adminContext);
+
+    expect(h.insertValues.mock.calls[0][0]).toHaveProperty("coverImage", coverImage);
+    expect(h.updateSet.mock.calls[0][0]).toHaveProperty("coverImage", coverImage);
+  });
+});
+
 // ── Characterization: the exact rows both actions write ─────────────────────
 
 const filledForm = {
@@ -166,7 +196,7 @@ const blankColumns = {
   title: "Hello World",
   content: postInput().content,
   excerpt: "Hello world and the rest of the body.",
-  coverImage: "",
+  coverImage: null,
   category: null,
   tags: null,
   readingTimeMinutes: 1,
@@ -196,7 +226,7 @@ describe("createPost row", () => {
     });
   });
 
-  it("leaves an absent cover image undefined so the column default applies", async () => {
+  it("writes NULL for an absent cover image", async () => {
     await server.createPost.handler(
       { title: "T", content: "<p>x</p>", published: false } as any,
       adminContext,
@@ -208,7 +238,7 @@ describe("createPost row", () => {
       title: "T",
       content: "<p>x</p>",
       excerpt: "x",
-      coverImage: undefined,
+      coverImage: null,
       category: null,
       tags: null,
       readingTimeMinutes: 1,

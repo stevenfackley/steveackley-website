@@ -7,6 +7,7 @@ import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
 import { readingTimeMinutes } from '@/lib/reading-time';
 import { requireAdminAction } from '@/lib/auth-guards';
+import { coverImageOf } from '@/lib/posts';
 import { ensureUniqueSlug, generateExcerpt, slugify } from '@/lib/utils';
 
 /** Parse a comma-separated tag string into a clean string[], or null if empty. */
@@ -50,7 +51,9 @@ function toPostValues(input: PostFields) {
     title: input.title,
     content: input.content,
     excerpt: resolveExcerpt(input.excerpt, input.content),
-    coverImage: input.coverImage,
+    // null, not undefined: Drizzle skips undefined on update, which would keep
+    // a cover the admin removed.
+    coverImage: coverImageOf(input),
     category: cleanCategory(input.category),
     tags: parseTags(input.tags),
     readingTimeMinutes: readingTimeMinutes(input.content),
