@@ -1,5 +1,6 @@
 ---
 import { cn, formatDateShort } from '@/lib/utils';
+import { coverImageOf } from '@/lib/posts';
 import type { PostSummary } from '@/types';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 const { post, class: className, delay } = Astro.props;
+const cover = coverImageOf(post);
 ---
 
 <article
@@ -17,9 +19,9 @@ const { post, class: className, delay } = Astro.props;
   class={cn('group glass-card spotlight-card card-glow rounded-2xl overflow-hidden', className)}
 >
   <a href={`/blog/${post.slug}`} class="block h-full">
-    {post.coverImage && (
+    {cover && (
       <div class="relative h-44 overflow-hidden">
-        <img src={post.coverImage} alt={post.title} loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={cover} alt={post.title} loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
       </div>
     )}
     <div class="p-5">

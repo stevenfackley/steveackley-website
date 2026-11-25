@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
-import { isPublic, isPublicPost, readMinutesOf, withReadMinutes } from "@/lib/posts";
+import { coverImageOf, isPublic, isPublicPost, readMinutesOf, withReadMinutes } from "@/lib/posts";
 
 const dialect = new PgDialect();
 
@@ -32,6 +32,23 @@ describe("readMinutesOf", () => {
   it("computes it from the body when none is stored", () => {
     expect(readMinutesOf({ readingTimeMinutes: null, content: body })).toBe(2);
     expect(readMinutesOf({ readingTimeMinutes: null, content: "" })).toBe(1);
+  });
+});
+
+describe("coverImageOf", () => {
+  it("returns a cover exactly as stored", () => {
+    expect(coverImageOf({ coverImage: "https://cdn.example.com/cover.webp" })).toBe(
+      "https://cdn.example.com/cover.webp",
+    );
+    expect(coverImageOf({ coverImage: " /uploads/cover.png " })).toBe(" /uploads/cover.png ");
+  });
+
+  it.each([null, undefined, "", "   ", "\n\t"])("is null when the cover is %j", (coverImage) => {
+    expect(coverImageOf({ coverImage })).toBeNull();
+  });
+
+  it("is null when the row carries no cover field", () => {
+    expect(coverImageOf({})).toBeNull();
   });
 });
 
