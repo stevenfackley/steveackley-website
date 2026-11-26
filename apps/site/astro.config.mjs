@@ -47,6 +47,13 @@ export default defineConfig({
     ssr: {
       noExternal: ['@tiptap/*', 'better-auth', /^better-auth\/.*/],
     },
+    build: {
+      // Vite writes any asset under 4 KB into the CSS as a base64 data: URI. Six JetBrains
+      // Mono subset files are that small, and the policy in src/middleware.ts is
+      // font-src 'self', so the browser refused each one on every page. Keep fonts as files.
+      // Returning nothing leaves every other asset on the default rule.
+      assetsInlineLimit: (filePath) => (/\.(woff2?|ttf|otf|eot)$/i.test(filePath) ? false : undefined),
+    },
     server: {
       headers: {
         // Allow 'unsafe-eval' in dev mode — Vite 8's module transform pipeline

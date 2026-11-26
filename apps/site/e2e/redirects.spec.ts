@@ -61,4 +61,20 @@ test.describe("Security headers", () => {
     const csp = res?.headers()["content-security-policy"];
     expect(csp).toBeTruthy();
   });
+
+  // The browser reports a refused asset only in the console, so listen there. A production
+  // build can turn a small file into a data: URI that the policy does not allow; `astro dev`
+  // never inlines, so this can only fail against a built site, which is how CI runs it.
+  for (const path of ["/", "/blog", "/resume"]) {
+    test(`the policy refuses nothing that ${path} loads`, async ({ page }) => {
+      const refused: string[] = [];
+      page.on("console", (msg) => {
+        if (msg.type() === "error" && msg.text().includes("Content Security Policy")) {
+          refused.push(msg.text().slice(0, 160));
+        }
+      });
+      await page.goto(path, { waitUntil: "load" });
+      expect(refused).toEqual([]);
+    });
+  }
 });
