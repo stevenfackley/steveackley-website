@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { canUseClientPortal, isAdmin } from "@/lib/roles";
 import { withRequestId } from "@shared/lib/logger";
+import type { APIContext, MiddlewareNext } from "astro";
 import { defineMiddleware } from "astro:middleware";
 import { randomUUID } from "node:crypto";
 
@@ -94,13 +95,15 @@ function getClientIp(request: Request): string {
 }
 // ── End Rate Limiter ────────────────────────────────────────
 
-export const onRequest = defineMiddleware(async (context, next) => {
-  const requestId =
-    context.request.headers.get("x-request-id") ?? randomUUID();
-  const reqLogger = withRequestId(requestId);
-
-  const url = new URL(context.request.url);
-
+// Everything the site does with a request. It can return before a page renders (a redirect,
+// a rate-limit refusal) and it can throw, so the headers every response needs are set by
+// its caller, onRequest.
+async function handle(
+  context: APIContext,
+  next: MiddlewareNext,
+  url: URL,
+  reqLogger: ReturnType<typeof withRequestId>,
+): Promise<Response> {
   // ── Canonical-URL redirects ─────────────────────────────────
   // The Cloudflare tunnel routes www.* to this same origin, and Astro serves
   // both /path and /path/ — each self-canonicalizing. 301 both duplicates to
@@ -136,7 +139,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
         headers: {
           "Content-Type": "application/json",
           "Retry-After": "60",
-          "X-Request-Id": requestId,
         },
       });
     }
@@ -174,11 +176,45 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // ────────────────────────────────────────────────────────────
 
   const response = await next();
+  if (!response.headers.has('Cache-Control')) {
+    // A server error is never worth caching, whatever path it is on.
+    response.headers.set(
+      'Cache-Control',
+      response.status >= 500 ? 'no-store' : cacheControlFor(url.pathname),
+    );
+  }
+  return response;
+}
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  const requestId =
+    context.request.headers.get("x-request-id") ?? randomUUID();
+  const reqLogger = withRequestId(requestId);
+
+  const url = new URL(context.request.url);
+
+  let response: Response;
+  try {
+    response = await handle(context, next, url, reqLogger);
+  } catch (error) {
+    // The dev server shows a thrown error in its overlay, so let it through there.
+    if (import.meta.env.DEV) throw error;
+
+    reqLogger.error(
+      "request failed",
+      error instanceof Error ? error : new Error(String(error)),
+      { method: context.request.method, path: url.pathname },
+    );
+    // An error Astro catches itself gets none of the headers below. It keeps the headers of
+    // a 500 that has no body, and renders src/pages/500.astro into it.
+    response = new Response(null, {
+      status: 500,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   response.headers.set('Content-Security-Policy', CSP);
   response.headers.set('X-Request-Id', requestId);
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  if (!response.headers.has('Cache-Control')) {
-    response.headers.set('Cache-Control', cacheControlFor(url.pathname));
-  }
   return response;
 });

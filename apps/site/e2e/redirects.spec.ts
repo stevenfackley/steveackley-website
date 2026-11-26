@@ -1,4 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { createServer, type AddressInfo } from "node:net";
+import { fileURLToPath } from "node:url";
 
 /**
  * The middleware redirects unauthenticated /admin/* and /client/* requests
@@ -77,4 +81,74 @@ test.describe("Security headers", () => {
       expect(refused).toEqual([]);
     });
   }
+
+  test("a redirect carries the headers too", async ({ request }) => {
+    const res = await request.get("/admin", { maxRedirects: 0, failOnStatusCode: false });
+    expect(res.status()).toBe(302);
+    expect(res.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(res.headers()["strict-transport-security"]).toBeTruthy();
+  });
+
+  // The middleware answers a failed page with an empty 500 and relies on Astro to keep that
+  // response's headers while it renders the 500 page into it. Only a real failure in a built
+  // server shows whether it still does, so start a second copy of the site whose database
+  // cannot be reached and ask it for a page that reads from the database.
+  test("a page that fails shows the 500 page and still carries the headers", async ({ request }, testInfo) => {
+    const entry = fileURLToPath(new URL("../dist/server/entry.mjs", import.meta.url));
+    // CI always has a build, so there a missing one fails the test instead of skipping it.
+    test.skip(
+      !process.env.CI && !existsSync(entry),
+      "needs a production build; `astro dev` shows its error overlay instead",
+    );
+
+    const port = await freePort();
+    const origin = `http://127.0.0.1:${port}`;
+    const server = spawn(process.execPath, [entry], {
+      env: {
+        BETTER_AUTH_SECRET: "e2e-secret-not-for-production-0000000000",
+        ...process.env,
+        // Nothing listens on port 1, so every query is refused at once.
+        DATABASE_URL: "postgres://127.0.0.1:1/unreachable",
+        BETTER_AUTH_URL: origin,
+        NODE_ENV: "production",
+        HOST: "127.0.0.1",
+        PORT: String(port),
+      },
+    });
+    let output = "";
+    server.stdout.on("data", (chunk) => (output += chunk));
+    server.stderr.on("data", (chunk) => (output += chunk));
+
+    try {
+      await expect
+        .poll(() => request.get(`${origin}/api/health`).then((r) => r.status(), () => 0), {
+          message: "the second server never answered",
+          timeout: 20_000,
+        })
+        .toBeGreaterThan(0);
+
+      const res = await request.get(`${origin}/blog`, { failOnStatusCode: false });
+      expect(res.status()).toBe(500);
+      expect(res.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+      expect(res.headers()["strict-transport-security"]).toBeTruthy();
+      expect(res.headers()["x-request-id"]).toBeTruthy();
+      expect(res.headers()["cache-control"]).toBe("no-store");
+      expect(res.headers()["content-type"]).toContain("text/html");
+      expect(await res.text()).toContain("This page failed to load");
+    } finally {
+      server.kill();
+      await testInfo.attach("second server output", { body: output, contentType: "text/plain" });
+    }
+  });
 });
+
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const { port } = probe.address() as AddressInfo;
+      probe.close(() => resolve(port));
+    });
+  });
+}
