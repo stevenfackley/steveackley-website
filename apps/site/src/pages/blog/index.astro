@@ -4,14 +4,14 @@ import PostList from '@/components/blog/PostList.astro';
 import Pagination from '@/components/blog/Pagination.astro';
 import { db, posts as postsTable } from '@/db';
 import { desc, count } from 'drizzle-orm';
+import { pageExists, requestedPage } from '@/lib/pagination';
 import { isPublic, withReadMinutes } from '@/lib/posts';
 import type { PaginationInfo } from '@/types';
 
 const SITE_ORIGIN = 'https://steveackley.org';
 
 const PER_PAGE = 10;
-const page = Number(Astro.url.searchParams.get('page') ?? '1');
-const currentPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+const currentPage = requestedPage(Astro.url.searchParams.get('page'));
 
 // Get total count of published posts
 const [totalCountResult] = await db
@@ -21,6 +21,12 @@ const [totalCountResult] = await db
 
 const totalItems = totalCountResult?.value || 0;
 const totalPages = Math.ceil(totalItems / PER_PAGE);
+
+// A page past the last one is not a page. Without this, ?page= with a large enough number
+// reached the query below as an offset Postgres rejects, and the request failed with a 500.
+if (!pageExists(currentPage, totalPages)) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
 
 // Get paginated posts
 const rows = await db

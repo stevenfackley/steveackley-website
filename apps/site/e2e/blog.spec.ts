@@ -13,6 +13,22 @@ test.describe("Blog", () => {
       await expect(page.getByText(/No posts found/i)).toBeVisible();
     });
 
+    // The second number used to reach Postgres as an offset it cannot hold, which failed
+    // the request with a 500. The test database has no posts, so page 1 is the only page.
+    for (const number of ["2", "99999999999999999999"]) {
+      test(`?page=${number} is past the last page, so it is a 404`, async ({ page }) => {
+        const res = await page.goto(`/blog?page=${number}`);
+        expect(res?.status()).toBe(404);
+        await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
+      });
+    }
+
+    test("a ?page= that is not a number shows the first page", async ({ page }) => {
+      const res = await page.goto("/blog?page=abc");
+      expect(res?.status()).toBe(200);
+      await expect(page.getByRole("heading", { name: "Blog" })).toBeVisible();
+    });
+
     test("blog page title is correct", async ({ page }) => {
       await page.goto("/blog");
       await expect(page).toHaveTitle(/blog/i);
