@@ -1,0 +1,44 @@
+---
+// Rendered by Astro when a request fails. The middleware has already logged the error and
+// set the response headers, so this page only has to tell the visitor what happened. It
+// reads nothing from the database, because a database outage is the likeliest reason it is
+// shown. The error Astro passes in is not displayed on purpose.
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="500 - Server Error" description="This page failed to load" noindex={true}>
+  <div class="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-lg w-full text-center">
+      <h1 class="font-display gradient-text-animated animate-float-slow text-[8rem] sm:text-[10rem] font-extrabold leading-none select-none">
+        500
+      </h1>
+      <div class="glass-card spotlight-card rounded-3xl p-8 -mt-6">
+        <h2 class="font-display text-2xl sm:text-3xl font-bold text-[var(--text-primary)]">
+          This page failed to load
+        </h2>
+        <p class="mt-3 text-sm text-[var(--text-secondary)] leading-relaxed">
+          The server hit an error while building it. The error is logged, and trying again in a minute usually works.
+        </p>
+        <p class="mt-2 font-mono text-xs text-[var(--text-muted)]">
+          HTTP 500 · server error
+        </p>
+        <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <!-- An empty href points at the address already in the bar, so nothing from the request is echoed into the page. -->
+          <a
+            href=""
+            class="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_var(--accent-glow)]"
+            style="background: linear-gradient(135deg, var(--gradient-start), var(--gradient-mid));"
+          >
+            Try Again
+          </a>
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold glass-card text-[var(--text-primary)] transition-all duration-200 hover:-translate-y-0.5"
+          >
+            Return Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

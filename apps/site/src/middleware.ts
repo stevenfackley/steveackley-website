@@ -177,7 +177,11 @@ async function handle(
 
   const response = await next();
   if (!response.headers.has('Cache-Control')) {
-    response.headers.set('Cache-Control', cacheControlFor(url.pathname));
+    // A server error is never worth caching, whatever path it is on.
+    response.headers.set(
+      'Cache-Control',
+      response.status >= 500 ? 'no-store' : cacheControlFor(url.pathname),
+    );
   }
   return response;
 }
@@ -201,9 +205,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       error instanceof Error ? error : new Error(String(error)),
       { method: context.request.method, path: url.pathname },
     );
-    // Astro answers an error it catches itself with a bare 500 that has no headers at all.
-    // It keeps the headers of a 500 that has no body, and still renders src/pages/500.astro
-    // into it if that page is ever added.
+    // An error Astro catches itself gets none of the headers below. It keeps the headers of
+    // a 500 that has no body, and renders src/pages/500.astro into it.
     response = new Response(null, {
       status: 500,
       headers: { "Cache-Control": "no-store" },

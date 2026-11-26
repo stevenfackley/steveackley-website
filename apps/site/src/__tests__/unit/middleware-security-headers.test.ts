@@ -84,6 +84,15 @@ describe("middleware security headers", () => {
     });
   });
 
+  // Astro renders the 500 page through the middleware as well. That response is an error
+  // too, whatever path it is on, and must not be cached.
+  it("come with no-store on any server error a page returns", async () => {
+    const response = await run("/blog", async () => new Response("failed", { status: 500 }));
+    expect(response.status).toBe(500);
+    expectSecurityHeaders(response);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+  });
+
   it("are on the 500 when the session lookup threw", async () => {
     mockGetSession.mockRejectedValue(new Error("database is down"));
     const next = vi.fn(rendered);

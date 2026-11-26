@@ -90,10 +90,10 @@ test.describe("Security headers", () => {
   });
 
   // The middleware answers a failed page with an empty 500 and relies on Astro to keep that
-  // response's headers. Only a real failure in a built server shows whether it still does, so
-  // start a second copy of the site whose database cannot be reached and ask it for a page
-  // that reads from the database.
-  test("a page that fails still carries the headers", async ({ request }, testInfo) => {
+  // response's headers while it renders the 500 page into it. Only a real failure in a built
+  // server shows whether it still does, so start a second copy of the site whose database
+  // cannot be reached and ask it for a page that reads from the database.
+  test("a page that fails shows the 500 page and still carries the headers", async ({ request }, testInfo) => {
     const entry = fileURLToPath(new URL("../dist/server/entry.mjs", import.meta.url));
     // CI always has a build, so there a missing one fails the test instead of skipping it.
     test.skip(
@@ -133,6 +133,8 @@ test.describe("Security headers", () => {
       expect(res.headers()["strict-transport-security"]).toBeTruthy();
       expect(res.headers()["x-request-id"]).toBeTruthy();
       expect(res.headers()["cache-control"]).toBe("no-store");
+      expect(res.headers()["content-type"]).toContain("text/html");
+      expect(await res.text()).toContain("This page failed to load");
     } finally {
       server.kill();
       await testInfo.attach("second server output", { body: output, contentType: "text/plain" });
