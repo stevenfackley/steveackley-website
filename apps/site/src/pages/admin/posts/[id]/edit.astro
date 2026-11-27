@@ -34,7 +34,7 @@ if (!post) {
         category: post.category,
         tags: post.tags,
         published: post.published,
-        scheduledAt: pendingScheduleOf(post, new Date()),
+        scheduledAt: pendingScheduleOf(post),
       }}
       client:load
     />

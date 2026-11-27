@@ -30,17 +30,11 @@ export const POST_STATUS_LABEL: Record<PostStatus, string> = {
 /**
  * The schedule time still in force for a post, or null.
  *
- * Once a post is published and its schedule time has passed, the time is used
- * up. The edit form must not start with it: saved again on a post switched
- * back to draft, it would make the cron route publish the post at its next
- * run. A time still ahead is kept, so a post published early by hand can go
- * back to waiting for it.
+ * A published post has none: whatever time the row still holds has done its
+ * work, or was overtaken by a publish by hand. The edit form must not start
+ * with it. Saved again on a post switched back to draft, a time that has
+ * passed would make the cron route publish the post at its next run.
  */
-export function pendingScheduleOf(
-  post: { published: boolean; scheduledAt?: Date | null },
-  now: Date,
-): Date | null {
-  const at = post.scheduledAt ?? null;
-  if (!at) return null;
-  return post.published && at.getTime() <= now.getTime() ? null : at;
+export function pendingScheduleOf(post: { published: boolean; scheduledAt?: Date | null }): Date | null {
+  return post.published ? null : post.scheduledAt ?? null;
 }

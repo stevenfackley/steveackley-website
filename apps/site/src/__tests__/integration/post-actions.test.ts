@@ -311,35 +311,19 @@ describe("togglePublished", () => {
     expect(render(h.updateWhere.mock.calls[0][0])).toEqual({ sql: '"Post"."id" = $1', params: ["p1"] });
   });
 
-  it("unpublishing first clears a schedule time that has passed, then unpublishes", async () => {
+  it("unpublishing clears the schedule time in the same update", async () => {
     // Left in place, a passed time would make the cron route publish the post
-    // again at its next run.
+    // again at its next run. One statement: the post is never both
+    // unpublished and due.
     await server.togglePublished.handler({ id: "p1", published: false }, adminContext);
 
-    expect(h.updateSet).toHaveBeenCalledTimes(2);
-
-    expect(h.updateSet.mock.calls[0][0]).toStrictEqual({ scheduledAt: null });
-    const clear = render(h.updateWhere.mock.calls[0][0]);
-    expect(clear.sql).toBe('("Post"."id" = $1 and "Post"."scheduledAt" <= $2)');
-    expect(clear.params[0]).toBe("p1");
-
-    const unpublish = h.updateSet.mock.calls[1][0] as { published: boolean; updatedAt: Date };
-    expect(unpublish).toStrictEqual({ published: false, updatedAt: expect.any(Date) });
-    expect(render(h.updateWhere.mock.calls[1][0])).toEqual({ sql: '"Post"."id" = $1', params: ["p1"] });
-
-    // "Passed" is judged against the same instant the row is stamped with.
-    expect(new Date(clear.params[1] as string).getTime()).toBe(unpublish.updatedAt.getTime());
-  });
-
-  it("does not unpublish when clearing the schedule time fails", async () => {
-    h.updateWhere.mockRejectedValueOnce(new Error("db down"));
-
-    await expect(
-      server.togglePublished.handler({ id: "p1", published: false }, adminContext),
-    ).rejects.toThrow("db down");
-
     expect(h.updateSet).toHaveBeenCalledTimes(1);
-    expect(h.updateSet.mock.calls[0][0]).toStrictEqual({ scheduledAt: null });
+    expect(h.updateSet.mock.calls[0][0]).toStrictEqual({
+      published: false,
+      scheduledAt: null,
+      updatedAt: expect.any(Date),
+    });
+    expect(render(h.updateWhere.mock.calls[0][0])).toEqual({ sql: '"Post"."id" = $1', params: ["p1"] });
   });
 
   it("rejects a non-admin before touching the database", async () => {

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { POST_STATUS_LABEL, pendingScheduleOf, postStatus } from "@/lib/post-status";
 
 const past = new Date("2026-01-01T09:00:00Z");
-const now = new Date("2026-06-01T12:00:00Z");
 const future = new Date("2099-01-01T09:00:00Z");
 
 describe("postStatus", () => {
@@ -42,24 +41,21 @@ describe("POST_STATUS_LABEL", () => {
 
 describe("pendingScheduleOf", () => {
   it("keeps the time of a post that is still waiting for it", () => {
-    expect(pendingScheduleOf({ published: false, scheduledAt: future }, now)).toBe(future);
+    expect(pendingScheduleOf({ published: false, scheduledAt: future })).toBe(future);
   });
 
   it("keeps a passed time on an unpublished post: the cron has not run yet", () => {
-    expect(pendingScheduleOf({ published: false, scheduledAt: past }, now)).toBe(past);
+    expect(pendingScheduleOf({ published: false, scheduledAt: past })).toBe(past);
   });
 
-  it("drops a passed time once the post is published: it is used up", () => {
-    expect(pendingScheduleOf({ published: true, scheduledAt: past }, now)).toBeNull();
-    expect(pendingScheduleOf({ published: true, scheduledAt: now }, now)).toBeNull();
-  });
-
-  it("keeps a time still ahead on a post published early by hand", () => {
-    expect(pendingScheduleOf({ published: true, scheduledAt: future }, now)).toBe(future);
+  it("is null for a published post, whatever time the row still holds", () => {
+    expect(pendingScheduleOf({ published: true, scheduledAt: past })).toBeNull();
+    expect(pendingScheduleOf({ published: true, scheduledAt: future })).toBeNull();
   });
 
   it("is null when there is no schedule time", () => {
-    expect(pendingScheduleOf({ published: false, scheduledAt: null }, now)).toBeNull();
-    expect(pendingScheduleOf({ published: true }, now)).toBeNull();
+    expect(pendingScheduleOf({ published: false, scheduledAt: null })).toBeNull();
+    expect(pendingScheduleOf({ published: false })).toBeNull();
+    expect(pendingScheduleOf({ published: true })).toBeNull();
   });
 });

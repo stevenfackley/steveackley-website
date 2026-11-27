@@ -142,6 +142,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               role="switch"
               aria-checked={published}
               aria-label="Published"
+              aria-describedby="post-status-text"
               onClick={() => setPublished(!published)}
               className="flex items-center gap-3 cursor-pointer border-0 bg-transparent p-0 text-left"
             >
@@ -150,7 +151,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               >
                 <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${published ? "translate-x-4" : "translate-x-0.5"}`} />
               </span>
-              <span className="text-sm text-[var(--text-secondary)]">{POST_STATUS_LABEL[status]}</span>
+              <span id="post-status-text" className="text-sm text-[var(--text-secondary)]">{POST_STATUS_LABEL[status]}</span>
             </button>
 
             <div>
@@ -164,7 +165,9 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               />
               {scheduledAt && status === "scheduled" && (
                 <p className="text-xs text-[var(--text-muted)] mt-1.5">
-                  Will auto-publish on {new Date(scheduledAt).toLocaleString()}
+                  {new Date(scheduledAt).getTime() <= Date.now()
+                    ? "This time has passed. The post is published when the scheduler next runs."
+                    : `Will auto-publish on ${new Date(scheduledAt).toLocaleString()}`}
                 </p>
               )}
             </div>
