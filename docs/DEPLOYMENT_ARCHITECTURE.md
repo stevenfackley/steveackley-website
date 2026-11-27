@@ -71,15 +71,17 @@ Server-side secrets that exist only at run time must be read with `process.env`.
 
 ## GitHub Token And The Homepage's Repo List
 
-The homepage lists repositories from GitHub (`lib/github.ts`). `GH_API_TOKEN` is read at run time, like `CRON_SECRET`, and the same build check covers the read. Until 2026-11-27 it was read through `import.meta.env`, so production never used the token the deploy provides.
+The homepage lists repositories from GitHub (`lib/github.ts`). `GH_API_TOKEN` is read at run time, like `CRON_SECRET`, and the same build check covers the read.
 
-Without a token the site asks GitHub for the public list, at the anonymous rate limit. **With a token it asks for every repository the token's owner owns that the token can read, private ones included, and shows them on the public homepage with a "Private" badge.** The same list is served as JSON at `/api/github/repos`. For each listed repository that makes public: its name, description, language, topics, the badge lines of its README and when it was last pushed. Its link leads to a GitHub 404 for visitors.
+- **No token:** the public list, at the anonymous rate limit. This is production today (no `GH_API_TOKEN` secret exists).
+- **A fine-grained personal access token** (it starts with `github_pat_`): the public list, plus every private repository that token was given access to, shown on the public homepage with a "Private" badge. The same list is served as JSON at `/api/github/repos`. For each listed private repository that makes public: its name, description, language, topics, the badge lines of its README and when it was last pushed. Its link leads to a GitHub 404 for visitors.
+- **Any other token** (a classic `ghp_` token, an OAuth token): the public list only. The token still authenticates the calls, which raises the rate limit, and the server logs once that private repositories are not listed. A classic token with the `repo` scope can read every private repository the account owns, so it is never allowed to decide what the public homepage shows.
 
-Today no `GH_API_TOKEN` repository secret exists, so nothing has changed in production. Before adding one:
+So the list of private repositories on the homepage is exactly the list chosen when the fine-grained token was created ("Only select repositories"). To add or remove one, edit the token's repository access; no deploy is needed (the list is cached for 30 seconds).
 
-1. Decide which private repositories may be shown. **The token's own reach is the control.** A fine-grained personal access token limited to chosen repositories lists only those. A classic token with the `repo` scope lists everything the account owns.
-2. Forks, archived repositories, templates and infrastructure repositories are dropped by the filters in `lib/github.ts`. The fixed skip list there matches by name, so a repository that was renamed after the list was written is no longer matched. Check that list against the account's current private repositories, or rely on the token's reach.
-3. Add the secret, then run the deploy workflow on `main`. The CI end-to-end job also receives the secret and renders the homepage with it.
+Forks, archived repositories, templates and infrastructure repositories are dropped by the filters in `lib/github.ts` in every case. The fixed skip list there matches by name, so a repository renamed after the list was written is no longer matched; with a fine-grained token that no longer matters, because the token's access is the control.
+
+To turn it on: create the fine-grained token (repository access: only the repositories to show; permissions: Contents read and Metadata read), add it as the repository secret `GH_API_TOKEN`, then run the deploy workflow on `main`. The CI end-to-end job also receives the secret and renders the homepage with it.
 
 ## Data Persistence
 
