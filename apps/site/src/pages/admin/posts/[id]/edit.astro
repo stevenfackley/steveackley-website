@@ -5,6 +5,7 @@ import { db, posts as postsTable } from '@/db';
 import { eq } from 'drizzle-orm';
 import { requireAdminPage } from '@/lib/auth-guards';
 import { coverImageOf } from '@/lib/posts';
+import { pendingScheduleOf } from '@/lib/post-status';
 
 const guard = requireAdminPage(Astro);
 if (guard) return guard;
@@ -33,7 +34,7 @@ if (!post) {
         category: post.category,
         tags: post.tags,
         published: post.published,
-        scheduledAt: post.scheduledAt,
+        scheduledAt: pendingScheduleOf(post),
       }}
       client:load
     />

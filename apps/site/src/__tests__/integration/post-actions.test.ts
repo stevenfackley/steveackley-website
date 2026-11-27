@@ -302,6 +302,39 @@ describe("updatePost row", () => {
   });
 });
 
+describe("togglePublished", () => {
+  it("publishes with one update, keyed by id, and leaves the schedule time alone", async () => {
+    await server.togglePublished.handler({ id: "p1", published: true }, adminContext);
+
+    expect(h.updateSet).toHaveBeenCalledTimes(1);
+    expect(h.updateSet.mock.calls[0][0]).toStrictEqual({ published: true, updatedAt: expect.any(Date) });
+    expect(render(h.updateWhere.mock.calls[0][0])).toEqual({ sql: '"Post"."id" = $1', params: ["p1"] });
+  });
+
+  it("unpublishing clears the schedule time in the same update", async () => {
+    // Left in place, a passed time would make the cron route publish the post
+    // again at its next run. One statement: the post is never both
+    // unpublished and due.
+    await server.togglePublished.handler({ id: "p1", published: false }, adminContext);
+
+    expect(h.updateSet).toHaveBeenCalledTimes(1);
+    expect(h.updateSet.mock.calls[0][0]).toStrictEqual({
+      published: false,
+      scheduledAt: null,
+      updatedAt: expect.any(Date),
+    });
+    expect(render(h.updateWhere.mock.calls[0][0])).toEqual({ sql: '"Post"."id" = $1', params: ["p1"] });
+  });
+
+  it("rejects a non-admin before touching the database", async () => {
+    await expect(
+      server.togglePublished.handler({ id: "p1", published: false }, clientContext),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+
+    expect(h.update).not.toHaveBeenCalled();
+  });
+});
+
 describe("post action guards", () => {
   it.each(["createPost", "updatePost"] as const)(
     "%s rejects a non-admin before touching the database",

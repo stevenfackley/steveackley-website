@@ -105,3 +105,90 @@ describe("PostForm schedule time", () => {
     expect(fd.get("scheduledAt")).toBe("");
   });
 });
+
+describe("PostForm status", () => {
+  const publishSwitch = () => screen.getByRole("switch", { name: "Published" });
+  const submitButton = () => screen.getByRole("button", { name: /^Save/ });
+  const hint = () => screen.queryByText(/^Will auto-publish on/);
+  const passedHint = () => screen.queryByText(/^This time has passed/);
+
+  it("says Draft for an unpublished post with no schedule time", () => {
+    render(<PostForm mode="create" defaultValues={{ title: "T", content: "<p>c</p>" }} />);
+
+    expect(publishSwitch()).toHaveTextContent("Draft");
+    expect(publishSwitch()).toHaveAccessibleDescription("Draft");
+    expect(submitButton()).toHaveTextContent("Save Draft");
+    expect(hint()).not.toBeInTheDocument();
+  });
+
+  it("tells a screen reader the status, not only the switch's name", () => {
+    render(<PostForm mode="create" defaultValues={{ title: "T", content: "<p>c</p>" }} />);
+
+    fireEvent.change(screen.getByLabelText("Schedule Publish"), { target: { value: "2099-12-01T09:00" } });
+    expect(publishSwitch()).toHaveAccessibleDescription("Scheduled");
+
+    fireEvent.click(publishSwitch());
+    expect(publishSwitch()).toHaveAccessibleDescription("Published");
+  });
+
+  it("says so when the schedule time has already passed", () => {
+    render(<PostForm mode="create" defaultValues={{ title: "T", content: "<p>c</p>" }} />);
+
+    fireEvent.change(screen.getByLabelText("Schedule Publish"), { target: { value: "2020-01-01T09:00" } });
+
+    expect(publishSwitch()).toHaveTextContent("Scheduled");
+    expect(passedHint()).toBeInTheDocument();
+    expect(hint()).not.toBeInTheDocument();
+  });
+
+  it("says Scheduled for an unpublished post with a stored schedule time", async () => {
+    render(
+      <PostForm
+        mode="update"
+        postId="p1"
+        defaultValues={{ title: "T", content: "<p>c</p>", published: false, scheduledAt: new Date("2099-12-01T14:00:00Z") }}
+      />,
+    );
+    await waitFor(() => expect(screen.getByLabelText("Schedule Publish")).not.toHaveValue(""));
+
+    expect(publishSwitch()).toHaveTextContent("Scheduled");
+    expect(submitButton()).toHaveTextContent("Save & Schedule");
+    expect(hint()).toBeInTheDocument();
+  });
+
+  it("goes from Draft to Scheduled when a time is typed, and back when it is cleared", () => {
+    render(<PostForm mode="create" defaultValues={{ title: "T", content: "<p>c</p>" }} />);
+    const field = screen.getByLabelText("Schedule Publish");
+
+    fireEvent.change(field, { target: { value: "2099-12-01T09:00" } });
+    expect(publishSwitch()).toHaveTextContent("Scheduled");
+    expect(submitButton()).toHaveTextContent("Save & Schedule");
+    expect(hint()).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "" } });
+    expect(publishSwitch()).toHaveTextContent("Draft");
+    expect(submitButton()).toHaveTextContent("Save Draft");
+    expect(hint()).not.toBeInTheDocument();
+  });
+
+  it("says Published, and promises no later publish, when the switch is on", async () => {
+    render(
+      <PostForm
+        mode="update"
+        postId="p1"
+        defaultValues={{ title: "T", content: "<p>c</p>", published: true, scheduledAt: new Date("2099-12-01T14:00:00Z") }}
+      />,
+    );
+    await waitFor(() => expect(screen.getByLabelText("Schedule Publish")).not.toHaveValue(""));
+
+    expect(publishSwitch()).toHaveTextContent("Published");
+    expect(submitButton()).toHaveTextContent("Save & Publish");
+    expect(hint()).not.toBeInTheDocument();
+
+    // Switched off with the time still in the field: the form says what a save will do.
+    fireEvent.click(publishSwitch());
+    expect(publishSwitch()).toHaveTextContent("Scheduled");
+    expect(submitButton()).toHaveTextContent("Save & Schedule");
+    expect(hint()).toBeInTheDocument();
+  });
+});

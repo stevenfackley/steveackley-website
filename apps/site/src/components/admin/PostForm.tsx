@@ -3,6 +3,9 @@ import { useState, useTransition, useEffect, lazy, Suspense } from "react";
 import { actions } from "astro:actions";
 import { ImageUploadButton } from "./ImageUploadButton";
 import { Button } from "@/components/ui/button";
+import { POST_STATUS_LABEL, postStatus } from "@/lib/post-status";
+
+const SUBMIT_LABEL = { published: "Save & Publish", scheduled: "Save & Schedule", draft: "Save Draft" } as const;
 
 // PostEditor is dynamic to avoid SSR issues with Tiptap
 const PostEditor = lazy(() => import("./PostEditor").then(m => ({ default: m.PostEditor })));
@@ -50,6 +53,12 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
       setScheduledAt(toLocalDateTimeInput(new Date(defaultValues.scheduledAt)));
     }
   }, []);
+
+  // What saving the form as it stands will do. Before mount the schedule field
+  // is still empty (it is filled above, in the browser's zone), so the first
+  // render reads the stored time.
+  const scheduleForStatus = isMounted ? scheduledAt : defaultValues.scheduledAt ?? null;
+  const status = postStatus({ published, scheduledAt: scheduleForStatus || null });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +142,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               role="switch"
               aria-checked={published}
               aria-label="Published"
+              aria-describedby="post-status-text"
               onClick={() => setPublished(!published)}
               className="flex items-center gap-3 cursor-pointer border-0 bg-transparent p-0 text-left"
             >
@@ -141,7 +151,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               >
                 <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${published ? "translate-x-4" : "translate-x-0.5"}`} />
               </span>
-              <span className="text-sm text-[var(--text-secondary)]">{published ? "Published" : "Draft"}</span>
+              <span id="post-status-text" className="text-sm text-[var(--text-secondary)]">{POST_STATUS_LABEL[status]}</span>
             </button>
 
             <div>
@@ -153,9 +163,11 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
                 onChange={(e) => setScheduledAt(e.target.value)}
                 className={inp}
               />
-              {scheduledAt && (
+              {scheduledAt && status === "scheduled" && (
                 <p className="text-xs text-[var(--text-muted)] mt-1.5">
-                  Will auto-publish on {new Date(scheduledAt).toLocaleString()}
+                  {new Date(scheduledAt).getTime() <= Date.now()
+                    ? "This time has passed. The post is published when the scheduler next runs."
+                    : `Will auto-publish on ${new Date(scheduledAt).toLocaleString()}`}
                 </p>
               )}
             </div>
@@ -216,7 +228,7 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
 
       <div className="flex items-center gap-3 pt-2">
         <Button type="submit" variant="default" disabled={isPending}>
-          {published ? "Save & Publish" : "Save Draft"}
+          {SUBMIT_LABEL[status]}
         </Button>
         <Button type="button" variant="secondary" onClick={() => window.history.back()}>
           Cancel

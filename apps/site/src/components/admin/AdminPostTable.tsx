@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDateShort } from "@/lib/utils";
+import { POST_STATUS_LABEL, postStatus } from "@/lib/post-status";
 import { actions } from "astro:actions";
 import type { PostSummary } from "@/types";
 
@@ -49,9 +50,12 @@ function ActionErrorText({ error }: { error: string | null }) {
   return <p role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{error}</p>;
 }
 
+const STATUS_BADGE_VARIANT = { published: "default", scheduled: "outline", draft: "secondary" } as const;
+
 /** The post's status pill, shared by the table row and the mobile card. */
-function PostStatusBadge({ post }: { post: Pick<PostSummary, "published"> }) {
-  return <Badge variant={post.published ? "default" : "secondary"}>{post.published ? "Published" : "Draft"}</Badge>;
+function PostStatusBadge({ post }: { post: Pick<PostSummary, "published" | "scheduledAt"> }) {
+  const status = postStatus(post);
+  return <Badge variant={STATUS_BADGE_VARIANT[status]}>{POST_STATUS_LABEL[status]}</Badge>;
 }
 
 export function AdminPostTable({ posts }: { posts: PostSummary[] }) {

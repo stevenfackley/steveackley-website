@@ -18,6 +18,9 @@ export interface PostSummary {
   tags?: string[] | null;
   category?: string | null;
   readingTimeMinutes?: number | null;
+  // When the cron route publishes the post. Unpublished with a time set means
+  // "scheduled"; see apps/site/src/lib/post-status.ts.
+  scheduledAt?: Date | null;
 }
 
 export interface PostFull extends PostSummary {

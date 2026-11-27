@@ -87,7 +87,14 @@ export const server = {
       requireAdminAction(context);
       await db
         .update(posts)
-        .set({ published: input.published, updatedAt: new Date() })
+        .set({
+          published: input.published,
+          // Unpublishing makes a draft: the schedule time goes too. Left in
+          // place, a time that has passed would make the cron route publish
+          // the post again at its next run.
+          ...(input.published ? {} : { scheduledAt: null }),
+          updatedAt: new Date(),
+        })
         .where(eq(posts.id, input.id));
       return { success: true };
     },
