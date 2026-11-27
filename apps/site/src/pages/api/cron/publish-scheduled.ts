@@ -6,8 +6,13 @@ import { logger } from '@/lib/logger';
 export const GET: APIRoute = async ({ request }) => {
   // Require a shared secret. Fail closed: if CRON_SECRET is not configured the
   // endpoint is locked rather than left open to anyone.
+  //
+  // Read from process.env, at run time. `import.meta.env.CRON_SECRET` is
+  // replaced with a literal when the site is built, and the image build never
+  // has the secret, so the built route was a bare 401 with the rest of this
+  // handler compiled away. scripts/check-built-routes.mjs guards that.
   const authHeader = request.headers.get('authorization');
-  const expectedToken = import.meta.env.CRON_SECRET;
+  const expectedToken = process.env.CRON_SECRET;
 
   if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {

@@ -33,7 +33,9 @@ jobs:
       # astro 7.4.2 refuses anything below 22.23.4, so CI and the shipped runtime must agree.
       node-version: "26"
       workspace: apps/site
-      build-cmd: npm run build:site
+      # The check fails the build when a route that reads a run-time secret was compiled
+      # down to a bare 401 (see apps/site/scripts/check-built-routes.mjs).
+      build-cmd: npm run build:site && npm run check:built-routes -w apps/site
     secrets: inherit
 
   build-and-push:
@@ -129,6 +131,9 @@ jobs:
               "${{ secrets.R2_BUCKET }}" \
               "${{ secrets.R2_PUBLIC_URL }}" >> .env
             printf 'CLOUDFLARE_TUNNEL_TOKEN=%s\n' "${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" >> .env
+            # Scheduled publishing. Empty until the CRON_SECRET secret exists; the route
+            # answers 401 to everyone while it is empty.
+            printf 'CRON_SECRET=%s\n' "${{ secrets.CRON_SECRET }}" >> .env
             # Schema is managed by qavren-db provisioning; never push on boot in prod
             printf 'DB_PUSH_ON_BOOT=0\n' >> .env
 

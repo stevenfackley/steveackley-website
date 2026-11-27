@@ -49,6 +49,21 @@ git push main ──▶ CI (gh-actions ci-astro@v1) ──▶ build & push GHCR 
 | `GH_API_TOKEN` | GitHub repo enrichment in `lib/github.ts` | GitHub Secret |
 | `R2_*` (5 vars) | Media upload helper | GitHub Secret |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Cloudflare Tunnel sidecar container | GitHub Secret |
+| `CRON_SECRET` | Scheduled-publish route (`/api/cron/publish-scheduled`) | GitHub Secret (optional) |
+
+## Scheduled Publishing
+
+A post saved unpublished with a schedule time is published by `/api/cron/publish-scheduled`, which `.github/workflows/publish-scheduled.yml` calls every 15 minutes. Both ends need the repository secret `CRON_SECRET`: the workflow sends it as a bearer token, and the deploy writes it to the server's `.env`. While the secret does not exist the workflow does nothing and the route answers 401 to everyone, so a scheduled post is not published by anything.
+
+To turn it on:
+
+1. Look at what the first run will publish. Every unpublished post whose time has passed goes public at once: `SELECT id, title, "scheduledAt" FROM "Post" WHERE published = false AND "scheduledAt" <= now();`. Clear the schedule time (or delete the post) for anything that should stay down.
+2. Add the repository secret `CRON_SECRET` (a long random value).
+3. Run the deploy workflow on `main`, so the server gets the secret. Until then the scheduled workflow fails with "The site refused the secret".
+
+Server-side secrets that exist only at run time must be read with `process.env`. `import.meta.env.X` is replaced with a literal when the site is built, and the image build has no secrets, so such a read is `undefined` in production. `apps/site/scripts/check-built-routes.mjs` runs after the CI build and fails it if the scheduled-publish route's code was compiled away for that reason.
+
+`GH_API_TOKEN` is still read through `import.meta.env` in `lib/github.ts`, so production makes its GitHub calls without the token. That is left as it is on purpose: with a token the code switches from the public repo list to `/user/repos`, which includes private repositories, so reading the token at run time would change what the public homepage lists. Decide that before changing the read.
 
 ## Data Persistence
 

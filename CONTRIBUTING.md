@@ -248,6 +248,7 @@ A template is committed at the repo root as `.env.example`. Copy it to `apps/sit
 | `BETTER_AUTH_SECRET` | Better Auth signing secret |
 | `BETTER_AUTH_URL` | App base URL used for auth redirects |
 | `GH_API_TOKEN` | GitHub API token for repo enrichment (`lib/github.ts`) |
+| `CRON_SECRET` | Bearer secret for `/api/cron/publish-scheduled`; optional locally (the route answers 401 without it) |
 | `R2_ACCOUNT_ID` | Cloudflare R2 account ID |
 | `R2_ACCESS_KEY_ID` | Cloudflare R2 access key |
 | `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret key |

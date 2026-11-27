@@ -89,6 +89,7 @@ R2_BUCKET
 R2_PUBLIC_URL
 ADMIN_EMAIL
 ADMIN_PASSWORD_HASH
+CRON_SECRET          # optional; scheduled publishing is off without it
 ```
 
 No `.env` file is committed. Use `.env.local` for local dev.
