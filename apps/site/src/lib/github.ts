@@ -13,7 +13,7 @@ export interface GitHubRepo {
   stargazers_count: number;
   /** GitHub "template repository" flag. Templates are scaffolding, not projects. */
   is_template?: boolean;
-  /** Set by GitHub; true for the owner's private repos listed via /user/repos. */
+  /** Set by GitHub; true for the owner's private repos. Listed only with a fine-grained token. */
   private?: boolean;
 }
 
@@ -192,30 +192,57 @@ function inferTech(repo: GitHubRepo): string[] {
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function getPublicRepos(): Promise<GitHubRepo[]> {
-  // If we have a token, use /user/repos to get both public and private repos we own.
-  // Otherwise, use /users/stevenfackley/repos for public only.
-  //
-  // With a token, every private repo the token can read is listed on the public
-  // homepage (with a "Private" badge) unless a filter below drops it. The
-  // token's own reach is the control: a fine-grained token limited to chosen
-  // repos lists only those.
-  const url = githubToken()
-    ? "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100"
-    : "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
+const PUBLIC_REPOS_URL =
+  "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
+const PRIVATE_REPOS_URL =
+  "https://api.github.com/user/repos?visibility=private&affiliation=owner&sort=pushed&direction=desc&per_page=100";
 
-  return githubFetch(url, async (res) => {
+/**
+ * Whether this token may put private repositories on the public homepage.
+ *
+ * Only a fine-grained personal access token may (GitHub gives those the prefix
+ * "github_pat_"): its owner chose, repository by repository, what it can read.
+ * A classic token with the `repo` scope reads everything the account owns, so
+ * with any other kind of token the site keeps to the public list. The token
+ * still authenticates the calls, which raises the rate limit.
+ */
+export function listsPrivateRepos(token: string | undefined): boolean {
+  return token !== undefined && token.startsWith("github_pat_");
+}
+
+let warnedAboutTokenKind = false;
+
+export async function getPublicRepos(): Promise<GitHubRepo[]> {
+  const token = githubToken();
+  const includePrivate = listsPrivateRepos(token);
+  if (token && !includePrivate && !warnedAboutTokenKind) {
+    warnedAboutTokenKind = true;
+    logger.warn("GH_API_TOKEN is not a fine-grained token, so private repositories are not listed");
+  }
+
+  const read = async (res: Response) => {
     // Throw (don't return []) so callers can tell a transient failure apart from a
     // genuinely empty list and avoid caching the failure over the last good data.
     if (!res.ok) throw new Error(`GitHub /repos request failed: ${res.status}`);
-    const repos: (GitHubRepo & { archived: boolean })[] = await res.json();
+    return (await res.json()) as (GitHubRepo & { archived: boolean })[];
+  };
 
-    // Filter out forks, archived projects, explicitly skipped repos, and
-    // templates / infrastructure (see isNonProjectRepo).
-    return repos.filter(
-      (r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name) && !isNonProjectRepo(r),
-    );
-  });
+  // The public list always comes from the public endpoint. Private repositories
+  // come from a second call and are merged in: what a fine-grained token gets
+  // from /user/repos is what it was given access to, which need not include
+  // every public repository.
+  const publicRepos = (await githubFetch(PUBLIC_REPOS_URL, read)).filter((r) => r.private !== true);
+  const privateRepos = includePrivate
+    ? (await githubFetch(PRIVATE_REPOS_URL, read)).filter((r) => r.private === true)
+    : [];
+
+  // Filter out forks, archived projects, explicitly skipped repos, and
+  // templates / infrastructure (see isNonProjectRepo).
+  const seen = new Set<string>();
+  return [...publicRepos, ...privateRepos]
+    .filter((r) => !r.fork && !r.archived && !SKIP_REPOS.has(r.name) && !isNonProjectRepo(r))
+    .filter((r) => (seen.has(r.name) ? false : (seen.add(r.name), true)))
+    .sort((a, b) => (Date.parse(b.pushed_at) || 0) - (Date.parse(a.pushed_at) || 0));
 }
 
 export type EnrichedRepo = GitHubRepo & {

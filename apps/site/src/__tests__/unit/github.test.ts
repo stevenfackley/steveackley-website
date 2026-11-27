@@ -16,6 +16,7 @@ afterEach(() => {
 
 import {
   getPublicRepos,
+  listsPrivateRepos,
   enrichRepos,
   isNonProjectRepo,
   type GitHubRepo,
@@ -503,19 +504,27 @@ describe("GitHub requests", () => {
     vi.stubEnv("GH_API_TOKEN", "  later  ");
     await getPublicRepos();
 
-    expect(String(fetchSpy.mock.calls[0][0])).toContain("/users/stevenfackley/repos");
-    expect(String(fetchSpy.mock.calls[1][0])).toContain("/user/repos?type=owner");
+    expect(headersOf(fetchSpy.mock.calls[0][1])).toEqual({ Accept: "application/vnd.github.v3+json" });
+    expect(String(fetchSpy.mock.calls[1][0])).toContain("/users/stevenfackley/repos");
     expect(headersOf(fetchSpy.mock.calls[1][1])).toEqual({
       Accept: "application/vnd.github.v3+json",
       Authorization: "token later",
     });
   });
 
-  it("adds the token header to every call and lists owned repos when a token is set", async () => {
-    vi.stubEnv("GH_API_TOKEN", "placeholder");
+  it("with a token that is not fine-grained, sends it but lists public repos only", async () => {
+    // A classic token with the repo scope reads every private repo the account
+    // owns. It must never put them on the public homepage.
+    vi.stubEnv("GH_API_TOKEN", "ghp_placeholder");
     const fetchSpy = vi.spyOn(global, "fetch").mockImplementation((url) => {
-      if (String(url).includes("/user/repos")) {
-        return Promise.resolve(new Response(JSON.stringify([makeRepo({ name: "a" })]), { status: 200 }));
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([makeRepo({ name: "a" }), makeRepo({ name: "leaked", private: true })]),
+            { status: 200 },
+          ),
+        );
       }
       return Promise.resolve(new Response("Not Found", { status: 404 }));
     });
@@ -523,19 +532,89 @@ describe("GitHub requests", () => {
     const repos = await getPublicRepos();
     await enrichRepos(repos);
 
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    const [listUrl, listInit] = fetchSpy.mock.calls[0];
-    const [, readmeInit] = fetchSpy.mock.calls[1];
-    expect(String(listUrl)).toBe(
-      "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100",
-    );
-    for (const init of [listInit, readmeInit]) {
+    expect(repos.map((r) => r.name)).toEqual(["a"]);
+    const listCalls = fetchSpy.mock.calls.filter(([url]) => String(url).includes("/repos?"));
+    expect(listCalls.map(([url]) => String(url))).toEqual([
+      "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100",
+    ]);
+    for (const [, init] of fetchSpy.mock.calls) {
       expect(headersOf(init)).toEqual({
         Accept: "application/vnd.github.v3+json",
-        Authorization: "token placeholder",
+        Authorization: "token ghp_placeholder",
       });
       expect(init?.signal).toBeInstanceOf(AbortSignal);
     }
   });
+
+  it("with a fine-grained token, adds the private repos it can read to the public list", async () => {
+    vi.stubEnv("GH_API_TOKEN", "github_pat_placeholder");
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation((url) => {
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              makeRepo({ name: "pub-old", pushed_at: "2024-01-01T00:00:00Z" }),
+              makeRepo({ name: "pub-new", pushed_at: "2024-09-01T00:00:00Z" }),
+            ]),
+            { status: 200 },
+          ),
+        );
+      }
+      if (s.includes("/user/repos")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              makeRepo({ name: "secret-mid", private: true, pushed_at: "2024-05-01T00:00:00Z" }),
+              // The private call may also return a public repo: it is already listed.
+              makeRepo({ name: "pub-new", pushed_at: "2024-09-01T00:00:00Z" }),
+              makeRepo({ name: "secret-fork", private: true, fork: true }),
+            ]),
+            { status: 200 },
+          ),
+        );
+      }
+      return Promise.resolve(new Response("Not Found", { status: 404 }));
+    });
+
+    const repos = await getPublicRepos();
+
+    // Newest push first, across both lists; forks dropped; nothing twice.
+    expect(repos.map((r) => r.name)).toEqual(["pub-new", "secret-mid", "pub-old"]);
+    expect(repos.find((r) => r.name === "secret-mid")?.private).toBe(true);
+    expect(fetchSpy.mock.calls.map(([url]) => String(url))).toEqual([
+      "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100",
+      "https://api.github.com/user/repos?visibility=private&affiliation=owner&sort=pushed&direction=desc&per_page=100",
+    ]);
+    for (const [, init] of fetchSpy.mock.calls) {
+      expect(headersOf(init)).toEqual({
+        Accept: "application/vnd.github.v3+json",
+        Authorization: "token github_pat_placeholder",
+      });
+    }
+  });
+
+  it("fails as a whole when the private list fails, so callers keep the last good list", async () => {
+    vi.stubEnv("GH_API_TOKEN", "github_pat_placeholder");
+    vi.spyOn(global, "fetch").mockImplementation((url) => {
+      const s = String(url);
+      if (s.includes("/users/stevenfackley/repos")) {
+        return Promise.resolve(new Response(JSON.stringify([makeRepo({ name: "a" })]), { status: 200 }));
+      }
+      return Promise.resolve(new Response("Forbidden", { status: 403 }));
+    });
+
+    await expect(getPublicRepos()).rejects.toThrow("GitHub /repos request failed: 403");
+  });
 });
+
+describe("listsPrivateRepos", () => {
+  it("is true only for a fine-grained personal access token", () => {
+    expect(listsPrivateRepos("github_pat_11ABC")).toBe(true);
+    for (const other of ["ghp_classic", "gho_oauth", "ghs_app", "placeholder", "", undefined]) {
+      expect(listsPrivateRepos(other)).toBe(false);
+    }
+  });
+});
+
 
