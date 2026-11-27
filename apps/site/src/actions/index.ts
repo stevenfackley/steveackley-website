@@ -1,7 +1,7 @@
 import { defineAction } from 'astro:actions';
 import { z } from 'astro:schema';
 import { db, posts } from '@/db';
-import { eq, like, or } from 'drizzle-orm';
+import { and, eq, like, lte, or } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { setSiteSetting } from '@shared/lib/settings';
 import { SETTING_KEYS } from '@shared/lib/setting-keys';
@@ -85,9 +85,19 @@ export const server = {
     }),
     handler: async (input, context) => {
       requireAdminAction(context);
+      const now = new Date();
+      if (!input.published) {
+        // A schedule time that has passed is used up. Left in place, the cron
+        // route would publish the post again at its next run. Cleared before
+        // the post is unpublished, so it is never both unpublished and due.
+        await db
+          .update(posts)
+          .set({ scheduledAt: null })
+          .where(and(eq(posts.id, input.id), lte(posts.scheduledAt, now)));
+      }
       await db
         .update(posts)
-        .set({ published: input.published, updatedAt: new Date() })
+        .set({ published: input.published, updatedAt: now })
         .where(eq(posts.id, input.id));
       return { success: true };
     },

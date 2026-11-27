@@ -62,14 +62,48 @@ describe("AdminPostTable status badge", () => {
     for (const badge of live) expect(badge).toHaveClass("bg-primary");
   });
 
-  it("shows a post waiting for its scheduled time as Draft", () => {
-    // Today's behaviour: the badge reads only `published`. Whether a scheduled
-    // post should say "Scheduled" instead is open with the owner.
+  it("shows a post waiting for its scheduled time as Scheduled in both layouts", () => {
     const scheduled = { ...post, published: false, scheduledAt: new Date("2099-01-01T09:00:00Z") };
     render(<AdminPostTable posts={[scheduled]} />);
 
-    expect(screen.getAllByText("Draft", { exact: true })).toHaveLength(2);
+    const badges = screen.getAllByText("Scheduled", { exact: true });
+    expect(badges).toHaveLength(2);
+    for (const badge of badges) {
+      expect(badge).toHaveClass("text-foreground");
+      expect(badge).not.toHaveClass("bg-secondary");
+      expect(badge).not.toHaveClass("bg-primary");
+    }
+    expect(screen.queryByText("Draft", { exact: true })).not.toBeInTheDocument();
     expect(screen.queryByText("Published", { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("still says Scheduled when the time has passed and the cron has not run yet", () => {
+    const due = { ...post, published: false, scheduledAt: new Date("2020-01-01T09:00:00Z") };
+    render(<AdminPostTable posts={[due]} />);
+
+    expect(screen.getAllByText("Scheduled", { exact: true })).toHaveLength(2);
+    expect(screen.queryByText("Draft", { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("shows a published post as Published whatever its schedule time", () => {
+    render(
+      <AdminPostTable
+        posts={[
+          { ...post, id: "a", title: "Was Scheduled", slug: "was-scheduled", published: true, scheduledAt: new Date("2020-01-01T09:00:00Z") },
+          { ...post, id: "b", title: "Published Early", slug: "published-early", published: true, scheduledAt: new Date("2099-01-01T09:00:00Z") },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByText("Published", { exact: true })).toHaveLength(4);
+    expect(screen.queryByText("Scheduled", { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("shows an unpublished post with no schedule time as Draft", () => {
+    render(<AdminPostTable posts={[{ ...post, published: false, scheduledAt: null }]} />);
+
+    expect(screen.getAllByText("Draft", { exact: true })).toHaveLength(2);
+    expect(screen.queryByText("Scheduled", { exact: true })).not.toBeInTheDocument();
   });
 });
 
