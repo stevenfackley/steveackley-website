@@ -141,6 +141,29 @@ describe("PostForm status", () => {
     expect(hint()).not.toBeInTheDocument();
   });
 
+  it("promises nothing when scheduled publishing is switched off on the server", () => {
+    render(
+      <PostForm mode="create" schedulerEnabled={false} defaultValues={{ title: "T", content: "<p>c</p>" }} />,
+    );
+    const field = screen.getByLabelText("Schedule Publish");
+    const offHint = () => screen.queryByText(/^Scheduled publishing is switched off on this server/);
+
+    expect(offHint()).not.toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "2099-12-01T09:00" } });
+    expect(publishSwitch()).toHaveTextContent("Scheduled");
+    expect(offHint()).toBeInTheDocument();
+    expect(hint()).not.toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "2020-01-01T09:00" } });
+    expect(offHint()).toBeInTheDocument();
+    expect(passedHint()).not.toBeInTheDocument();
+
+    // Published now: no schedule is in play, so nothing is said about it.
+    fireEvent.click(publishSwitch());
+    expect(offHint()).not.toBeInTheDocument();
+  });
+
   it("says Scheduled for an unpublished post with a stored schedule time", async () => {
     render(
       <PostForm

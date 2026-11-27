@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { requireAdminPage } from '@/lib/auth-guards';
 import { coverImageOf } from '@/lib/posts';
 import { pendingScheduleOf } from '@/lib/post-status';
+import { isSchedulerEnabled } from '@/lib/scheduler';
 
 const guard = requireAdminPage(Astro);
 if (guard) return guard;
@@ -26,6 +27,7 @@ if (!post) {
     <PostForm
       mode="update"
       postId={post.id}
+      schedulerEnabled={isSchedulerEnabled()}
       defaultValues={{
         title: post.title,
         content: post.content,

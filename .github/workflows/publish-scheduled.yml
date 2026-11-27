@@ -1,0 +1,71 @@
+name: Publish scheduled posts
+
+# Calls the site's scheduled-publish route, which publishes every unpublished post
+# whose schedule time has passed. Nothing else calls that route.
+#
+# Off until the REPOSITORY secret CRON_SECRET exists: without it every run ends at the
+# first step. It must be a repository secret, not one in the `production` environment:
+# this job has no environment, so it would not see that one and would stay off in
+# silence. The same secret must reach the server, which the deploy workflow writes into
+# .env, so add the secret and then run a deploy before expecting a publish.
+#
+# Before adding the secret, look at every post that is waiting on a schedule time. The
+# first run publishes all of them whose time has passed, however old:
+#   SELECT id, title, "scheduledAt" FROM "Post"
+#   WHERE published = false AND "scheduledAt" IS NOT NULL ORDER BY "scheduledAt";
+# ("scheduledAt" holds UTC without a zone; do not compare it with now() by eye.)
+#
+# GitHub turns scheduled workflows off in a public repository after 60 days with no
+# activity. If scheduled posts stop going out, look at this workflow's page first.
+
+on:
+  schedule:
+    # Every 15 minutes, off the hour (GitHub delays runs queued on the hour).
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: publish-scheduled
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish due posts
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      # A secret cannot be read in a step's `if`, so the job carries a plain boolean.
+      HAS_SECRET: ${{ secrets.CRON_SECRET != '' }}
+    steps:
+      - name: Nothing to do without the secret
+        if: env.HAS_SECRET != 'true'
+        run: echo "CRON_SECRET is not set. Scheduled publishing is off."
+
+      - name: Call the route
+        if: env.HAS_SECRET == 'true'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          status=$(curl --silent --show-error --max-time 30 \
+            --retry 2 --retry-delay 10 --retry-connrefused \
+            -o response.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            https://steveackley.org/api/cron/publish-scheduled)
+          # The body names the posts just published; they are public from this moment.
+          cat response.json
+          echo
+          if [ "$status" = "401" ]; then
+            echo "::error::The site refused the secret. Run the deploy workflow so the server gets CRON_SECRET."
+            exit 1
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error::The route answered ${status}."
+            exit 1
+          fi
+          # A 200 that is not the route's own answer (a proxy page) published nothing.
+          if ! jq -e '.count | numbers' response.json > /dev/null; then
+            echo "::error::The answer is not the route's own JSON."
+            exit 1
+          fi

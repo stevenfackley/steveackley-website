@@ -67,6 +67,28 @@ describe("GET /api/cron/publish-scheduled", () => {
       expect(res.status).toBe(401);
       expect(h.update).not.toHaveBeenCalled();
     });
+
+    it.each([
+      ["a longer token that starts with the secret", "Bearer s3cretX"],
+      ["a shorter token", "Bearer s3cre"],
+      ["the secret without the scheme", "s3cret"],
+      ["another scheme", "Basic s3cret"],
+      ["a lower-case scheme", "bearer s3cret"],
+    ])("returns 401 for %s", async (_name, header) => {
+      vi.stubEnv("CRON_SECRET", "s3cret");
+      const res = await GET(ctx(header) as any);
+      expect(res.status).toBe(401);
+      expect(h.update).not.toHaveBeenCalled();
+    });
+
+    it("stays locked when the secret is only whitespace, whatever is sent", async () => {
+      vi.stubEnv("CRON_SECRET", "   ");
+      for (const header of ["Bearer    ", "Bearer ", "Bearer"]) {
+        const res = await GET(ctx(header) as any);
+        expect(res.status).toBe(401);
+      }
+      expect(h.update).not.toHaveBeenCalled();
+    });
   });
 
   describe("publishing", () => {
@@ -96,6 +118,25 @@ describe("GET /api/cron/publish-scheduled", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.count).toBe(0);
+    });
+
+    it("keeps its own record of what it published, and none when nothing was due", async () => {
+      // The caller's copy of the answer can be lost to a timeout or a retry.
+      const info = vi.spyOn(console, "info").mockImplementation(() => {});
+      vi.stubEnv("CRON_SECRET", "s3cret");
+
+      h.updateReturning.mockResolvedValue([]);
+      await GET(ctx("Bearer s3cret") as any);
+      expect(info).not.toHaveBeenCalled();
+
+      h.updateReturning.mockResolvedValue([{ id: "1", title: "A", slug: "a" }]);
+      await GET(ctx("Bearer s3cret") as any);
+      expect(info).toHaveBeenCalledTimes(1);
+      const line = String(info.mock.calls[0][0]);
+      expect(line).toContain("Published scheduled posts");
+      expect(line).toContain('"slug":"a"');
+
+      info.mockRestore();
     });
   });
 });

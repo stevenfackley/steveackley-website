@@ -2,6 +2,7 @@
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import { PostForm } from '@/components/admin/PostForm';
 import { requireAdminPage } from '@/lib/auth-guards';
+import { isSchedulerEnabled } from '@/lib/scheduler';
 
 const guard = requireAdminPage(Astro);
 if (guard) return guard;
@@ -10,6 +11,6 @@ if (guard) return guard;
 <AdminLayout title="New Post">
   <div class="space-y-6">
     <h1 class="text-2xl font-semibold text-[var(--text-primary)]">New Post</h1>
-    <PostForm mode="create" client:load />
+    <PostForm mode="create" schedulerEnabled={isSchedulerEnabled()} client:load />
   </div>
 </AdminLayout>

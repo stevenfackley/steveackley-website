@@ -7,6 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "start": "node ./dist/server/entry.mjs",
+    "check:built-routes": "node scripts/check-built-routes.mjs",
     "lint": "eslint .",
     "typecheck": "astro check",
     "setup:admin": "tsx scripts/setup-admin.ts",

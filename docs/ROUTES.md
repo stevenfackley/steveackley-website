@@ -50,7 +50,7 @@ All routes live in `apps/site/src/pages/`. There is no separate portal app (see 
 | `/api/health` | `api/health.ts` | Health check |
 | `/api/github/repos` | `api/github/repos.ts` | Cached enriched repo list (30s in-process TTL, shared with SSR). JSON response: `{ repos, fetchedAt }` |
 | `/api/fetch-metadata` | `api/fetch-metadata.ts` | Server-side link-metadata fetch, SSRF-guarded (blocks private/reserved IPv4 ranges incl. cloud metadata endpoint) |
-| `/api/cron/publish-scheduled` | `api/cron/publish-scheduled.ts` | Scheduled job — publishes posts whose scheduled time has passed |
+| `/api/cron/publish-scheduled` | `api/cron/publish-scheduled.ts` | Scheduled job — publishes posts whose scheduled time has passed. Needs `Authorization: Bearer $CRON_SECRET`; answers 401 to everyone while `CRON_SECRET` is unset. Called every 15 minutes by `.github/workflows/publish-scheduled.yml` once that secret exists |
 | `/rss.xml` | `rss.xml.ts` | RSS feed |
 | `/sitemap.xml` | `sitemap.xml.ts` | Sitemap |
 
