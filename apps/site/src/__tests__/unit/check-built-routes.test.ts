@@ -11,6 +11,7 @@ import { checkBuiltRoutes } from "../../../scripts/check-built-routes.mjs";
 
 const ROUTE_REGION = "//#region src/pages/api/cron/publish-scheduled.ts";
 const LIB_REGION = "//#region src/lib/scheduler.ts";
+const GITHUB_REGION = "//#region src/lib/github.ts";
 
 // What `astro build` produced before the fix: the secret was `undefined` at
 // build time, so only the 401 branch survived.
@@ -44,6 +45,20 @@ function cronSecret() {}
 //#endregion
 `;
 
+const GITHUB_INTACT = `${GITHUB_REGION}
+function githubToken() {
+	const value = process.env.GH_API_TOKEN?.trim();
+	return value ? value : void 0;
+}
+//#endregion
+`;
+
+// The token read through import.meta.env, as the bundler leaves it.
+const GITHUB_COMPILED_AWAY = `${GITHUB_REGION}
+function githubToken() {}
+//#endregion
+`;
+
 let dir: string;
 
 beforeEach(() => {
@@ -59,12 +74,25 @@ describe("checkBuiltRoutes", () => {
   it("passes when the route and the secret read are in the build", () => {
     writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), ROUTE_INTACT);
     writeFileSync(join(dir, "chunks", "scheduler_def.mjs"), LIB_INTACT);
+    writeFileSync(join(dir, "chunks", "github_jkl.mjs"), GITHUB_INTACT);
 
     expect(checkBuiltRoutes(dir)).toEqual([]);
   });
 
+  it("fails when the GitHub token is no longer read at run time", () => {
+    writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), ROUTE_INTACT);
+    writeFileSync(join(dir, "chunks", "scheduler_def.mjs"), LIB_INTACT);
+    writeFileSync(join(dir, "chunks", "github_jkl.mjs"), GITHUB_COMPILED_AWAY);
+
+    const problems = checkBuiltRoutes(dir);
+
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("GitHub token");
+    expect(problems[0]).toContain("process.env.GH_API_TOKEN");
+  });
+
   it("passes when the bundler puts both in one file", () => {
-    writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), LIB_INTACT + ROUTE_INTACT);
+    writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), LIB_INTACT + ROUTE_INTACT + GITHUB_INTACT);
 
     expect(checkBuiltRoutes(dir)).toEqual([]);
   });
@@ -72,6 +100,7 @@ describe("checkBuiltRoutes", () => {
   it("fails when the route was compiled down to a bare 401", () => {
     writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), ROUTE_COMPILED_AWAY);
     writeFileSync(join(dir, "chunks", "scheduler_def.mjs"), LIB_INTACT);
+    writeFileSync(join(dir, "chunks", "github_jkl.mjs"), GITHUB_INTACT);
 
     const problems = checkBuiltRoutes(dir);
 
@@ -83,6 +112,7 @@ describe("checkBuiltRoutes", () => {
   it("fails when the secret is no longer read at run time", () => {
     writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), ROUTE_INTACT);
     writeFileSync(join(dir, "chunks", "scheduler_def.mjs"), LIB_COMPILED_AWAY);
+    writeFileSync(join(dir, "chunks", "github_jkl.mjs"), GITHUB_INTACT);
 
     const problems = checkBuiltRoutes(dir);
 
@@ -94,16 +124,20 @@ describe("checkBuiltRoutes", () => {
   it("is not satisfied by the same text in an unrelated file", () => {
     writeFileSync(join(dir, "chunks", "publish-scheduled_abc.mjs"), ROUTE_COMPILED_AWAY);
     writeFileSync(join(dir, "chunks", "scheduler_def.mjs"), LIB_COMPILED_AWAY);
+    writeFileSync(join(dir, "chunks", "github_jkl.mjs"), GITHUB_COMPILED_AWAY);
     writeFileSync(
       join(dir, "chunks", "other_ghi.mjs"),
-      '//#region src/pages/api/other.ts\nprocess.env.CRON_SECRET; "No posts to publish";\n//#endregion\n',
+      '//#region src/pages/api/other.ts\nprocess.env.CRON_SECRET; process.env.GH_API_TOKEN; "No posts to publish";\n//#endregion\n',
     );
 
-    expect(checkBuiltRoutes(dir)).toHaveLength(2);
+    expect(checkBuiltRoutes(dir)).toHaveLength(3);
   });
 
   it("searches every built file when the build carries no region comments", () => {
-    writeFileSync(join(dir, "entry.mjs"), 'const t=process.env.CRON_SECRET;const m="No posts to publish";');
+    writeFileSync(
+      join(dir, "entry.mjs"),
+      'const t=process.env.CRON_SECRET;const g=process.env.GH_API_TOKEN;const m="No posts to publish";',
+    );
 
     expect(checkBuiltRoutes(dir)).toEqual([]);
   });

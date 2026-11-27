@@ -478,6 +478,39 @@ describe("GitHub requests", () => {
     }
   });
 
+  it("treats a blank token as no token", async () => {
+    vi.stubEnv("GH_API_TOKEN", "   ");
+    const fetchSpy = mockRepoFetch([makeRepo({ name: "a" })]);
+
+    await getPublicRepos();
+
+    const [listUrl, listInit] = fetchSpy.mock.calls[0];
+    expect(String(listUrl)).toBe(
+      "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100",
+    );
+    expect(headersOf(listInit)).toEqual({ Accept: "application/vnd.github.v3+json" });
+  });
+
+  it("reads the token when it is called, not when the module loads", async () => {
+    // The deploy provides the token only at run time; a value captured at
+    // build or import time would never see it.
+    vi.stubEnv("GH_API_TOKEN", "");
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify([makeRepo({ name: "a" })]), { status: 200 })),
+    );
+
+    await getPublicRepos();
+    vi.stubEnv("GH_API_TOKEN", "  later  ");
+    await getPublicRepos();
+
+    expect(String(fetchSpy.mock.calls[0][0])).toContain("/users/stevenfackley/repos");
+    expect(String(fetchSpy.mock.calls[1][0])).toContain("/user/repos?type=owner");
+    expect(headersOf(fetchSpy.mock.calls[1][1])).toEqual({
+      Accept: "application/vnd.github.v3+json",
+      Authorization: "token later",
+    });
+  });
+
   it("adds the token header to every call and lists owned repos when a token is set", async () => {
     vi.stubEnv("GH_API_TOKEN", "placeholder");
     const fetchSpy = vi.spyOn(global, "fetch").mockImplementation((url) => {

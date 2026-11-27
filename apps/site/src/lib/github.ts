@@ -75,6 +75,18 @@ interface GitHubFileContent {
 }
 
 /**
+ * The GitHub token, read at run time. `import.meta.env.GH_API_TOKEN` is replaced
+ * with a literal when the site is built, and the image build never has the
+ * token, so a read through it is always empty in production: the token the
+ * deploy provides was never used. A blank value counts as no token.
+ * scripts/check-built-routes.mjs guards this read.
+ */
+function githubToken(): string | undefined {
+  const value = process.env.GH_API_TOKEN?.trim();
+  return value ? value : undefined;
+}
+
+/**
  * GET a GitHub API URL with the v3 Accept header (plus the token when one is
  * set) and an 8s abort. The abort timer stays armed until `read` settles, so a
  * body read inside `read` is covered by it.
@@ -88,8 +100,9 @@ async function githubFetch<T>(url: string, read: (res: Response) => Promise<T>):
       Accept: "application/vnd.github.v3+json",
     };
 
-    if (import.meta.env.GH_API_TOKEN) {
-      headers["Authorization"] = `token ${import.meta.env.GH_API_TOKEN}`;
+    const token = githubToken();
+    if (token) {
+      headers["Authorization"] = `token ${token}`;
     }
 
     const res = await fetch(url, {
@@ -182,7 +195,12 @@ function inferTech(repo: GitHubRepo): string[] {
 export async function getPublicRepos(): Promise<GitHubRepo[]> {
   // If we have a token, use /user/repos to get both public and private repos we own.
   // Otherwise, use /users/stevenfackley/repos for public only.
-  const url = import.meta.env.GH_API_TOKEN
+  //
+  // With a token, every private repo the token can read is listed on the public
+  // homepage (with a "Private" badge) unless a filter below drops it. The
+  // token's own reach is the control: a fine-grained token limited to chosen
+  // repos lists only those.
+  const url = githubToken()
     ? "https://api.github.com/user/repos?type=owner&sort=pushed&direction=desc&per_page=100"
     : "https://api.github.com/users/stevenfackley/repos?sort=pushed&direction=desc&per_page=100";
 

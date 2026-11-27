@@ -26,6 +26,11 @@ const ROUTES = [
     source: "src/lib/scheduler.ts",
     mustContain: ["process.env.CRON_SECRET"],
   },
+  {
+    route: "the GitHub token (lib/github.ts)",
+    source: "src/lib/github.ts",
+    mustContain: ["process.env.GH_API_TOKEN"],
+  },
 ];
 
 function builtFiles(dir) {
