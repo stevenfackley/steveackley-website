@@ -28,9 +28,14 @@ interface Props {
     published?: boolean;
     scheduledAt?: Date | null;
   };
+  /**
+   * Whether anything on this server publishes a scheduled post (lib/scheduler.ts).
+   * When it is false the form says so instead of promising a publish time.
+   */
+  schedulerEnabled?: boolean;
 }
 
-export function PostForm({ mode, postId, defaultValues = {} }: Props) {
+export function PostForm({ mode, postId, defaultValues = {}, schedulerEnabled = true }: Props) {
   const [title, setTitle]         = useState(defaultValues.title       ?? "");
   const [content, setContent]     = useState(defaultValues.content     ?? "");
   const [excerpt, setExcerpt]     = useState(defaultValues.excerpt     ?? "");
@@ -165,9 +170,11 @@ export function PostForm({ mode, postId, defaultValues = {} }: Props) {
               />
               {scheduledAt && status === "scheduled" && (
                 <p className="text-xs text-[var(--text-muted)] mt-1.5">
-                  {new Date(scheduledAt).getTime() <= Date.now()
-                    ? "This time has passed. The post is published when the scheduler next runs."
-                    : `Will auto-publish on ${new Date(scheduledAt).toLocaleString()}`}
+                  {!schedulerEnabled
+                    ? "Scheduled publishing is switched off on this server, so this post will not be published automatically."
+                    : new Date(scheduledAt).getTime() <= Date.now()
+                      ? "This time has passed. The post is published when the scheduler next runs."
+                      : `Will auto-publish on ${new Date(scheduledAt).toLocaleString()}`}
                 </p>
               )}
             </div>

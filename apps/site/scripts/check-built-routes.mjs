@@ -14,12 +14,17 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Each route's built code must still read its secret at run time and keep a string only its real work has. */
+/** Each source's built code must keep a string that only its real work has. */
 const ROUTES = [
   {
     route: "/api/cron/publish-scheduled",
     source: "src/pages/api/cron/publish-scheduled.ts",
-    mustContain: ["process.env.CRON_SECRET", "No posts to publish"],
+    mustContain: ["No posts to publish"],
+  },
+  {
+    route: "the scheduler secret (lib/scheduler.ts)",
+    source: "src/lib/scheduler.ts",
+    mustContain: ["process.env.CRON_SECRET"],
   },
 ];
 
@@ -53,7 +58,7 @@ export function checkBuiltRoutes(serverDir, routes = ROUTES) {
       if (!haystack.includes(text)) {
         problems.push(
           `${route}: the built server does not contain ${JSON.stringify(text)}. ` +
-            "The route's code was compiled away: read run-time secrets with process.env, not import.meta.env.",
+            "The code was compiled away: read run-time secrets with process.env, not import.meta.env.",
         );
       }
     }

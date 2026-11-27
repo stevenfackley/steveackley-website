@@ -3,13 +3,20 @@ name: Publish scheduled posts
 # Calls the site's scheduled-publish route, which publishes every unpublished post
 # whose schedule time has passed. Nothing else calls that route.
 #
-# Off until the repository secret CRON_SECRET exists: without it every run ends at the
-# first step. The same secret must reach the server, which the deploy workflow writes
-# into .env, so add the secret and then run a deploy before expecting a publish.
+# Off until the REPOSITORY secret CRON_SECRET exists: without it every run ends at the
+# first step. It must be a repository secret, not one in the `production` environment:
+# this job has no environment, so it would not see that one and would stay off in
+# silence. The same secret must reach the server, which the deploy workflow writes into
+# .env, so add the secret and then run a deploy before expecting a publish.
 #
-# Before adding the secret, look at the posts the first run will publish:
+# Before adding the secret, look at every post that is waiting on a schedule time. The
+# first run publishes all of them whose time has passed, however old:
 #   SELECT id, title, "scheduledAt" FROM "Post"
-#   WHERE published = false AND "scheduledAt" <= now();
+#   WHERE published = false AND "scheduledAt" IS NOT NULL ORDER BY "scheduledAt";
+# ("scheduledAt" holds UTC without a zone; do not compare it with now() by eye.)
+#
+# GitHub turns scheduled workflows off in a public repository after 60 days with no
+# activity. If scheduled posts stop going out, look at this workflow's page first.
 
 on:
   schedule:
@@ -55,5 +62,10 @@ jobs:
           fi
           if [ "$status" != "200" ]; then
             echo "::error::The route answered ${status}."
+            exit 1
+          fi
+          # A 200 that is not the route's own answer (a proxy page) published nothing.
+          if ! jq -e '.count | numbers' response.json > /dev/null; then
+            echo "::error::The answer is not the route's own JSON."
             exit 1
           fi
