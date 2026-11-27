@@ -67,9 +67,19 @@ To turn it off again, delete the secret and run a deploy. Deleting the secret al
 
 Things to know once it is on. Publishing happens at the next run, and GitHub's schedule is best effort, so a post can go out late. A run that finds the site down fails and sends mail; nothing is lost, the next run catches up. The run's log, which is public, shows the id, title and slug of each post as it is published. The server logs the same under "Published scheduled posts". GitHub turns scheduled workflows off in a public repository after 60 days with no activity; if scheduled posts stop going out, look at the workflow's page first.
 
-Server-side secrets that exist only at run time must be read with `process.env`. `import.meta.env.X` is replaced with a literal when the site is built, and the image build has no secrets, so such a read is `undefined` in production. The secret is read in one place, `apps/site/src/lib/scheduler.ts`. `apps/site/scripts/check-built-routes.mjs` runs after the CI build and fails it if that read or the scheduled-publish route's code was compiled away for that reason.
+Server-side secrets that exist only at run time must be read with `process.env`. `import.meta.env.X` is replaced with a literal when the site is built, and the image build has no secrets, so such a read is `undefined` in production. The secret is read in one place, `apps/site/src/lib/scheduler.ts`. `apps/site/scripts/check-built-routes.mjs` runs after the CI build and fails it if that read, the GitHub token read or the scheduled-publish route's code was compiled away for that reason.
 
-`GH_API_TOKEN` is still read through `import.meta.env` in `lib/github.ts`, so production makes its GitHub calls without the token. That is left as it is on purpose: with a token the code switches from the public repo list to `/user/repos`, which includes private repositories, so reading the token at run time would change what the public homepage lists. Decide that before changing the read.
+## GitHub Token And The Homepage's Repo List
+
+The homepage lists repositories from GitHub (`lib/github.ts`). `GH_API_TOKEN` is read at run time, like `CRON_SECRET`, and the same build check covers the read. Until 2026-11-27 it was read through `import.meta.env`, so production never used the token the deploy provides.
+
+Without a token the site asks GitHub for the public list, at the anonymous rate limit. **With a token it asks for every repository the token's owner owns that the token can read, private ones included, and shows them on the public homepage with a "Private" badge.** The same list is served as JSON at `/api/github/repos`. For each listed repository that makes public: its name, description, language, topics, the badge lines of its README and when it was last pushed. Its link leads to a GitHub 404 for visitors.
+
+Today no `GH_API_TOKEN` repository secret exists, so nothing has changed in production. Before adding one:
+
+1. Decide which private repositories may be shown. **The token's own reach is the control.** A fine-grained personal access token limited to chosen repositories lists only those. A classic token with the `repo` scope lists everything the account owns.
+2. Forks, archived repositories, templates and infrastructure repositories are dropped by the filters in `lib/github.ts`. The fixed skip list there matches by name, so a repository that was renamed after the list was written is no longer matched. Check that list against the account's current private repositories, or rely on the token's reach.
+3. Add the secret, then run the deploy workflow on `main`. The CI end-to-end job also receives the secret and renders the homepage with it.
 
 ## Data Persistence
 

@@ -90,7 +90,7 @@ Environment values live at the repo root (see the committed [.env.example](./.en
 | `BETTER_AUTH_SECRET` | `apps/site`, shared auth handler | Session/auth secret |
 | `BETTER_AUTH_URL` | `apps/site`, shared auth handler | Better Auth base URL |
 | `R2_*` | `apps/site`, shared upload helpers | Cloudflare R2 media storage |
-| `GH_API_TOKEN` | `apps/site` | Public GitHub repo enrichment on homepage |
+| `GH_API_TOKEN` | `apps/site` | GitHub repo list on the homepage. Optional. With a token, private repos it can read are listed too (see `docs/DEPLOYMENT_ARCHITECTURE.md`) |
 | `CRON_SECRET` | `apps/site`, `publish-scheduled.yml` | Bearer secret for the scheduled-publish route; scheduled publishing is off while it is unset |
 
 ## Content Ownership
